@@ -15,13 +15,17 @@ jobs:
   markdown-lint:
     name: Markdown Linting
     runs-on: ubuntu-latest
+    container:
+      image: debian:latest
     steps:
       - uses: actions/checkout@v4
-      - name: markdownlint-cli
-        uses: nosborn/github-action-markdown-cli@v3.3.0
-        with:
-          files: "*.md"
-          config_file: ".markdownlint.json"
-          ignore_files: "LICENSE.md"
-          ignore_path: ".markdownlintignore"
-          fallback: false
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y nodejs npm git
+      - name: Install markdownlint
+        run: |
+          npm install -g markdownlint-cli
+      - name: Run markdownlint
+        run: |
+          markdownlint --config .markdownlint.json --ignore LICENSE.md --ignore-path .markdownlintignore *.md

@@ -14,14 +14,19 @@ jobs:
   ansible-dry-run:
     name: Ansible Playbook Dry Run
     runs-on: ubuntu-latest
+    container:
+      image: debian:latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
+      - name: Install system dependencies
+        run: |
+          apt-get update
+          apt-get install -y build-essential python3 python3-pip python3-dev libyaml-dev git
       - name: Install Ansible
-        run: pip install ansible-core docker-compose
+        run: |
+          python3 -m pip install --upgrade pip setuptools wheel
+          pip3 install --only-binary :all: PyYAML
+          pip3 install ansible-core docker-compose
       - name: Create test inventory and vars
         run: |
           mkdir -p test
@@ -67,8 +72,19 @@ jobs:
   build-containers:
     name: Test Docker Compose Build
     runs-on: ubuntu-latest
+    container:
+      image: debian:latest
     steps:
       - uses: actions/checkout@v4
+      - name: Install system dependencies
+        run: |
+          apt-get update
+          apt-get install -y build-essential python3 python3-pip python3-dev libyaml-dev git
+      - name: Install Docker Compose
+        run: |
+          python3 -m pip install --upgrade pip setuptools wheel
+          pip3 install --only-binary :all: PyYAML
+          pip3 install docker-compose
       - name: Create dummy .env file
         run: |
           cat > .env << EOF
