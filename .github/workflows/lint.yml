@@ -17,8 +17,6 @@ jobs:
   ansible-lint:
     name: Ansible Lint
     runs-on: ubuntu-latest
-    container:
-      image: debian:latest
     steps:
       - uses: actions/checkout@v4
       - name: Install system dependencies
@@ -36,8 +34,6 @@ jobs:
   yaml-lint:
     name: YAML Lint
     runs-on: ubuntu-latest
-    container:
-      image: debian:latest
     steps:
       - uses: actions/checkout@v4
       - name: Install system dependencies
