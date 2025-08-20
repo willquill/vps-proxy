@@ -1,0 +1,76 @@
+---
+# Traefik setup tasks
+
+- name: Install Apache utils (for htpasswd)
+  apt:
+    name: apache2-utils
+    state: present
+
+- name: Ensure Traefik config directories exist
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: '0755'
+  with_items:
+    - "{{ repo_dest }}/config/traefik"
+    - "{{ repo_dest }}/config/traefik/config"
+    - "{{ repo_dest }}/var/log/traefik"
+
+- name: Generate Traefik htpasswd file
+  shell: "htpasswd -bc {{ repo_dest }}/config/traefik/usersfile.txt {{ traefik_username }} {{ traefik_password }}"
+  when: 
+    - traefik_username is defined
+    - traefik_password is defined
+  
+- name: Set correct ownership for usersfile.txt
+  file:
+    path: "{{ repo_dest }}/config/traefik/usersfile.txt"
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: '0600'
+  when: 
+    - traefik_username is defined
+    - traefik_password is defined
+    
+- name: Deploy Traefik main configuration
+  template:
+    src: traefik.yml.j2
+    dest: "{{ repo_dest }}/config/traefik/traefik.yml"
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: '0644'
+  vars:
+    acme_email: "{{ acme_email }}"
+    
+- name: Deploy Traefik middlewares configuration
+  template:
+    src: middlewares.yml.j2
+    dest: "{{ repo_dest }}/config/traefik/config/middlewares.yml"
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: '0644'
+  vars:
+    admin_ip_range: "{{ admin_ip_range | default('192.168.1.0/24') }}"
+    
+- name: Deploy Traefik services configuration
+  template:
+    src: services.yml.j2
+    dest: "{{ repo_dest }}/config/traefik/config/services.yml"
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: '0644'
+  vars:
+    public_hostname: "{{ public_hostname }}"
+    
+- name: Create empty acme.json file if it doesn't exist
+  file:
+    path: "{{ repo_dest }}/config/traefik/acme.json"
+    state: touch
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: '0600'
+    modification_time: preserve
+    access_time: preserve
+  changed_when: false

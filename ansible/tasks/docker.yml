@@ -1,0 +1,18 @@
+---
+# Docker setup tasks
+
+- name: Install Docker
+  apt:
+    name:
+      - docker.io
+    state: present
+
+- name: Ensure user is in docker group
+  user:
+    name: "{{ user_name }}"
+    groups: docker
+    append: yes
+
+- name: Create docker network if it doesn't exist
+  command: docker network create proxy
+  ignore_errors: true

@@ -1,0 +1,64 @@
+api:
+  dashboard: true
+  debug: true
+entryPoints:
+  ssh:
+    address: ":22"
+  http:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: https
+          scheme: https
+  https:
+    address: ":443"
+    http3: true
+
+serversTransport:
+  insecureSkipVerify: true
+
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    # Had as false forever, but when I switched to using the file provider directory files, had to set to true
+    exposedByDefault: true # Default is true
+  file:
+    directory: /etc/traefik/config
+    watch: true
+
+certificatesResolvers:
+  cloudflare:
+    acme:
+      email: {{ acme_email }}
+      storage: acme.json
+      dnsChallenge:
+        provider: cloudflare
+        #disablePropagationCheck: true # uncomment this if you have issues pulling certificates through cloudflare, By setting this flag to true disables the need to wait for the propagation of the TXT record to all authoritative name servers.
+        # delayBeforeCheck: 5
+        # Staging (disable for production use)
+        caServer: https://acme-staging-v02.api.letsencrypt.org/directory # staging
+        resolvers:
+          - "1.1.1.1:53"
+          - "1.0.0.1:53"
+
+tls:
+  stores:
+    default:
+      defaultGeneratedCert:
+        resolver: cloudflare
+        domain:
+          main: '{PUBLIC_HOSTNAME}'
+          sans:
+            - 'ldaps.{PUBLIC_HOSTNAME}'
+
+# accessLog:
+#   filePath: "/etc/traefik/access.log"
+#   format: json
+#   filters:
+#     statusCodes:
+#       - "200"
+#       - "300-302"
+#       - "522"
+#     retryAttempts: true
+#     minDuration: "10ms"
