@@ -1,0 +1,27 @@
+name: Documentation Checks
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "**/*.md"
+      - ".markdownlint.json"
+      - ".markdownlintignore"
+      - ".github/workflows/docs.yml"
+  # Allows manual triggering
+  workflow_dispatch:
+
+jobs:
+  markdown-lint:
+    name: Markdown Linting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: markdownlint-cli
+        uses: nosborn/github-action-markdown-cli@v3.3.0
+        with:
+          files: "*.md"
+          config_file: ".markdownlint.json"
+          ignore_files: "LICENSE.md"
+          ignore_path: ".markdownlintignore"
+          fallback: false

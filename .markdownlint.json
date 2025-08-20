@@ -1,0 +1,14 @@
+{
+  "default": true,
+  "line-length": {
+    "line_length": 120,
+    "tables": false,
+    "code_blocks": false
+  },
+  "no-trailing-punctuation": {
+    "punctuation": ".,;:!"
+  },
+  "no-inline-html": {
+    "allowed_elements": ["br", "p", "pre", "code", "details", "summary"]
+  }
+}

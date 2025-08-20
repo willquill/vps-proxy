@@ -148,3 +148,40 @@ You can also check the connection status in OPNsense under **VPN > WireGuard > S
 
 - You'll use this `cloud-init.yaml` file to initially provision your VPS.
 - GitHub actions will use Ansible to prepare your VPS configuration, install Docker, clone this repo, and apply the docker compose file.
+
+## CI/CD Pipeline
+
+This repository uses GitHub Actions for CI/CD workflows to ensure code quality and automate deployment:
+
+### Continuous Integration (CI)
+
+The CI workflow (`.github/workflows/ci.yml`) runs on pull requests to the main branch and includes:
+
+- **Syntax and Linting Checks**:
+
+  - Ansible Lint: Validates Ansible playbooks and roles
+  - YAML Lint: Ensures YAML files follow best practices
+  - Docker Compose Validation: Verifies docker-compose.yml is valid
+
+- **Security Scanning**:
+
+  - Secret Detection: Uses Gitleaks to detect accidentally committed secrets
+  - Vulnerability Scanning: Uses Trivy to scan for security vulnerabilities
+
+- **Functional Testing**:
+
+  - Ansible Dry Run: Tests playbooks in check mode without making changes
+  - Container Build Test: Ensures Docker containers build correctly
+
+- **Documentation Checks**:
+  - Markdown Linting: Validates formatting of documentation
+
+### Continuous Deployment (CD)
+
+The deployment workflow (`.github/workflows/deploy.yml`) runs on pushes to the main branch and:
+
+1. Sets up SSH connection to your VPS
+2. Runs the Ansible playbook to configure your VPS
+3. Deploys the services using Docker Compose
+
+To use these workflows, ensure you've configured the required GitHub Secrets as detailed in the "Use of Secrets" section.

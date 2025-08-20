@@ -1,0 +1,74 @@
+name: Linting
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "**/*.yml"
+      - "**/*.yaml"
+      - "ansible/**"
+      - "docker-compose.yml"
+      - ".ansible-lint"
+      - ".yamllint.yml"
+  # Allows manual triggering
+  workflow_dispatch:
+
+jobs:
+  ansible-lint:
+    name: Ansible Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible-lint
+      - name: Run ansible-lint
+        run: ansible-lint ansible/**/*.yml
+
+  yaml-lint:
+    name: YAML Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+      - name: Install yamllint
+        run: pip install yamllint
+      - name: Run yamllint
+        run: |
+          yamllint -c .yamllint.yml . || echo "Consider adding a .yamllint.yml file to customize rules"
+          yamllint .
+
+  docker-compose-validate:
+    name: Docker Compose Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Docker Compose
+        run: pip install docker-compose
+      - name: Create dummy env file for testing
+        run: |
+          # Create a minimal .env file with dummy values for validation
+          cat > .env << EOF
+          PUBLIC_HOSTNAME=example.com
+          PUID=1000
+          PGID=1000
+          TZ=UTC
+          CF_DNS_API_TOKEN=dummy_token
+          CF_ZONE_API_TOKEN=dummy_token
+          TRAEFIK_BASIC_AUTH_USERNAME=dummy_user
+          TRAEFIK_BASIC_AUTH_PASSWORD=dummy_password
+          AUTHENTIK_POSTGRESQL__NAME=authentik
+          AUTHENTIK_POSTGRESQL__PASSWORD=dummy_password
+          AUTHENTIK_POSTGRESQL__USER=authentik
+          AUTHENTIK_SECRET_KEY=dummy_key
+          EOF
+      - name: Validate docker-compose.yml
+        run: docker-compose config
