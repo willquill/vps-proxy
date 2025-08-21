@@ -13,45 +13,30 @@ on:
 
 jobs:
   detect-secrets:
-    name: Detect Secrets
+    name: Detect Secrets with Gitleaks
     runs-on: ubuntu-latest
-    container:
-      image: debian:latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Install dependencies
-        run: |
-          apt-get update
-          apt-get install -y git wget
-      - name: Install Gitleaks
-        run: |
-          wget -q https://github.com/zricethezav/gitleaks/releases/download/v8.18.3/gitleaks_8.18.3_linux_x64.tar.gz
-          tar -xzf gitleaks_8.18.3_linux_x64.tar.gz
-          chmod +x gitleaks
-          mv gitleaks /usr/local/bin/
-      - name: Detect secrets in repo
-        run: |
-          gitleaks detect -v
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   trivy-scan:
     name: Vulnerability Scanning
     runs-on: ubuntu-latest
-    container:
-      image: debian:latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Install dependencies
-        run: |
-          apt-get update
-          apt-get install -y wget apt-transport-https gnupg lsb-release
-      - name: Setup Trivy
-        run: |
-          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | apt-key add -
-          echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | tee -a /etc/apt/sources.list.d/trivy.list
-          apt-get update
-          apt-get install -y trivy
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Build an image from Dockerfile
+        run: docker build -t docker.io/my-organization/my-app:${{ github.sha }} .
       - name: Run Trivy vulnerability scanner
-        run: |
-          trivy fs --exit-code 1 --no-progress --ignore-unfixed --severity CRITICAL,HIGH .
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: "docker.io/my-organization/my-app:${{ github.sha }}"
+          format: "table"
+          exit-code: "1"
+          ignore-unfixed: true
+          vuln-type: "os,library"
+          severity: "CRITICAL,HIGH"

@@ -11,22 +11,29 @@ on:
   workflow_dispatch:
 
 jobs:
-  ansible-dry-run:
+  molecule:
     name: Ansible Playbook Dry Run
     runs-on: ubuntu-latest
-    container:
-      image: debian:latest
+    strategy:
+      fail-fast: false
+      matrix:
+        scenario:
+          - debian-12
+          - debian-13
     steps:
-      - uses: actions/checkout@v4
-      - name: Install system dependencies
-        run: |
-          apt-get update
-          apt-get install -y build-essential python3 python3-pip python3-dev libyaml-dev git
-      - name: Install Ansible
-        run: |
-          python3 -m pip install --upgrade pip setuptools wheel
-          pip3 install --only-binary :all: PyYAML
-          pip3 install ansible-core docker-compose
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          path: "${{ github.repository }}"
+      - name: Molecule
+        uses: gofrolist/molecule-action@v2
+        with:
+          molecule_options: --debug --base-config molecule/_shared/base.yml
+          molecule_command: test
+          molecule_args: --scenario-name ${{ matrix.scenario }}
+        env:
+          ANSIBLE_FORCE_COLOR: "1"
+
       - name: Create test inventory and vars
         run: |
           mkdir -p test
@@ -35,7 +42,6 @@ jobs:
           [all]
           localhost ansible_connection=local
           EOF
-
           # Create test vars
           cat > test/vars.yml << EOF
           wireguard_port: 51820
@@ -68,40 +74,3 @@ jobs:
         run: |
           # Run with --check to simulate changes without making them
           ansible-playbook -i test/inventory -e "@test/vars.yml" --skip-tags "never" --check ansible/main.yml || echo "Dry run completed with warnings"
-
-  build-containers:
-    name: Test Docker Compose Build
-    runs-on: ubuntu-latest
-    container:
-      image: debian:latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install system dependencies
-        run: |
-          apt-get update
-          apt-get install -y build-essential python3 python3-pip python3-dev libyaml-dev git
-      - name: Install Docker Compose
-        run: |
-          python3 -m pip install --upgrade pip setuptools wheel
-          pip3 install --only-binary :all: PyYAML
-          pip3 install docker-compose
-      - name: Create dummy .env file
-        run: |
-          cat > .env << EOF
-          PUBLIC_HOSTNAME=example.com
-          PUID=1000
-          PGID=1000
-          TZ=UTC
-          CF_DNS_API_TOKEN=dummy_token
-          CF_ZONE_API_TOKEN=dummy_token
-          TRAEFIK_BASIC_AUTH_USERNAME=dummy_user
-          TRAEFIK_BASIC_AUTH_PASSWORD=dummy_password
-          AUTHENTIK_POSTGRESQL__NAME=authentik
-          AUTHENTIK_POSTGRESQL__PASSWORD=dummy_password
-          AUTHENTIK_POSTGRESQL__USER=authentik
-          AUTHENTIK_SECRET_KEY=dummy_key
-          EOF
-      - name: Test docker-compose build
-        run: |
-          # Only test build, don't run the containers
-          docker-compose build

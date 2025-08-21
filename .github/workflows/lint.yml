@@ -16,59 +16,45 @@ on:
 jobs:
   ansible-lint:
     name: Ansible Lint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - name: Install system dependencies
-        run: |
-          apt-get update
-          apt-get install -y build-essential python3 python3-pip python3-dev libyaml-dev git
-      - name: Install dependencies
-        run: |
-          python3 -m pip install --upgrade pip setuptools wheel
-          pip3 install --only-binary :all: PyYAML
-          pip3 install ansible-lint
       - name: Run ansible-lint
-        run: ansible-lint ansible/**/*.yml
+        uses: ansible/ansible-lint@main # or vX.X.X version
+        # optional (see below):
+        with:
+          args: ""
+          #gh_action_ref: "<version - e.g. `v25.5.0`>" # Not recommended for non-composite action use
+          setup_python: "true"
+          working_directory: ""
+          requirements_file: ""
 
   yaml-lint:
-    name: YAML Lint
+    name: Yaml Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Install system dependencies
-        run: |
-          apt-get update
-          apt-get install -y build-essential python3 python3-pip python3-dev libyaml-dev git
-      - name: Install dependencies
-        run: |
-          python3 -m pip install --upgrade pip setuptools wheel
-          pip3 install --only-binary :all: PyYAML
-          pip3 install yamllint
-      - name: Run yamllint
-        run: |
-          yamllint -c .yamllint.yml . || echo "Consider adding a .yamllint.yml file to customize rules"
-          yamllint .
+      - uses: actions/checkout@v3
+      - name: yaml-lint
+        uses: ibiqlik/action-yamllint@v3
+      - run: echo ${{ steps.yaml-lint.outputs.logfile }}
+      - uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: yamllint-logfile
+          path: ${{ steps.yaml-lint.outputs.logfile }}
 
   docker-compose-validate:
     name: Docker Compose Validation
     runs-on: ubuntu-latest
-    container:
-      image: debian:latest
+    services:
+      docker:
+        image: docker:20.10.9
+        options: --privileged
     steps:
-      - uses: actions/checkout@v4
-      - name: Install system dependencies
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Create dummy .env file
         run: |
-          apt-get update
-          apt-get install -y build-essential python3 python3-pip python3-dev libyaml-dev git
-      - name: Install Docker Compose
-        run: |
-          python3 -m pip install --upgrade pip setuptools wheel
-          pip3 install --only-binary :all: PyYAML
-          pip3 install docker-compose
-      - name: Create dummy env file for testing
-        run: |
-          # Create a minimal .env file with dummy values for validation
           cat > .env << EOF
           PUBLIC_HOSTNAME=example.com
           PUID=1000
