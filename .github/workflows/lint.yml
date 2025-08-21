@@ -33,11 +33,11 @@ jobs:
     name: Yaml Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: yaml-lint
         uses: ibiqlik/action-yamllint@v3
       - run: echo ${{ steps.yaml-lint.outputs.logfile }}
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: yamllint-logfile
@@ -48,7 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       docker:
-        image: docker:20.10.9
+        image: docker:28.3.3
         options: --privileged
     steps:
       - name: Checkout code
