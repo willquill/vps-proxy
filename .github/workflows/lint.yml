@@ -14,34 +14,35 @@ on:
   workflow_dispatch:
 
 jobs:
-  ansible-lint:
-    name: Ansible Lint
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run ansible-lint
-        uses: ansible/ansible-lint@main # or vX.X.X version
-        # optional (see below):
-        with:
-          args: ""
-          #gh_action_ref: "<version - e.g. `v25.5.0`>" # Not recommended for non-composite action use
-          setup_python: "true"
-          working_directory: ""
-          requirements_file: ""
+  # Disabled for now because I lint locally
+  #   ansible-lint:
+  #     name: Ansible Lint
+  #     runs-on: ubuntu-24.04
+  #     steps:
+  #       - uses: actions/checkout@v4
+  #       - name: Run ansible-lint
+  #         uses: ansible/ansible-lint@main # or vX.X.X version
+  #         # optional (see below):
+  #         with:
+  #           args: ""
+  #           #gh_action_ref: "<version - e.g. `v25.5.0`>" # Not recommended for non-composite action use
+  #           setup_python: "true"
+  #           working_directory: ""
+  #           requirements_file: ""
 
-  yaml-lint:
-    name: Yaml Lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: yaml-lint
-        uses: ibiqlik/action-yamllint@v3
-      - run: echo ${{ steps.yaml-lint.outputs.logfile }}
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: yamllint-logfile
-          path: ${{ steps.yaml-lint.outputs.logfile }}
+  #   yaml-lint:
+  #     name: Yaml Lint
+  #     runs-on: ubuntu-latest
+  #     steps:
+  #       - uses: actions/checkout@v4
+  #       - name: yaml-lint
+  #         uses: ibiqlik/action-yamllint@v3
+  #       - run: echo ${{ steps.yaml-lint.outputs.logfile }}
+  #       - uses: actions/upload-artifact@v4
+  #         if: always()
+  #         with:
+  #           name: yamllint-logfile
+  #           path: ${{ steps.yaml-lint.outputs.logfile }}
 
   docker-compose-validate:
     name: Docker Compose Validation

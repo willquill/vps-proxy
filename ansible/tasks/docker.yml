@@ -2,17 +2,20 @@
 # Docker setup tasks
 
 - name: Install Docker
-  apt:
+  ansible.builtin.apt:
     name:
       - docker.io
     state: present
 
 - name: Ensure user is in docker group
-  user:
+  ansible.builtin.user:
     name: "{{ user_name }}"
     groups: docker
     append: yes
 
 - name: Create docker network if it doesn't exist
-  command: docker network create proxy
-  ignore_errors: true
+  ansible.builtin.command: docker network create proxy
+  register: create_network_result
+  failed_when:
+    - create_network_result.rc != 0
+    - "'already exists' not in create_network_result.stderr"

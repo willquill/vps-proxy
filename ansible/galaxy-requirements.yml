@@ -1,0 +1,24 @@
+---
+# Ansible Galaxy requirements file
+# Install using: ansible-galaxy install -r galaxy-requirements.yml
+
+collections:
+  # Core Ansible collections
+  - name: ansible.builtin
+    version: ">=2.18.0"
+  
+  # Used for sysctl module in wireguard.yml
+  - name: ansible.posix
+    version: ">=1.6.2"
+
+  # Additional community collections that might be useful
+  - name: community.docker
+    version: ">=4.7.0"
+  
+  # Useful for cloud providers like Hetzner
+  - name: community.general
+    version: ">=10.7.3"
+
+  # Useful for network configurations, firewalls, etc
+  - name: ansible.netcommon
+    version: ">=7.2.0"
