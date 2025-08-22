@@ -19,6 +19,8 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      ANSIBLE_VERSION: ${{ github.event.inputs.version || '9.3.0' }}
 
     steps:
       # ---------- Checkout code ----------
@@ -35,12 +37,12 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-${{ inputs.version }}
+          key: ${{ runner.os }}-${{ env.ANSIBLE_VERSION }}
 
       - name: "Install packages"
         shell: bash
         run: |
-          python -m pip install ansible==${{ inputs.version}}
+          python -m pip install ansible==${{ env.ANSIBLE_VERSION }}
       - name: "Print Ansible version"
         run: ansible-playbook --version
 
