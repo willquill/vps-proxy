@@ -4,6 +4,12 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Ansible version to use"
+        required: true
+        default: "9.3.0"
+        type: string
 
 env:
   # Ansible will read these automatically if prefixed ANSIBLE_
