@@ -5,7 +5,7 @@
 collections:
   # Core Ansible collections
   - name: ansible.builtin
-    version: ">=2.18.0"
+    version: ">=2.16.14"
   
   # Used for sysctl module in wireguard.yml
   - name: ansible.posix
