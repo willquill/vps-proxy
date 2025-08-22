@@ -64,6 +64,7 @@ jobs:
           #molecule_options: --debug --base-config molecule/_shared/base.yml
           molecule_command: test
           molecule_args: --scenario-name ${{ matrix.scenario }}
+          molecule_working_dir: will/vps-proxy
         env:
           ANSIBLE_FORCE_COLOR: "1"
 
@@ -86,7 +87,7 @@ jobs:
           wireguard_private_key_path: "/tmp/wireguard/privatekey"
           wireguard_public_key_path: "/tmp/wireguard/publickey"
           wireguard_config_path: "/tmp/wireguard/wg0.conf"
-          user_name: "testuser"
+          user_name: "will"
           user_id: 1000
           group_id: 1000
           repo_url: "https://github.com/willquill/vps-proxy.git"
