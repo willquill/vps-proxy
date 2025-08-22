@@ -1,0 +1,17 @@
+# Node modules
+
+node_modules/
+
+# Vendor files
+
+vendor/
+
+# Build output
+
+dist/
+build/
+
+# License files that may not conform to style
+
+LICENSE.md
+LICENSE

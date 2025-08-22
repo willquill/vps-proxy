@@ -1,0 +1,24 @@
+name: Security Scan
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  # Run on a schedule to catch new vulnerabilities
+  schedule:
+    - cron: "0 4 * * 1" # 4 AM every Monday
+  # Allows manual triggering
+  workflow_dispatch:
+
+jobs:
+  detect-secrets:
+    name: Detect Secrets with Gitleaks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

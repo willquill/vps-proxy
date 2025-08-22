@@ -1,0 +1,18 @@
+---
+# .ansible-lint
+exclude_paths:
+  - .github/
+  - .vscode/
+  - venv/
+parseable: true
+quiet: false
+verbosity: 1
+warn_list:
+  - yaml
+  - var-spacing
+skip_list:
+  - no-changed-when  # Commands should not change things if nothing needs doing
+  - no-handler  # Tasks that run when changed should likely be handlers
+  - yaml[line-length]
+  - yaml[comments]
+use_default_rules: true

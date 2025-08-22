@@ -1,0 +1,69 @@
+########################
+### HTTP Middlewares ###
+########################
+http:
+  middlewares:
+
+    https-redirectscheme:
+      redirectScheme:
+        scheme: https
+        permanent: true
+
+    default-headers:
+      headers:
+        browserXssFilter: true
+        contentTypeNosniff: true
+        frameDeny: true
+        forceSTSHeader: true
+        stsIncludeSubdomains: true
+        stsPreload: true
+        stsSeconds: 15552000
+        customFrameOptionsValue: SAMEORIGIN
+        customRequestHeaders:
+          X-Forwarded-Proto: https
+
+    # Shouldn't need X-Forwarded-* b/c Traefik forwards by default
+    # Comment: https://community.traefik.io/t/x-forwarded-for-missing/15013/2
+    # The code: https://github.com/traefik/traefik/blob/master/pkg/middlewares/forwardedheaders/forwarded_header.go
+    # youtrack-headers:
+    #   headers:
+    #     browserXssFilter: true
+    #     contentTypeNosniff: true
+    #     frameDeny: true
+    #     forceSTSHeader: true
+    #     stsIncludeSubdomains: true
+    #     stsPreload: true
+    #     stsSeconds: 15552000
+    #     customFrameOptionsValue: SAMEORIGIN
+    #     customRequestHeaders:
+    #       X-Forwarded-Proto: https   
+    #       X-Forwarded-Host: "youtrack.{{env "PRIVATE_HOSTNAME"}}"       
+
+    authelia:
+      forwardAuth:
+        #address: 'https://authelia.{{env "PRIVATE_HOSTNAME"}}/api/authz/forward-auth'
+        address: 'http://authelia:9091/api/verify?rd=https://authelia.{{env "PRIVATE_HOSTNAME"}}'
+        trustForwardHeader: 'true'
+        authResponseHeaders:
+          - Remote-User
+          - Remote-Groups
+          - Remote-Name
+          - Remote-Email
+
+    http-RFC1918-only:
+      ipAllowList:
+        sourceRange:
+          - "10.0.0.0/8"
+          - "192.168.0.0/16"
+          - "172.16.0.0/12"
+
+    public:
+      chain:
+        middlewares:
+        - default-headers
+    
+    private:
+      chain:
+        middlewares:
+        - http-RFC1918-only
+        - default-headers

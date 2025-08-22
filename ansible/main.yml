@@ -1,0 +1,42 @@
+---
+- name: VPS Proxy Setup
+  hosts: all
+  become: true
+  vars:
+    wireguard_port: 51820
+    wireguard_interface: wg0
+    wireguard_tunnel_subnet: 192.168.145.0/24
+    wireguard_address: 192.168.145.1/24
+    wireguard_peer1: 192.168.145.2/32
+    wireguard_private_key_path: "/etc/wireguard/privatekey"
+    wireguard_public_key_path: "/etc/wireguard/publickey"
+    wireguard_config_path: "/etc/wireguard/wg0.conf"
+    user_id: 1000
+    group_id: 1000
+
+  # Import handlers
+  handlers:
+    - name: Import handlers
+      ansible.builtin.import_tasks: handlers/main.yml
+
+  # Split tasks into logical modules
+  tasks:
+    # System setup - package updates and common utilities
+    - name: System setup - package updates and common utilities
+      ansible.builtin.import_tasks: tasks/system.yml
+
+    # WireGuard VPN setup
+    - name: WireGuard VPN setup
+      ansible.builtin.import_tasks: tasks/wireguard.yml
+
+    # Docker setup
+    - name: Docker setup
+      ansible.builtin.import_tasks: tasks/docker.yml
+
+    # Traefik configuration
+    - name: Traefik configuration
+      ansible.builtin.import_tasks: tasks/traefik-setup.yml
+
+    # Application deployment
+    - name: Application deployment
+      ansible.builtin.import_tasks: tasks/app.yml

@@ -1,0 +1,37 @@
+http:
+####################
+### HTTP Routers ###
+####################
+  routers: 
+    authentik:
+      entryPoints:
+        - "https"
+      rule: "Host(`auth.{{env "PUBLIC_HOSTNAME"}}`)"
+      middlewares:
+        - public
+        - https-redirectscheme
+      tls: {}
+      service: authentik
+    gatus:
+      entryPoints:
+        - "https"
+      rule: "Host(`uptime.{{env "PUBLIC_HOSTNAME"}}`)"
+      middlewares:
+        - private
+        - https-redirectscheme
+      tls: {}
+      service: gatus
+#####################
+### HTTP Services ###
+#####################
+  services:
+    authentik:
+      loadBalancer:
+        servers:
+          - url: "http://10.1.15.13:9000"
+        passHostHeader: true
+    gatus:
+      loadBalancer:
+        servers:
+          - url: "http://10.1.20.32:8080"
+        passHostHeader: true

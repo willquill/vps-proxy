@@ -1,0 +1,68 @@
+---
+# Traefik setup tasks
+
+- name: Install Apache utils (for htpasswd)
+  ansible.builtin.apt:
+    name: apache2-utils
+    state: present
+
+- name: Ensure Traefik config directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0755"
+  with_items:
+    - "{{ repo_dest }}/config/traefik"
+    - "{{ repo_dest }}/config/traefik/config"
+    - "{{ repo_dest }}/var/log/traefik"
+
+- name: Generate Traefik htpasswd file
+  community.general.htpasswd:
+    path: "{{ repo_dest }}/config/traefik/usersfile.txt"
+    name: "{{ traefik_username }}"
+    password: "{{ traefik_password }}"
+    crypt_scheme: bcrypt
+    state: present
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0600"
+  when:
+    - traefik_username is defined
+    - traefik_password is defined
+
+- name: Generate Traefik main configuration
+  ansible.builtin.template:
+    src: traefik.yml.j2
+    dest: "{{ repo_dest }}/config/traefik/traefik.yml"
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0644"
+
+- name: Generate Traefik middlewares configuration
+  ansible.builtin.template:
+    src: middlewares.yml.j2
+    dest: "{{ repo_dest }}/config/traefik/config/middlewares.yml"
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0644"
+
+- name: Generate Traefik services configuration
+  ansible.builtin.template:
+    src: services.yml.j2
+    dest: "{{ repo_dest }}/config/traefik/config/services.yml"
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0644"
+
+- name: Create empty acme.json file if it doesn't exist
+  ansible.builtin.file:
+    path: "{{ repo_dest }}/config/traefik/acme.json"
+    state: touch
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0600"
+    modification_time: preserve
+    access_time: preserve
+  changed_when: false

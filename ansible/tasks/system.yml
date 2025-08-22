@@ -1,0 +1,13 @@
+---
+# System setup tasks
+
+- name: Update apt cache and upgrade system
+  ansible.builtin.apt:
+    update_cache: yes
+    upgrade: dist
+
+- name: Install desired packages
+  ansible.builtin.apt:
+    name:
+      - git
+    state: present
