@@ -58,20 +58,12 @@ jobs:
           ansible-galaxy collection install -r ansible/galaxy-requirements.yml
           ansible-galaxy collection install -r ansible/roles/deploy/molecule/requirements.yml
 
-      # Install Docker for molecule tests
-      - name: Install Docker
-        run: |
-          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-          sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-          sudo apt-get update
-          sudo apt-get install -y docker-ce
-
       # Create necessary directories first
       - name: Create ansible tmp directory
         run: |
           mkdir -p /tmp/ansible-tmp
           chmod 1777 /tmp/ansible-tmp
-      
+
       - name: Molecule
         uses: gofrolist/molecule-action@v2
         with:
