@@ -27,7 +27,6 @@ jobs:
       fail-fast: false
       matrix:
         scenario:
-          - debian-12
           - debian-13
     steps:
       - name: Checkout
@@ -61,7 +60,7 @@ jobs:
       - name: Molecule
         uses: gofrolist/molecule-action@v2
         with:
-          #molecule_options: --debug --base-config molecule/_shared/base.yml
+          molecule_options: --debug #--base-config molecule/_shared/base.yml
           molecule_command: test
           molecule_args: --scenario-name ${{ matrix.scenario }}
           molecule_working_dir: ansible/roles/deploy
