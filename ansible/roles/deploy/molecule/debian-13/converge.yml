@@ -31,11 +31,14 @@
     timezone: "UTC"
   pre_tasks:
     # Create directories that might be needed
-    - name: Ensure /tmp/wireguard directory exists
+    - name: Ensure required directories exist
       ansible.builtin.file:
-        path: /tmp/wireguard
+        path: "{{ item }}"
         state: directory
-        mode: '0755'
+        mode: '0777'
+      with_items:
+        - /tmp/wireguard
+        - /tmp/ansible-tmp
   tasks:
     - name: "Include deploy role"
       ansible.builtin.include_role:

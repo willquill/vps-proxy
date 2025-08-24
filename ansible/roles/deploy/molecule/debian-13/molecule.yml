@@ -13,11 +13,13 @@ platforms:
     pre_build_image: true
 provisioner:
   name: ansible
-  config_options:
-    defaults:
-      remote_tmp: /tmp/.ansible-${USER}/tmp
-      interpreter_python: auto_silent
+  ansible_args:
+    - "--timeout=60"
+    - "-vvv"
+  config_file: ${MOLECULE_SCENARIO_DIRECTORY}/ansible.cfg
   env:
     ANSIBLE_FORCE_COLOR: "true"
+    ANSIBLE_REMOTE_TMP: /tmp/ansible-tmp
+    ANSIBLE_LOCAL_TEMP: /tmp/ansible-tmp
 verifier:
   name: ansible
