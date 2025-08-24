@@ -12,10 +12,7 @@
     wireguard_config_path: "/etc/wireguard/wg0.conf"
     user_id: 1000
     group_id: 1000
-  # Import handlers
-  handlers:
-    - name: Import handlers
-      ansible.builtin.import_tasks: handlers/main.yml
+
   tasks:
     - name: Include deploy role
       ansible.builtin.include_role:
