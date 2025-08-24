@@ -185,3 +185,7 @@ The deployment workflow (`.github/workflows/deploy.yml`) runs on pushes to the m
 3. Deploys the services using Docker Compose
 
 To use these workflows, ensure you've configured the required GitHub Secrets as detailed in the "Use of Secrets" section.
+
+## Development
+
+1. Use [nektos/act](https://github.com/nektos/act) to test GitHub Actions locally - big time saver!

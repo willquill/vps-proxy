@@ -7,6 +7,11 @@ platforms:
   - name: instance
     image: "geerlingguy/docker-debian13-ansible:latest"
     command: ""
+    # both cgroupns_mode and making /sys/fs/cgroup rw is required when using Ubunt in GitHub Actions
+    # This lets the container access the host's cgroup namespace
+    # (container shares the host cgroups)
+    # https://github.com/ansible/molecule/issues/3094#issuecomment-2198763110
+    cgroupns_mode: host
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
     privileged: true
