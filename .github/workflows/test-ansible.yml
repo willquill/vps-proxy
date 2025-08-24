@@ -64,12 +64,12 @@ jobs:
           #molecule_options: --debug --base-config molecule/_shared/base.yml
           molecule_command: test
           molecule_args: --scenario-name ${{ matrix.scenario }}
-          molecule_working_dir: willquill/vps-proxy/ansible
+          molecule_working_dir: willquill/vps-proxy/ansible/roles/deploy
         env:
           ANSIBLE_FORCE_COLOR: "1"
 
       - name: Create test inventory and vars
-        working-directory: .
+        working-directory: willquill/vps-proxy/ansible
         run: |
           mkdir -p test
           # Create a test inventory
@@ -105,8 +105,9 @@ jobs:
           cf_zone_api_token: "testtoken"
           timezone: "UTC"
           EOF
+
       - name: Run Ansible in check mode
-        working-directory: .
+        working-directory: willquill/vps-proxy/ansible
         run: |
           # Run with --check to simulate changes without making them
           ansible-playbook -i test/inventory -e "@test/vars.yml" --skip-tags "never" --check ansible/main.yml || echo "Dry run completed with warnings"

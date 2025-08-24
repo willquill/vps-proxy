@@ -1,0 +1,23 @@
+####################################
+### Split tasks into logical modules
+####################################
+---
+# System setup - package updates and common utilities
+- name: System setup - package updates and common utilities
+  ansible.builtin.import_tasks: tasks/system.yml
+
+# WireGuard VPN setup
+- name: WireGuard VPN setup
+  ansible.builtin.import_tasks: tasks/wireguard.yml
+
+# Docker setup
+- name: Docker setup
+  ansible.builtin.import_tasks: tasks/docker.yml
+
+# Traefik configuration
+- name: Traefik configuration
+  ansible.builtin.import_tasks: tasks/traefik-setup.yml
+
+# Application deployment
+- name: Application deployment
+  ansible.builtin.import_tasks: tasks/app.yml

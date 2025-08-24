@@ -1,7 +1,6 @@
----
-- name: VPS Proxy Setup
+- name: Deploy VPS Proxy
   hosts: all
-  become: true
+  tags: deploy
   vars:
     wireguard_port: 51820
     wireguard_interface: wg0
@@ -13,30 +12,11 @@
     wireguard_config_path: "/etc/wireguard/wg0.conf"
     user_id: 1000
     group_id: 1000
-
   # Import handlers
   handlers:
     - name: Import handlers
       ansible.builtin.import_tasks: handlers/main.yml
-
-  # Split tasks into logical modules
   tasks:
-    # System setup - package updates and common utilities
-    - name: System setup - package updates and common utilities
-      ansible.builtin.import_tasks: tasks/system.yml
-
-    # WireGuard VPN setup
-    - name: WireGuard VPN setup
-      ansible.builtin.import_tasks: tasks/wireguard.yml
-
-    # Docker setup
-    - name: Docker setup
-      ansible.builtin.import_tasks: tasks/docker.yml
-
-    # Traefik configuration
-    - name: Traefik configuration
-      ansible.builtin.import_tasks: tasks/traefik-setup.yml
-
-    # Application deployment
-    - name: Application deployment
-      ansible.builtin.import_tasks: tasks/app.yml
+    - name: Include deploy role
+      ansible.builtin.include_role:
+        name: deploy
