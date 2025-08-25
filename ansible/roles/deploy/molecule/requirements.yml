@@ -1,0 +1,7 @@
+---
+# Molecule test requirements
+collections:
+  - community.docker
+  - ansible.posix
+  - community.general
+  - ansible.netcommon
