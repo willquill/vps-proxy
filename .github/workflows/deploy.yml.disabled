@@ -17,7 +17,8 @@ env:
   ANSIBLE_FORCE_COLOR: 1
 
 jobs:
-  deploy:
+  deploy:ansible:
+    needs: [opentofu:deploy]
     runs-on: ubuntu-latest
     env:
       ANSIBLE_VERSION: ${{ github.event.inputs.version || '9.3.0' }}
@@ -25,7 +26,7 @@ jobs:
     steps:
       # ---------- Checkout code ----------
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # ---------- Setup tooling ----------
       - name: "Install Python"

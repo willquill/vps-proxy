@@ -67,9 +67,17 @@ printf "%s" "$(openssl rand -base64 36 | tr -d '\n')" > ${PWD}/secrets/authentik
 
 ## Installation
 
+For my example, I use Hetzner Cloud. You will need to first create a project manually in the [Hetzner console](console.hetzner.com). Then go to Security, upload the SSH key you created, and create an API key for Terraform.
+
+## Terraform
+
 First, spin up the cloud server. I used [this cloud-init](https://community.hetzner.com/tutorials/basic-cloud-config) with a few modifications of my own. See my `cloud-init.yaml` file.
 
-Then you can clone or fork this repo and make modifications for yourself and simply commit to GitHub and it will run the tasks you see in the playbook to configure the host.
+You can use Terraform or just do it manually.
+
+If using Terraform, ensure that GitLab has the following secrets:
+
+- `HCLOUD_TOKEN` - This is the Hetzner Cloud API Token
 
 Move on to [Wireguard Setup with OPNsense](#wireguard-setup-with-opnsense)
 
