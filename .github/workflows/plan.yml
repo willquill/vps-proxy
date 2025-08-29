@@ -1,0 +1,68 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  e2e:
+    if: >
+      github.event_name == 'push' ||
+      github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.tool }}-${{ matrix.version }}
+      cancel-in-progress: true
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - tool: opentofu
+            version: v1.10.x
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - if: matrix.tool == 'opentofu'
+        uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: ${{ matrix.version }}
+          tofu_wrapper: false
+
+      - name: Hetzner Cloud TPS
+        uses: hetznercloud/tps-action@main
+        with:
+          token: ${{ secrets.HCLOUD_TOKEN  }}
+
+      - uses: hetznercloud/setup-hcloud@v1
+      - # The action set the environment variable HCLOUD_TOKEN, so all
+        # subsequent steps in the same job can use it.
+        run: hcloud server-type list
+
+      - name: OpenTofu fmt
+        id: fmt
+        run: tofu fmt -check
+        continue-on-error: true
+
+      - name: OpenTofu Init
+        id: init
+        run: tofu init
+
+      - name: OpenTofu Validate
+        id: validate
+        run: tofu validate -no-color
+
+      - name: OpenTofu Plan
+        id: plan
+        run: tofu plan -no-color
+        continue-on-error: true
+
+      - run: echo ${{ steps.plan.outputs.stdout }}
+      - run: echo ${{ steps.plan.outputs.stderr }}
+      - run: echo ${{ steps.plan.outputs.exitcode }}
