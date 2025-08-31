@@ -77,7 +77,7 @@ jobs:
 
       - name: OpenTofu Plan
         id: plan
-        run: tofu plan -no-color
+        run: tofu plan -no-color -var="HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}"
         continue-on-error: true
 
       - run: echo ${{ steps.plan.outputs.stdout }}
