@@ -11,12 +11,12 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
-    inputs:
-      tps-url:
-        description: "TPS endpoint URL"
-        #required: true
-        default: "https://api.hetzner.cloud/v1"
-        type: string
+    # inputs:
+    #   tps-url:
+    #     description: "TPS endpoint URL"
+    #     #required: true
+    #     default: "https://api.hetzner.cloud/v1"
+    #     type: string
 
 jobs:
   plan-opentofu:
@@ -49,7 +49,7 @@ jobs:
         uses: hetznercloud/tps-action@main
         with:
           token: ${{ secrets.HCLOUD_TOKEN  }}
-          tps-url: ${{ github.event.inputs.tps-url }}
+          # tps-url: ${{ github.event.inputs.tps-url }}
         env:
           ACTIONS_ID_TOKEN_REQUEST_URL: ${{ env.ACTIONS_ID_TOKEN_REQUEST_URL || 'https://api.github.com/actions/oidc/token' }}
 
