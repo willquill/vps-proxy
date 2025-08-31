@@ -6,7 +6,7 @@ on:
     paths:
       - "ansible/**"
       - "docker-compose.yml"
-      - ".github/workflows/test-ansible.yml"
+      - ".github/workflows/test.yml"
   # Allows manual triggering
   workflow_dispatch:
     inputs:
@@ -17,8 +17,8 @@ on:
         type: string
 
 jobs:
-  molecule:
-    name: Ansible Playbook Dry Run
+  ansible:
+    name: Ansible Tests with Molecule
     runs-on: ubuntu-latest
     env:
       ANSIBLE_VERSION: ${{ github.event.inputs.version || '9.3.0' }}

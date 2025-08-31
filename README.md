@@ -69,17 +69,7 @@ printf "%s" "$(openssl rand -base64 36 | tr -d '\n')" > ${PWD}/secrets/authentik
 
 For my example, I use Hetzner Cloud. You will need to first create a project manually in the [Hetzner console](console.hetzner.com). Then go to Security, upload the SSH key you created, and create an API key for Terraform.
 
-## Terraform
-
-First, spin up the cloud server. I used [this cloud-init](https://community.hetzner.com/tutorials/basic-cloud-config) with a few modifications of my own. See my `cloud-init.yaml` file.
-
-You can use Terraform or just do it manually.
-
-If using Terraform, ensure that GitLab has the following secrets:
-
-- `HCLOUD_TOKEN` - This is the Hetzner Cloud API Token
-
-Move on to [Wireguard Setup with OPNsense](#wireguard-setup-with-opnsense)
+If you use GitHub Actions to deploy, use the ones from this repo. Otherwise, deploy manually in the order seen in the deploy action.
 
 ## WireGuard Setup with OPNsense
 
@@ -151,48 +141,6 @@ To test if the WireGuard tunnel is working:
 2. From OPNsense: `ping 192.168.145.1`
 
 You can also check the connection status in OPNsense under **VPN > WireGuard > Status**
-
-## Automation Overview:
-
-- You'll use this `cloud-init.yaml` file to initially provision your VPS.
-- GitHub actions will use Ansible to prepare your VPS configuration, install Docker, clone this repo, and apply the docker compose file.
-
-## CI/CD Pipeline
-
-This repository uses GitHub Actions for CI/CD workflows to ensure code quality and automate deployment:
-
-### Continuous Integration (CI)
-
-The CI workflow (`.github/workflows/ci.yml`) runs on pull requests to the main branch and includes:
-
-- **Syntax and Linting Checks**:
-
-  - Ansible Lint: Validates Ansible playbooks and roles
-  - YAML Lint: Ensures YAML files follow best practices
-  - Docker Compose Validation: Verifies docker-compose.yml is valid
-
-- **Security Scanning**:
-
-  - Secret Detection: Uses Gitleaks to detect accidentally committed secrets
-  - Vulnerability Scanning: Uses Trivy to scan for security vulnerabilities
-
-- **Functional Testing**:
-
-  - Ansible Dry Run: Tests playbooks in check mode without making changes
-  - Container Build Test: Ensures Docker containers build correctly
-
-- **Documentation Checks**:
-  - Markdown Linting: Validates formatting of documentation
-
-### Continuous Deployment (CD)
-
-The deployment workflow (`.github/workflows/deploy.yml`) runs on pushes to the main branch and:
-
-1. Sets up SSH connection to your VPS
-2. Runs the Ansible playbook to configure your VPS
-3. Deploys the services using Docker Compose
-
-To use these workflows, ensure you've configured the required GitHub Secrets as detailed in the "Use of Secrets" section.
 
 ## Development
 
