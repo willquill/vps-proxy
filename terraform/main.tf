@@ -1,9 +1,9 @@
-variable "hcloud_token" {
-  description = "Hetzner Cloud API Token"
-  type        = string
-  sensitive   = true
-  default     = ""
-}
+# variable "hcloud_token" {
+#   description = "Hetzner Cloud API Token"
+#   type        = string
+#   sensitive   = true
+#   default     = ""
+# }
 
 variable "firewall_rules_tcp_inbound" {
   description = "Inbound firewall rules for TCP"

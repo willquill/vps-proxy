@@ -12,5 +12,5 @@ terraform {
 # Configure the Hetzner Cloud provider
 provider "hcloud" {
   # Don't need this when setting HCLOUD_TOKEN envvar
-  token = var.hcloud_token
+  # token = var.hcloud_token
 }

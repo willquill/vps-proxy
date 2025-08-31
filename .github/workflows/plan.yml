@@ -20,6 +20,9 @@ on:
 jobs:
   plan-opentofu:
     runs-on: ubuntu-latest
+    permissions:
+      # This is required so the pipeline can generate an oauth token.
+      id-token: write
 
     defaults:
       run:
@@ -53,10 +56,12 @@ jobs:
       #   env:
       #     ACTIONS_ID_TOKEN_REQUEST_URL: ${{ env.ACTIONS_ID_TOKEN_REQUEST_URL || 'https://api.github.com/actions/oidc/token' }}
 
-      # - uses: hetznercloud/setup-hcloud@v1
-      # - # The action set the environment variable HCLOUD_TOKEN, so all
-      #   # subsequent steps in the same job can use it.
-      #   run: hcloud server-type list
+      - uses: hetznercloud/setup-hcloud@v1
+      - # The action set the environment variable HCLOUD_TOKEN, so all
+        # subsequent steps in the same job can use it.
+        run: hcloud server-type list
+        env:
+          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
 
       # - name: Set up working directory
       #   run: |
