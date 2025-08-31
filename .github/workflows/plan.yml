@@ -24,8 +24,8 @@ jobs:
     #   # This is required so the pipeline can generate an oauth token.
     #   id-token: write
     environment: hetzner-cloud
-    # env:
-    #   HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+    env:
+      HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
 
     defaults:
       run:
