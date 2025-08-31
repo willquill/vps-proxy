@@ -82,6 +82,15 @@ jobs:
         id: validate
         run: tofu validate
 
+      - name: Check HCLOUD_TOKEN is set
+        run: |
+          if [ -z "${HCLOUD_TOKEN}" ]; then
+            echo "HCLOUD_TOKEN is not set!"
+            exit 1
+          else
+            echo "HCLOUD_TOKEN is set."
+          fi
+
       - name: OpenTofu Plan
         id: plan
         run: tofu plan
