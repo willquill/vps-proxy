@@ -21,6 +21,8 @@ jobs:
     needs: [opentofu:deploy]
     runs-on: ubuntu-latest
     environment: hetzner-cloud
+    # Note: We do not need to set each env because instead of envvars,
+    #       we set -e options where necessary
     env:
       ANSIBLE_VERSION: ${{ github.event.inputs.version || '9.3.0' }}
 

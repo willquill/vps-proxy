@@ -40,7 +40,7 @@ jobs:
       matrix:
         include:
           - tool: opentofu
-            version: v1.10.x
+            version: v1.10.5
 
     steps:
       - uses: actions/checkout@v5
@@ -49,11 +49,8 @@ jobs:
         uses: opentofu/setup-opentofu@v1
         with:
           tofu_version: ${{ matrix.version }}
-          tofu_wrapper: false
-
-      # - name: Set up working directory
-      #   run: |
-      #     echo "tf_actions_working_dir=${{ github.workspace }}" >> $GITHUB_ENV
+          # Must be true to make STDOUT, STDERR, and exit code available
+          tofu_wrapper: true
 
       - name: OpenTofu fmt
         id: fmt
@@ -80,11 +77,13 @@ jobs:
       - name: OpenTofu Plan
         id: plan
         run: tofu plan
-        continue-on-error: true
 
-      - run: echo ${{ steps.plan.outputs.stdout }}
-      - run: echo ${{ steps.plan.outputs.stderr }}
-      - run: echo ${{ steps.plan.outputs.exitcode }}
+      - name: Show OpenTofu Plan Output
+        run: echo ${{ steps.plan.outputs.stdout }}
+      - name: Show OpenTofu Plan Error Output
+        run: echo ${{ steps.plan.outputs.stderr }}
+      - name: Show OpenTofu Plan Exit Code
+        run: echo ${{ steps.plan.outputs.exitcode }}
 
       # Post comment on PR
       - uses: actions/github-script@v6
@@ -94,6 +93,17 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            // 1. Retrieve existing bot comments for the PR
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            })
+            const botComment = comments.find(comment => {
+              return comment.user.type === 'Bot' && comment.body.includes('OpenTofu Format and Style')
+            })
+
+            // 2. Prepare format of the comment
             const output = `#### OpenTofu Format and Style 🖌\`${{ steps.fmt.outcome }}\`
             #### OpenTofu Initialization ⚙️\`${{ steps.init.outcome }}\`
             #### OpenTofu Validation 🤖\`${{ steps.validate.outcome }}\`
@@ -117,9 +127,19 @@ jobs:
 
             *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.tf_actions_working_dir }}\`, Workflow: \`${{ github.workflow }}\`*`;
 
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: output
-            })
+            // 3. If we have a comment, update it, otherwise create a new one
+            if (botComment) {
+              github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: output
+              })
+            } else {
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: output
+              })
+            }

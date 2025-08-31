@@ -9,11 +9,11 @@ variable "firewall_rules_tcp_inbound" {
   description = "Inbound firewall rules for TCP"
   type        = list(string)
   default = [
-    "2222", # SSH host
+    "2222",  # SSH host
     "51820", # WireGuard
-    "443", # HTTPS traefik
-    "22",  # SSH traefik to git server
-    "636", # LDAPS traefik to IDP
+    "443",   # HTTPS traefik
+    "22",    # SSH traefik to git server
+    "636",   # LDAPS traefik to IDP
   ]
 }
 
@@ -43,10 +43,10 @@ resource "hcloud_firewall" "vps_proxy" {
 }
 
 resource "hcloud_server" "server" {
-  name        = "vps-proxy"
-  server_type = "cpx11"
-  image       = "debian-13"
-  datacenter = "ash-dc1"
+  name         = "vps-proxy"
+  server_type  = "cpx11"
+  image        = "debian-13"
+  datacenter   = "ash-dc1"
   firewall_ids = [hcloud_firewall.vps_proxy.id]
 
   user_data = file("${path.module}/cloud-init.yaml")
