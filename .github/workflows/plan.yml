@@ -56,12 +56,12 @@ jobs:
       #   env:
       #     ACTIONS_ID_TOKEN_REQUEST_URL: ${{ env.ACTIONS_ID_TOKEN_REQUEST_URL || 'https://api.github.com/actions/oidc/token' }}
 
-      - uses: hetznercloud/setup-hcloud@v1
-      - # The action set the environment variable HCLOUD_TOKEN, so all
-        # subsequent steps in the same job can use it.
-        run: hcloud server-type list
-        env:
-          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+      # - uses: hetznercloud/setup-hcloud@v1
+      # - # The action set the environment variable HCLOUD_TOKEN, so all
+      #   # subsequent steps in the same job can use it.
+      #   run: hcloud server-type list
+      #   env:
+      #     HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
 
       # - name: Set up working directory
       #   run: |
@@ -82,8 +82,10 @@ jobs:
 
       - name: OpenTofu Plan
         id: plan
-        run: tofu plan -no-color -var="hcloud_token=${{ secrets.HCLOUD_TOKEN }}"
+        run: tofu plan -no-color
         continue-on-error: true
+        env:
+          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
 
       - run: echo ${{ steps.plan.outputs.stdout }}
       - run: echo ${{ steps.plan.outputs.stderr }}
