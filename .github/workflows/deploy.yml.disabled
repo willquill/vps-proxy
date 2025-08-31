@@ -20,6 +20,7 @@ jobs:
   deploy:ansible:
     needs: [opentofu:deploy]
     runs-on: ubuntu-latest
+    environment: hetzner-cloud
     env:
       ANSIBLE_VERSION: ${{ github.event.inputs.version || '9.3.0' }}
 
