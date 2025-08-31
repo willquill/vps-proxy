@@ -20,9 +20,11 @@ on:
 jobs:
   plan-opentofu:
     runs-on: ubuntu-latest
-    permissions:
-      # This is required so the pipeline can generate an oauth token.
-      id-token: write
+    # permissions:
+    #   # This is required so the pipeline can generate an oauth token.
+    #   id-token: write
+    env:
+      HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
 
     defaults:
       run:
@@ -78,14 +80,12 @@ jobs:
 
       - name: OpenTofu Validate
         id: validate
-        run: tofu validate -no-color
+        run: tofu validate
 
       - name: OpenTofu Plan
         id: plan
-        run: tofu plan -no-color
+        run: tofu plan
         continue-on-error: true
-        env:
-          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
 
       - run: echo ${{ steps.plan.outputs.stdout }}
       - run: echo ${{ steps.plan.outputs.stderr }}
