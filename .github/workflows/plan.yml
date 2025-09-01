@@ -75,6 +75,8 @@ jobs:
         run: tofu plan
 
       # Post comment on PR
+      # Requires: Settings > Actions > Workflow Permissions >
+      # Allow GitHub Actions to create and approve pull requests
       - uses: actions/github-script@v6
         if: github.event_name == 'pull_request'
         env:
