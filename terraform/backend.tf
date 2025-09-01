@@ -1,4 +1,3 @@
-# Tell terraform to use the provider and select a version.
 terraform {
   required_providers {
     hcloud = {
