@@ -3,7 +3,7 @@ name: Deploy
 on:
   push:
     branches: [main]
-  # Only run when the plan workflow is successful
+  # Only run when the plan workflow completed
   workflow_run:
     workflows: ["Plan"]
     types:
@@ -20,6 +20,8 @@ on:
 jobs:
   tofu-apply:
     name: OpenTofu Apply
+    # Only run if Plan was successful
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     environment: hetzner-cloud
     env:
