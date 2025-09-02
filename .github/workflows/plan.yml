@@ -18,9 +18,7 @@ jobs:
     name: OpenTofu Plan
     runs-on: ubuntu-latest
     # Only run if Lint was successful
-    if: |
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
-      (github.event_name != 'workflow_run')
+    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
     environment: hetzner-cloud
     env:
       # AWS keys for S3 state backend
