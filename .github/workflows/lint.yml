@@ -18,6 +18,13 @@ jobs:
     name: OpenTofu Lint
     runs-on: ubuntu-latest
     environment: hetzner-cloud
+    env: # Required for tofu init
+      # AWS keys for S3 state backend
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      # To populate Terraform variables
+      TF_VAR_repo_owner: ${{ github.repository_owner }}
+      TF_VAR_ssh_authorized_key: ${{ secrets.VPS_PROXY_KEY }}
 
     defaults:
       run:
