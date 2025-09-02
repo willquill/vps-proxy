@@ -15,10 +15,10 @@ jobs:
         include:
           - tool: opentofu
             version: v1.10.5
-            working_dir: terraform
+            working_dir: opentofu
           - tool: opentofu
             version: v1.10.5
-            working_dir: terraform/tfstate
+            working_dir: tfstate
     environment: hetzner-cloud
     env: # Required for tofu init
       # AWS keys for S3 state backend
