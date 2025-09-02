@@ -1,0 +1,127 @@
+name: Plan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  # Allows manual triggering
+  workflow_dispatch:
+
+jobs:
+  tofu-plan:
+    name: OpenTofu Plan
+    runs-on: ubuntu-latest
+    environment: hetzner-cloud
+    env:
+      # AWS keys for S3 state backend
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      # To populate Terraform variables
+      TF_VAR_repo_owner: ${{ github.repository_owner }}
+      TF_VAR_ssh_authorized_key: ${{ secrets.VPS_PROXY_KEY }}
+      # Hetzner Cloud token required to create resources
+      HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+
+    defaults:
+      run:
+        working-directory: ${{ env.tf_actions_working_dir || 'terraform' }}
+
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.tool }}-${{ matrix.version }}
+      cancel-in-progress: true
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - tool: opentofu
+            version: v1.10.5
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - if: matrix.tool == 'opentofu'
+        uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: ${{ matrix.version }}
+          # Must be true to make STDOUT, STDERR, and exit code available
+          tofu_wrapper: true
+
+      - name: OpenTofu Init
+        id: init
+        run: tofu init
+
+      - name: Check HCLOUD_TOKEN is set
+        run: |
+          if [ -z "${HCLOUD_TOKEN}" ]; then
+            echo "HCLOUD_TOKEN is not set!"
+            exit 1
+          else
+            echo "HCLOUD_TOKEN is set."
+          fi
+
+      - name: OpenTofu Plan
+        id: plan
+        run: tofu plan
+
+      # Post comment on PR
+      # Requires: Settings > Actions > Workflow Permissions >
+      # Read and write permissions
+      - uses: actions/github-script@v6
+        if: github.event_name == 'pull_request'
+        env:
+          PLAN: "tofu\n${{ steps.plan.outputs.stdout }}"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            // 1. Retrieve existing bot comments for the PR
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            })
+            const botComment = comments.find(comment => {
+              return comment.user.type === 'Bot' && comment.body.includes('OpenTofu Format and Style')
+            })
+
+            // 2. Prepare format of the comment
+            const output = `#### OpenTofu Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+            #### OpenTofu Initialization ⚙️\`${{ steps.init.outcome }}\`
+            #### OpenTofu Validation 🤖\`${{ steps.validate.outcome }}\`
+            <details><summary>Validation Output</summary>
+
+            \`\`\`\n
+            ${{ steps.validate.outputs.stdout }}
+            \`\`\`
+
+            </details>
+
+            #### OpenTofu Plan 📖\`${{ steps.plan.outcome }}\`
+
+            <details><summary>Show Plan</summary>
+
+            \`\`\`\n
+            ${process.env.PLAN}
+            \`\`\`
+
+            </details>
+
+            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.tf_actions_working_dir }}\`, Workflow: \`${{ github.workflow }}\`*`;
+
+            // 3. If we have a comment, update it, otherwise create a new one
+            if (botComment) {
+              github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: output
+              })
+            } else {
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: output
+              })
+            }

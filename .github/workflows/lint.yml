@@ -1,4 +1,4 @@
-name: Linting
+name: Lint
 
 on:
   pull_request:
@@ -14,12 +14,63 @@ on:
   workflow_dispatch:
 
 jobs:
+  tofu-lint:
+    name: OpenTofu Lint
+    runs-on: ubuntu-latest
+    environment: hetzner-cloud
+    env: # Required for tofu init
+      # AWS keys for S3 state backend
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      # To populate Terraform variables
+      TF_VAR_repo_owner: ${{ github.repository_owner }}
+      TF_VAR_ssh_authorized_key: ${{ secrets.VPS_PROXY_KEY }}
+
+    defaults:
+      run:
+        working-directory: ${{ env.tf_actions_working_dir || 'terraform' }}
+
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.tool }}-${{ matrix.version }}
+      cancel-in-progress: true
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - tool: opentofu
+            version: v1.10.5
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - if: matrix.tool == 'opentofu'
+        uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: ${{ matrix.version }}
+          # Must be true to make STDOUT, STDERR, and exit code available
+          tofu_wrapper: true
+
+      - name: OpenTofu fmt
+        id: fmt
+        run: tofu fmt -check
+        continue-on-error: true
+
+      # Required for validation
+      - name: OpenTofu Init
+        id: init
+        run: tofu init
+
+      - name: OpenTofu Validate
+        id: validate
+        run: tofu validate
+
   # Disabled for now because I lint locally
   #   ansible-lint:
   #     name: Ansible Lint
   #     runs-on: ubuntu-24.04
   #     steps:
-  #       - uses: actions/checkout@v4
+  #       - uses: actions/checkout@v5
   #       - name: Run ansible-lint
   #         uses: ansible/ansible-lint@main # or vX.X.X version
   #         # optional (see below):
@@ -34,7 +85,7 @@ jobs:
   #     name: Yaml Lint
   #     runs-on: ubuntu-latest
   #     steps:
-  #       - uses: actions/checkout@v4
+  #       - uses: actions/checkout@v5
   #       - name: yaml-lint
   #         uses: ibiqlik/action-yamllint@v3
   #       - run: echo ${{ steps.yaml-lint.outputs.logfile }}
@@ -53,7 +104,7 @@ jobs:
         options: --privileged
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Create dummy .env file
         run: |
           cat > .env << EOF

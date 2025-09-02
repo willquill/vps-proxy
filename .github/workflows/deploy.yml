@@ -1,0 +1,205 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  # Only run when the plan workflow is successful
+  workflow_run:
+    workflows: ["Plan"]
+    types:
+      - completed
+  # Allows manual triggering
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Ansible version to use"
+        required: true
+        default: "9.3.0"
+        type: string
+
+jobs:
+  tofu-apply:
+    name: OpenTofu Apply
+    runs-on: ubuntu-latest
+    environment: hetzner-cloud
+    env:
+      # AWS keys for S3 state backend
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      # To populate Terraform variables
+      TF_VAR_repo_owner: ${{ github.repository_owner }}
+      TF_VAR_ssh_authorized_key: ${{ secrets.VPS_PROXY_KEY }}
+      # Hetzner Cloud token required to create resources
+      HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+
+    defaults:
+      run:
+        working-directory: ${{ env.tf_actions_working_dir || 'terraform' }}
+
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.tool }}-${{ matrix.version }}
+      cancel-in-progress: true
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - tool: opentofu
+            version: v1.10.5
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - if: matrix.tool == 'opentofu'
+        uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: ${{ matrix.version }}
+          # Must be true to make STDOUT, STDERR, and exit code available
+          tofu_wrapper: true
+
+      - name: OpenTofu Init
+        id: init
+        run: tofu init
+
+      - name: Check HCLOUD_TOKEN is set
+        run: |
+          if [ -z "${HCLOUD_TOKEN}" ]; then
+            echo "HCLOUD_TOKEN is not set!"
+            exit 1
+          else
+            echo "HCLOUD_TOKEN is set."
+          fi
+
+      - name: OpenTofu Apply
+        id: apply
+        run: tofu apply -auto-approve
+
+      - name: Save OpenTofu output
+        run: tofu output -json > tf_output.json
+
+      - name: Upload Terraform output
+        uses: actions/upload-artifact@v4
+        with:
+          name: tf-output
+          path: tf_output.json
+
+  ansible-deploy:
+    name: Execute Ansible Playbook
+    needs: [tofu-apply]
+    runs-on: ubuntu-latest
+    environment: hetzner-cloud
+    # Note: We do not need to set each env because instead of envvars,
+    #       we set -e options where necessary
+    env:
+      ANSIBLE_VERSION: ${{ github.event.inputs.version || '9.3.0' }}
+      ANSIBLE_HOST_KEY_CHECKING: False
+      ANSIBLE_FORCE_COLOR: 1
+
+    steps:
+      # ---------- Checkout code ----------
+      - name: Checkout repo
+        uses: actions/checkout@v5
+
+      # ---------- Setup tooling ----------
+      - name: "Install Python"
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+
+      - name: "Cache python packages"
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-${{ env.ANSIBLE_VERSION }}
+
+      - name: "Install packages"
+        shell: bash
+        run: |
+          python -m pip install ansible==${{ env.ANSIBLE_VERSION }}
+      - name: "Print Ansible version"
+        run: ansible-playbook --version
+
+      # ---------- Install Ansible Galaxy requirements ----------
+      - name: Install Ansible Galaxy requirements
+        run: |
+          ansible-galaxy collection install -r ansible/galaxy-requirements.yml
+
+      # Get values from Terraform output
+      - name: Download Terraform output
+        uses: actions/download-artifact@v4
+        with:
+          name: tf-output
+
+      - name: Parse SERVER_IPV4 from output
+        id: parse_output
+        run: |
+          SERVER_IPV4=$(jq -r '.server_ipv4.value' tf_output.json)
+          echo "SERVER_IPV4=$SERVER_IPV4" >> $GITHUB_ENV
+
+      # ---------- SSH key ----------
+      # Use IPv4 from Terraform output
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_PROXY_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p 2222 -H ${{ env.SERVER_IPV4 }} >> ~/.ssh/known_hosts
+
+      # ---------- Create inventory file ----------
+      - name: Create inventory file
+        run: |
+          cat <<EOF > inventory
+          [vps]
+            ${{ env.SERVER_IPV4 }} ansible_user=${{ github.repository_owner }} ansible_port=2222
+          EOF
+
+      # ---------- Run Ansible Check----------
+      - name: Run ansible playbook with check option
+        id: ansible-check
+        run: |
+          ansible-playbook \
+            -i inventory \
+            -- check \
+            -e "ansible_ssh_private_key_file=~/.ssh/id_ed25519" \
+            -e "repo_url=https://github.com/${{ github.repository }}.git" \
+              -e "repo_dest=/home/${{ github.repository_owner }}/vps-proxy" \
+              -e "vps_host=${{ env.SERVER_IPV4 }}" \
+              -e "user_name=${{ github.repository_owner }}" \
+            -e "traefik_username=${{ secrets.TRAEFIK_BASIC_AUTH_USERNAME }}" \
+            -e "traefik_password=${{ secrets.TRAEFIK_BASIC_AUTH_PASSWORD }}" \
+            -e "acme_email=${{ secrets.ACME_EMAIL }}" \
+            -e "public_hostname=${{ secrets.PUBLIC_HOSTNAME }}" \
+            -e "admin_ip_range=${{ secrets.ADMIN_IP_RANGE }}" \
+            -e "authentik_postgresql_name=${{ secrets.AUTHENTIK_POSTGRESQL__NAME }}" \
+            -e "authentik_postgresql_password=${{ secrets.AUTHENTIK_POSTGRESQL__PASSWORD }}" \
+            -e "authentik_postgresql_user=${{ secrets.AUTHENTIK_POSTGRESQL__USER }}" \
+            -e "authentik_secret_key=${{ secrets.AUTHENTIK_SECRET_KEY }}" \
+            -e "cf_dns_api_token=${{ secrets.CF_DNS_API_TOKEN }}" \
+            -e "cf_zone_api_token=${{ secrets.CF_ZONE_API_TOKEN }}" \
+            -e "timezone=${{ secrets.TZ }}" \
+            ansible/main.yml
+
+      # ---------- Run Ansible ----------
+      - name: Run ansible playbook
+        if: ${{ success() && steps.ansible-check.outcome == 'success' }}
+        run: |
+          ansible-playbook \
+            -i inventory \
+            -e "ansible_ssh_private_key_file=~/.ssh/id_ed25519" \
+            -e "repo_url=https://github.com/${{ github.repository }}.git" \
+              -e "repo_dest=/home/${{ github.repository_owner }}/vps-proxy" \
+              -e "vps_host=${{ env.SERVER_IPV4 }}" \
+              -e "user_name=${{ github.repository_owner }}" \
+            -e "traefik_username=${{ secrets.TRAEFIK_BASIC_AUTH_USERNAME }}" \
+            -e "traefik_password=${{ secrets.TRAEFIK_BASIC_AUTH_PASSWORD }}" \
+            -e "acme_email=${{ secrets.ACME_EMAIL }}" \
+            -e "public_hostname=${{ secrets.PUBLIC_HOSTNAME }}" \
+            -e "admin_ip_range=${{ secrets.ADMIN_IP_RANGE }}" \
+            -e "authentik_postgresql_name=${{ secrets.AUTHENTIK_POSTGRESQL__NAME }}" \
+            -e "authentik_postgresql_password=${{ secrets.AUTHENTIK_POSTGRESQL__PASSWORD }}" \
+            -e "authentik_postgresql_user=${{ secrets.AUTHENTIK_POSTGRESQL__USER }}" \
+            -e "authentik_secret_key=${{ secrets.AUTHENTIK_SECRET_KEY }}" \
+            -e "cf_dns_api_token=${{ secrets.CF_DNS_API_TOKEN }}" \
+            -e "cf_zone_api_token=${{ secrets.CF_ZONE_API_TOKEN }}" \
+            -e "timezone=${{ secrets.TZ }}" \
+            ansible/main.yml

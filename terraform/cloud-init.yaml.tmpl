@@ -1,12 +1,12 @@
 #cloud-config
 users:
   # Note: This user must match your VPS_USER secret
-  - name: will
+  - name: ${name}
     groups: users, admin
     sudo: ALL=(ALL) NOPASSWD:ALL
     shell: /bin/bash
     ssh_authorized_keys:
-      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP/FsUy+W3EaBhgsj2ECDFm7PuwwO/UFpHuGMgx0ScAh vpsproxykey@mail.willq.net
+      - ${ssh_authorized_key}
 packages:
   - fail2ban
   - ufw
@@ -34,7 +34,7 @@ write_files:
       X11Forwarding no
       AllowAgentForwarding no
       AuthorizedKeysFile .ssh/authorized_keys
-      AllowUsers will
+      AllowUsers $(name)
   - path: /etc/systemd/system/ssh.socket.d/listen.conf
     content: |
       [Socket]

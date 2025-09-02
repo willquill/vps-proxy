@@ -65,13 +65,39 @@ printf "%s" "$(openssl rand -base64 36 | tr -d '\n')" > ${PWD}/secrets/authentik
 
 4. Modify the `cloud-init.yaml` file for your needs.
 
+### Prepare Terraform State Backend
+
+Instead of storing the Terraform state locally or committing it to GitHub, I'm going to keep mine in AWS S3 and use DynamoDB for state locking. The [terraform-aws-bootstrap](https://github.com/trussworks/terraform-aws-bootstrap) module makes this super easy.
+
+I do this part manually since it is only done once.
+
+`cd` into `./terraform/tfstate`, run "aws configure", enter your key ID and access key for your AWS user, then do `terraform apply`. Why Terraform and not OpenTofu? Because I don't know of a similar module for OpenTofu, and I was too lazy to build it myself.
+
+In sum:
+
+- Terraform will be used _manually_ to create the S3 bucket to store the OpenTofu state and DynamoDB for state locking
+- OpenTofu will be used _with GitHub Actions_ to create the Hetzner Cloud resources.
+
+If you did a `tofu apply` before creating your backend, you can migrate your local tfstate file to the remote state by simply executing `tofu init` as follows:
+
+```txt
+$ tofu init
+
+Initializing the backend...
+Do you want to copy existing state to the new backend?
+  Pre-existing state was found while migrating the previous "local" backend to the
+  newly configured "s3" backend. No existing state was found in the newly
+  configured "s3" backend. Do you want to copy this state to the new "s3"
+  backend? Enter "yes" to copy and "no" to start with an empty state.
+
+  Enter a value: yes
+```
+
 ## Installation
 
-First, spin up the cloud server. I used [this cloud-init](https://community.hetzner.com/tutorials/basic-cloud-config) with a few modifications of my own. See my `cloud-init.yaml` file.
+For my example, I use Hetzner Cloud. You will need to first create a project manually in the [Hetzner console](console.hetzner.com). Then go to Security, upload the SSH key you created, and create an API key for Terraform.
 
-Then you can clone or fork this repo and make modifications for yourself and simply commit to GitHub and it will run the tasks you see in the playbook to configure the host.
-
-Move on to [Wireguard Setup with OPNsense](#wireguard-setup-with-opnsense)
+If you use GitHub Actions to deploy, use the ones from this repo. Otherwise, deploy manually in the order seen in the deploy action.
 
 ## WireGuard Setup with OPNsense
 
@@ -143,48 +169,6 @@ To test if the WireGuard tunnel is working:
 2. From OPNsense: `ping 192.168.145.1`
 
 You can also check the connection status in OPNsense under **VPN > WireGuard > Status**
-
-## Automation Overview:
-
-- You'll use this `cloud-init.yaml` file to initially provision your VPS.
-- GitHub actions will use Ansible to prepare your VPS configuration, install Docker, clone this repo, and apply the docker compose file.
-
-## CI/CD Pipeline
-
-This repository uses GitHub Actions for CI/CD workflows to ensure code quality and automate deployment:
-
-### Continuous Integration (CI)
-
-The CI workflow (`.github/workflows/ci.yml`) runs on pull requests to the main branch and includes:
-
-- **Syntax and Linting Checks**:
-
-  - Ansible Lint: Validates Ansible playbooks and roles
-  - YAML Lint: Ensures YAML files follow best practices
-  - Docker Compose Validation: Verifies docker-compose.yml is valid
-
-- **Security Scanning**:
-
-  - Secret Detection: Uses Gitleaks to detect accidentally committed secrets
-  - Vulnerability Scanning: Uses Trivy to scan for security vulnerabilities
-
-- **Functional Testing**:
-
-  - Ansible Dry Run: Tests playbooks in check mode without making changes
-  - Container Build Test: Ensures Docker containers build correctly
-
-- **Documentation Checks**:
-  - Markdown Linting: Validates formatting of documentation
-
-### Continuous Deployment (CD)
-
-The deployment workflow (`.github/workflows/deploy.yml`) runs on pushes to the main branch and:
-
-1. Sets up SSH connection to your VPS
-2. Runs the Ansible playbook to configure your VPS
-3. Deploys the services using Docker Compose
-
-To use these workflows, ensure you've configured the required GitHub Secrets as detailed in the "Use of Secrets" section.
 
 ## Development
 
