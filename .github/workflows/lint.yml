@@ -32,10 +32,6 @@ jobs:
       group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.tool }}-${{ matrix.version }}--${{ matrix.working_dir }}
       cancel-in-progress: true
 
-    defaults:
-      run:
-        working-directory: ${{ matrix.working_dir }}
-
     steps:
       - uses: actions/checkout@v5
 
@@ -44,17 +40,18 @@ jobs:
         id: fmt
         run: tofu fmt -check
         continue-on-error: true
+        working-directory: ${{ matrix.working_dir }}
 
       - if: matrix.tool == 'opentofu'
         uses: ./.github/actions/opentofu-setup
-        #with:
-        #  working_directory: ${{ matrix.working_dir }}
+        with:
+          working_directory: ${{ matrix.working_dir }}
 
       - if: matrix.tool == 'opentofu'
         name: OpenTofu Validate
         id: validate
-        run: cd  && tofu validate
-        #working-directory: ${{ matrix.working_dir }}
+        run: tofu validate
+        working-directory: ${{ matrix.working_dir }}
 
   # Disabled for now because I lint locally
   #   ansible-lint:
