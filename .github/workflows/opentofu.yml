@@ -3,7 +3,10 @@ name: OpenTofu
 on:
   # Allows manual triggering
   workflow_dispatch:
+  pull_request:
+    branches: [main]
   push:
+    branches: [main]
 
 env:
   # AWS keys for S3 state backend
@@ -56,7 +59,8 @@ jobs:
         run: tofu fmt -check
         continue-on-error: true
 
-      - uses: ./.github/actions/opentofu
+      - name: tofu init
+        uses: ./.github/actions/opentofu
 
       - name: tofu Validate
         id: validate
@@ -75,9 +79,6 @@ jobs:
           - tool: opentofu
             version: v1.10.5
             working_dir: opentofu
-          - tool: opentofu
-            version: v1.10.5
-            working_dir: tfstate
     environment: hetzner-cloud
     env:
       tf_actions_working_dir: ${{ matrix.working_dir }}
@@ -89,13 +90,15 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: ./.github/actions/opentofu
+      - name: OpenTofu Plan
+        id: plan
+        uses: ./.github/actions/opentofu
         with:
           plan: "true"
 
       - name: Plan Comment
         uses: actions/github-script@v6
-        if: github.event_name == 'pull_request'
+        if: ${{ github.event_name == 'pull_request' }}
         env:
           PLAN: "tofu\n${{ steps.plan.outputs.stdout }}"
         with:
