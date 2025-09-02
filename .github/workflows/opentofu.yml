@@ -19,7 +19,7 @@ env:
   HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
 
 jobs:
-  tofu-security:
+  security:
     uses: ./.github/workflows/checkov.yml
     strategy:
       fail-fast: false
@@ -32,7 +32,7 @@ jobs:
     with:
       directory: ${{ matrix.working_dir }}
 
-  tofu-lint:
+  lint:
     name: Lint
     runs-on: ubuntu-latest
     strategy:
@@ -66,11 +66,11 @@ jobs:
         id: validate
         run: tofu validate
 
-  tofu-plan:
+  plan:
     name: OpenTofu Plan
     needs:
-      - tofu-security
-      - tofu-lint
+      - security
+      - lint
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
