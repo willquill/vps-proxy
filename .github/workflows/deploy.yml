@@ -18,7 +18,8 @@ on:
         type: string
 
 jobs:
-  apply-opentofu:
+  tofu-apply:
+    name: OpenTofu Apply
     runs-on: ubuntu-latest
     environment: hetzner-cloud
     env:
@@ -82,8 +83,9 @@ jobs:
           name: tf-output
           path: tf_output.json
 
-  deploy-ansible:
-    needs: [apply-opentofu]
+  ansible-deploy:
+    name: Execute Ansible Playbook
+    needs: [tofu-apply]
     runs-on: ubuntu-latest
     environment: hetzner-cloud
     # Note: We do not need to set each env because instead of envvars,

@@ -14,7 +14,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  lint-opentofu:
+  tofu-lint:
+    name: OpenTofu Lint
     runs-on: ubuntu-latest
     environment: hetzner-cloud
 
@@ -82,7 +83,7 @@ jobs:
   #           name: yamllint-logfile
   #           path: ${{ steps.yaml-lint.outputs.logfile }}
 
-  validate-docker-compose:
+  docker-compose-validate:
     name: Docker Compose Validation
     runs-on: ubuntu-latest
     services:

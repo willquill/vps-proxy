@@ -35,7 +35,7 @@ services:
     environment:
       - CLOUDFLARE_API_TOKEN=$CF_DNS_API_TOKEN
         # Your Cloudflare API token
-      - DOMAINS=$PUBLIC_HOSTNAME
+      - DOMAINS="ddns.${PUBLIC_HOSTNAME}"
       # Tell Cloudflare to cache webpages and hide your IP (optional)
       - PROXIED=false
       - IP6_PROVIDER=none
