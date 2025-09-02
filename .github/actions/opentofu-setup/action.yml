@@ -1,21 +1,21 @@
 name: OpenTofu Setup
 
 description: Initializes OpenTofu
-inputs:
-  working_directory:
-    description: OpenTofu working directory
-    required: true
+# inputs:
+#   working_directory:
+#     description: OpenTofu working directory
+#     required: true
 
 runs:
   using: "composite"
   steps:
     - name: OpenTofu Setup
       uses: opentofu/setup-opentofu@v1
-      with:
-        working-directory: ${{ inputs.working_directory }}
+      # with:
+      #   working-directory: ${{ inputs.working_directory }}
 
     - name: OpenTofu Init
       id: init
       run: tofu init
       shell: bash
-      working-directory: ${{ inputs.working_directory }}
+      working-directory: ${{ env.tf_actions_working_dir }}

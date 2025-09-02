@@ -41,7 +41,7 @@ jobs:
         id: fmt
         run: tofu fmt -check
         continue-on-error: true
-        working-directory: ${{ matrix.working_dir }}
+        # working-directory: ${{ matrix.working_dir }}
 
       - if: matrix.tool == 'opentofu'
         uses: ./.github/actions/opentofu-setup
@@ -50,7 +50,7 @@ jobs:
         name: OpenTofu Validate
         id: validate
         run: tofu validate
-        working-directory: ${{ matrix.working_dir }}
+        # working-directory: ${{ matrix.working_dir }}
 
   # Disabled for now because I lint locally
   #   ansible-lint:
