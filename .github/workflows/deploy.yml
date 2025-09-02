@@ -9,6 +9,8 @@ on:
         required: true
         default: "9.3.0"
         type: string
+  push:
+    branches: [main]
   # Only run when the plan workflow completed
   workflow_run:
     workflows: ["Plan"]
