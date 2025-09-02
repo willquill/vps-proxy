@@ -3,10 +3,10 @@ name: Plan
 on:
   # Allows manual triggering
   workflow_dispatch:
-  pull_request:
-    branches: [main]
-  push:
-    branches: [main]
+  # pull_request:
+  #   branches: [main]
+  # push:
+  #   branches: [main]
   # Only run if Lint workflow completed
   workflow_run:
     workflows: ["Lint"]
