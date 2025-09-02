@@ -35,7 +35,12 @@ runs:
 
     - name: Plan
       if: ${{ inputs.plan == 'true' }}
-      run: tofu plan
+      id: plan
+      run: |
+        tofu plan | tee plan.out
+        echo "stdout<<EOF" >> $GITHUB_OUTPUT
+        cat plan.out >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
       shell: bash
       working-directory: ${{ env.tf_actions_working_dir }}
 
@@ -44,3 +49,14 @@ runs:
       run: tofu apply -auto-approve
       shell: bash
       working-directory: ${{ env.tf_actions_working_dir }}
+
+outputs:
+  init_outcome:
+    description: "outcome from tofu init"
+    value: ${{ steps.init.outcome }}
+  plan_outcome:
+    description: "outcome from tofu plan"
+    value: ${{ steps.plan.outcome }}
+  plan_stdout:
+    description: "stdout from tofu plan"
+    value: ${{ steps.plan.outputs.plan_stdout }}

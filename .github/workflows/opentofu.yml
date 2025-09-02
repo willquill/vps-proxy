@@ -60,11 +60,17 @@ jobs:
         continue-on-error: true
 
       - name: tofu init
+        id: init
         uses: ./.github/actions/opentofu
 
       - name: tofu Validate
         id: validate
         run: tofu validate
+
+    outputs:
+      fmt_outcome: ${{ steps.fmt.outcome }}
+      validate_outcome: ${{ steps.validate.outcome }}
+      validate_stdout: ${{ steps.validate.outputs.stdout }}
 
   plan:
     name: Plan
@@ -100,7 +106,7 @@ jobs:
         uses: actions/github-script@v6
         if: ${{ github.event_name == 'pull_request' }}
         env:
-          PLAN: "tofu\n${{ steps.plan.outputs.stdout }}"
+          PLAN: "tofu\n${{ steps.plan.outputs.plan_stdout }}"
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -115,13 +121,13 @@ jobs:
             })
 
             // 2. Prepare format of the comment
-            const output = `#### OpenTofu Format and Style 🖌\`${{ steps.fmt.outcome }}\`
-            #### OpenTofu Initialization ⚙️\`${{ steps.init.outcome }}\`
-            #### OpenTofu Validation 🤖\`${{ steps.validate.outcome }}\`
+            const output = `#### OpenTofu Format and Style 🖌\`${{ needs.lint.outputs.fmt_outcome }}\`
+            #### OpenTofu Initialization ⚙️\`${{ steps.plan.outputs.plan_outcome }}\`
+            #### OpenTofu Validation 🤖\`${{ needs.lint.outputs.validate_outcome }}\`
             <details><summary>Validation Output</summary>
 
             \`\`\`\n
-            ${{ steps.validate.outputs.stdout }}
+            ${{ needs.lint.outputs.validate_stdout }}
             \`\`\`
 
             </details>
