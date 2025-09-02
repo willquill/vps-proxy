@@ -3,7 +3,7 @@ name: Plan
 on:
   # 1. Run on Lint completion
   workflow_run:
-    workflows: ["Lint"]
+    workflows: [Lint]
     types: [completed]
 
   # 2. Allow manual start from the Actions tab
