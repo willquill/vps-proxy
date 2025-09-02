@@ -1,9 +1,5 @@
 name: Plan
 
-# permissions:
-#   id-token: write
-#   contents: read
-
 on:
   push:
     branches: [main]
@@ -51,18 +47,9 @@ jobs:
           # Must be true to make STDOUT, STDERR, and exit code available
           tofu_wrapper: true
 
-      - name: OpenTofu fmt
-        id: fmt
-        run: tofu fmt -check
-        continue-on-error: true
-
       - name: OpenTofu Init
         id: init
         run: tofu init
-
-      - name: OpenTofu Validate
-        id: validate
-        run: tofu validate
 
       - name: Check HCLOUD_TOKEN is set
         run: |

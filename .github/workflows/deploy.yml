@@ -1,8 +1,14 @@
-name: Provision & Deploy VPS
+name: Deploy
 
 on:
   push:
     branches: [main]
+  # Only run when the plan workflow is successful
+  workflow_run:
+    workflows: ["Plan"]
+    types:
+      - completed
+  # Allows manual triggering
   workflow_dispatch:
     inputs:
       version:
@@ -11,20 +17,81 @@ on:
         default: "9.3.0"
         type: string
 
-env:
-  # Ansible will read these automatically if prefixed ANSIBLE_
-  ANSIBLE_HOST_KEY_CHECKING: False
-  ANSIBLE_FORCE_COLOR: 1
-
 jobs:
-  deploy:ansible:
-    needs: [opentofu:deploy]
+  apply-opentofu:
+    runs-on: ubuntu-latest
+    environment: hetzner-cloud
+    env:
+      # AWS keys for S3 state backend
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      # To populate Terraform variables
+      TF_VAR_repo_owner: ${{ github.repository_owner }}
+      TF_VAR_ssh_authorized_key: ${{ secrets.VPS_PROXY_KEY }}
+      # Hetzner Cloud token required to create resources
+      HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+
+    defaults:
+      run:
+        working-directory: ${{ env.tf_actions_working_dir || 'terraform' }}
+
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.tool }}-${{ matrix.version }}
+      cancel-in-progress: true
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - tool: opentofu
+            version: v1.10.5
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - if: matrix.tool == 'opentofu'
+        uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: ${{ matrix.version }}
+          # Must be true to make STDOUT, STDERR, and exit code available
+          tofu_wrapper: true
+
+      - name: OpenTofu Init
+        id: init
+        run: tofu init
+
+      - name: Check HCLOUD_TOKEN is set
+        run: |
+          if [ -z "${HCLOUD_TOKEN}" ]; then
+            echo "HCLOUD_TOKEN is not set!"
+            exit 1
+          else
+            echo "HCLOUD_TOKEN is set."
+          fi
+
+      - name: OpenTofu Apply
+        id: apply
+        run: tofu apply -auto-approve
+
+      - name: Save OpenTofu output
+        run: tofu output -json > tf_output.json
+
+      - name: Upload Terraform output
+        uses: actions/upload-artifact@v4
+        with:
+          name: tf-output
+          path: tf_output.json
+
+  deploy-ansible:
+    needs: [apply-opentofu]
     runs-on: ubuntu-latest
     environment: hetzner-cloud
     # Note: We do not need to set each env because instead of envvars,
     #       we set -e options where necessary
     env:
       ANSIBLE_VERSION: ${{ github.event.inputs.version || '9.3.0' }}
+      ANSIBLE_HOST_KEY_CHECKING: False
+      ANSIBLE_FORCE_COLOR: 1
 
     steps:
       # ---------- Checkout code ----------
@@ -55,20 +122,33 @@ jobs:
         run: |
           ansible-galaxy collection install -r ansible/galaxy-requirements.yml
 
+      # Get values from Terraform output
+      - name: Download Terraform output
+        uses: actions/download-artifact@v4
+        with:
+          name: tf-output
+
+      - name: Parse SERVER_IPV4 from output
+        id: parse_output
+        run: |
+          SERVER_IPV4=$(jq -r '.server_ipv4.value' tf_output.json)
+          echo "SERVER_IPV4=$SERVER_IPV4" >> $GITHUB_ENV
+
       # ---------- SSH key ----------
+      # Use IPv4 from Terraform output
       - name: Setup SSH key
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.VPS_PROXY_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -p 2222 -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -p 2222 -H ${{ env.SERVER_IPV4 }} >> ~/.ssh/known_hosts
 
       # ---------- Create inventory file ----------
       - name: Create inventory file
         run: |
           cat <<EOF > inventory
           [vps]
-          ${{ secrets.VPS_HOST }} ansible_user=${{ secrets.VPS_USER }} ansible_port=2222
+            ${{ env.SERVER_IPV4 }} ansible_user=${{ github.repository_owner }} ansible_port=2222
           EOF
 
       # ---------- Run Ansible ----------
@@ -78,9 +158,9 @@ jobs:
             -i inventory \
             -e "ansible_ssh_private_key_file=~/.ssh/id_ed25519" \
             -e "repo_url=https://github.com/${{ github.repository }}.git" \
-            -e "repo_dest=/home/${{ secrets.VPS_USER }}/vps-proxy" \
-            -e "vps_host=${{ secrets.VPS_HOST }}" \
-            -e "user_name=${{ secrets.VPS_USER }}" \
+              -e "repo_dest=/home/${{ github.repository_owner }}/vps-proxy" \
+              -e "vps_host=${{ env.SERVER_IPV4 }}" \
+              -e "user_name=${{ github.repository_owner }}" \
             -e "traefik_username=${{ secrets.TRAEFIK_BASIC_AUTH_USERNAME }}" \
             -e "traefik_password=${{ secrets.TRAEFIK_BASIC_AUTH_PASSWORD }}" \
             -e "acme_email=${{ secrets.ACME_EMAIL }}" \

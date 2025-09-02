@@ -1,4 +1,4 @@
-name: Linting
+name: Lint
 
 on:
   pull_request:
@@ -14,6 +14,44 @@ on:
   workflow_dispatch:
 
 jobs:
+  lint-opentofu:
+    runs-on: ubuntu-latest
+    environment: hetzner-cloud
+
+    defaults:
+      run:
+        working-directory: ${{ env.tf_actions_working_dir || 'terraform' }}
+
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.tool }}-${{ matrix.version }}
+      cancel-in-progress: true
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - tool: opentofu
+            version: v1.10.5
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - if: matrix.tool == 'opentofu'
+        uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: ${{ matrix.version }}
+          # Must be true to make STDOUT, STDERR, and exit code available
+          tofu_wrapper: true
+
+      - name: OpenTofu fmt
+        id: fmt
+        run: tofu fmt -check
+        continue-on-error: true
+
+      - name: OpenTofu Validate
+        id: validate
+        run: tofu validate
+
   # Disabled for now because I lint locally
   #   ansible-lint:
   #     name: Ansible Lint
@@ -44,7 +82,7 @@ jobs:
   #           name: yamllint-logfile
   #           path: ${{ steps.yaml-lint.outputs.logfile }}
 
-  docker-compose-validate:
+  validate-docker-compose:
     name: Docker Compose Validation
     runs-on: ubuntu-latest
     services:
