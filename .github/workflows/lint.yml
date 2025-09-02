@@ -27,6 +27,7 @@ jobs:
       # To populate Terraform variables
       TF_VAR_repo_owner: ${{ github.repository_owner }}
       TF_VAR_ssh_authorized_key: ${{ secrets.VPS_PROXY_KEY }}
+      tf_actions_working_dir: ${{ matrix.working_dir }}
 
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.tool }}-${{ matrix.version }}--${{ matrix.working_dir }}
@@ -44,8 +45,6 @@ jobs:
 
       - if: matrix.tool == 'opentofu'
         uses: ./.github/actions/opentofu-setup
-        with:
-          working_directory: ${{ matrix.working_dir }}
 
       - if: matrix.tool == 'opentofu'
         name: OpenTofu Validate
