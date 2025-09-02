@@ -18,5 +18,4 @@ runs:
       id: init
       run: tofu init
       shell: bash
-      with:
-        working-directory: ${{ inputs.working_directory }}
+      working-directory: ${{ inputs.working_directory }}
