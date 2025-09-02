@@ -1,16 +1,13 @@
 name: Plan
 
 on:
-  # Allows manual triggering
-  # workflow_dispatch:
-  # pull_request:
-  #   branches: [main]
-  # push:
-  #   branches: [main]
-  # Only run if Lint workflow completed
+  # 1. Run on Lint completion
   workflow_run:
     workflows: ["Lint"]
     types: [completed]
+
+  # 2. Allow manual start from the Actions tab
+  workflow_dispatch:
 
 jobs:
   # Debug conditional for workflow_run
