@@ -1,12 +1,7 @@
 name: Functional Tests
 
 on:
-  pull_request:
-    branches: [main]
-    paths:
-      - "ansible/**"
-      - "docker-compose.yml"
-      - ".github/workflows/test.yml"
+  push:
   # Allows manual triggering
   workflow_dispatch:
     inputs:
@@ -76,3 +71,32 @@ jobs:
           ANSIBLE_REMOTE_TMP: "/tmp/ansible-tmp"
           ANSIBLE_LOCAL_TEMP: "/tmp/ansible-tmp"
           PYTHONUNBUFFERED: "1"
+
+  validate-docker-compose:
+    name: Docker Compose Validation
+    runs-on: ubuntu-latest
+    services:
+      docker:
+        image: docker:28.3.3
+        options: --privileged
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+      - name: Create dummy .env file
+        run: |
+          cat > .env << EOF
+          PUBLIC_HOSTNAME=example.com
+          PUID=1000
+          PGID=1000
+          TZ=UTC
+          CF_DNS_API_TOKEN=dummy_token
+          CF_ZONE_API_TOKEN=dummy_token
+          TRAEFIK_BASIC_AUTH_USERNAME=dummy_user
+          TRAEFIK_BASIC_AUTH_PASSWORD=dummy_password
+          AUTHENTIK_POSTGRESQL__NAME=authentik
+          AUTHENTIK_POSTGRESQL__PASSWORD=dummy_password
+          AUTHENTIK_POSTGRESQL__USER=authentik
+          AUTHENTIK_SECRET_KEY=dummy_key
+          EOF
+      - name: Validate docker-compose.yml
+        run: docker compose config

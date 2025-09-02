@@ -3,10 +3,7 @@ name: Security Scan
 on:
   # Allows manual triggering
   workflow_dispatch:
-  pull_request:
-    branches: [main]
   push:
-    branches: [main]
   # Run on a schedule to catch new vulnerabilities
   schedule:
     - cron: "0 4 * * *" # 4 AM every day
@@ -22,3 +19,32 @@ jobs:
       - uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_NOTIFY_USER_LIST: ${{ github.repository_owner }}
+  checkov-tfstate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
+      - name: Test with Checkov
+        id: checkov
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: terraform/tfstate
+          framework: terraform
+  checkov-terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
+      - name: Test with Checkov
+        id: checkov
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: terraform
+          framework: terraform
