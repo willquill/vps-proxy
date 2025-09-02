@@ -49,6 +49,11 @@ jobs:
         run: tofu fmt -check
         continue-on-error: true
 
+      # Required for validation
+      - name: OpenTofu Init
+        id: init
+        run: tofu init
+
       - name: OpenTofu Validate
         id: validate
         run: tofu validate

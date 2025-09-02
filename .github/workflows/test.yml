@@ -17,7 +17,7 @@ on:
         type: string
 
 jobs:
-  ansible:
+  test-ansible:
     name: Ansible Tests with Molecule
     runs-on: ubuntu-latest
     env:
