@@ -42,7 +42,7 @@ jobs:
         run: tofu fmt -check
         continue-on-error: true
 
-      - uses: ./.github/actions/opentofu-setup
+      - uses: ./.github/actions/opentofu
 
       - name: tofu Validate
         id: validate

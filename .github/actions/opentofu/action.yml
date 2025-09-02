@@ -24,7 +24,7 @@ runs:
       working-directory: ${{ env.tf_actions_working_dir }}
 
     - name: Check HCLOUD_TOKEN is set
-      if: ${{ inputs.plan == 'true' }} || ${{ inputs.apply == 'true' }}
+      if: ${{ inputs.plan == 'true' || inputs.apply == 'true' }}
       shell: bash
       run: |
         if [ -z "${HCLOUD_TOKEN}" ]; then

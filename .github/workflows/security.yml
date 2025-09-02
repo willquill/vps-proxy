@@ -23,10 +23,26 @@ jobs:
 
   checkov-tfstate:
     uses: ./.github/workflows/checkov.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - version: v1.10.5
+            working_dir: opentofu
+          - version: v1.10.5
+            working_dir: tfstate
     with:
-      directory: terraform/tfstate
+      directory: ${{ matrix.working_dir }}
 
   checkov-terraform:
     uses: ./.github/workflows/checkov.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - version: v1.10.5
+            working_dir: opentofu
+          - version: v1.10.5
+            working_dir: tfstate
     with:
-      directory: terraform
+      directory: ${{ matrix.working_dir }}
