@@ -18,7 +18,6 @@ runs:
       uses: opentofu/setup-opentofu@v1
 
     - name:  Init
-      id: init
       run: tofu init
       shell: bash
       working-directory: ${{ env.tf_actions_working_dir }}
@@ -36,14 +35,12 @@ runs:
 
     - name: Plan
       if: ${{ inputs.plan == 'true' }}
-      id: plan
       run: tofu plan
       shell: bash
       working-directory: ${{ env.tf_actions_working_dir }}
 
-    - name: OpenTofu Apply
+    - name: Apply
       if: ${{ inputs.apply == 'true' }}
-      id: apply
-      run: tofu apply
+      run: tofu apply -auto-approve
       shell: bash
       working-directory: ${{ env.tf_actions_working_dir }}

@@ -67,7 +67,7 @@ jobs:
         run: tofu validate
 
   plan:
-    name: OpenTofu Plan
+    name: Plan
     needs:
       - security
       - lint
@@ -90,7 +90,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: OpenTofu Plan
+      - name: Plan
         id: plan
         uses: ./.github/actions/opentofu
         with:
@@ -154,6 +154,36 @@ jobs:
                 body: output
               })
             }
+
+  apply:
+    name: Apply
+    needs:
+      - plan
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - tool: opentofu
+            version: v1.10.5
+            working_dir: opentofu
+    environment: hetzner-cloud
+    env:
+      tf_actions_working_dir: ${{ matrix.working_dir }}
+
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.tool }}-${{ matrix.version }}--${{ matrix.working_dir }}
+      cancel-in-progress: true
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Apply
+        id: apply
+        uses: ./.github/actions/opentofu
+        with:
+          apply: "true"
 
   # Disabled for now because I lint locally
   #   ansible-lint:

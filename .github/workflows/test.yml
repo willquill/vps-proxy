@@ -12,7 +12,7 @@ on:
         type: string
 
 jobs:
-  test-ansible:
+  ansible:
     name: Ansible Tests with Molecule
     runs-on: ubuntu-latest
     env:
@@ -72,7 +72,7 @@ jobs:
           ANSIBLE_LOCAL_TEMP: "/tmp/ansible-tmp"
           PYTHONUNBUFFERED: "1"
 
-  validate-docker-compose:
+  docker-compose:
     name: Docker Compose Validation
     runs-on: ubuntu-latest
     services:
