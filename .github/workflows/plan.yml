@@ -1,17 +1,27 @@
 name: Plan
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-  # Allows manual triggering
+  # 1. Run on Lint completion
+  workflow_run:
+    workflows: ["Lint"]
+    types: [completed]
+
+  # 2. Allow manual start from the Actions tab
   workflow_dispatch:
 
 jobs:
+  # Debug conditional for workflow_run
+  debug:
+    name: Debug the Lint workflow
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo '${{ toJSON(github.event.workflow_run) }}'
+
   tofu-plan:
     name: OpenTofu Plan
     runs-on: ubuntu-latest
+    # Only run if Lint was successful
+    if: github.event.workflow_run.conclusion == 'success'
     environment: hetzner-cloud
     env:
       # AWS keys for S3 state backend

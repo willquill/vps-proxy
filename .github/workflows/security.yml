@@ -1,15 +1,15 @@
 name: Security Scan
 
 on:
+  # Allows manual triggering
+  workflow_dispatch:
   pull_request:
     branches: [main]
   push:
     branches: [main]
   # Run on a schedule to catch new vulnerabilities
   schedule:
-    - cron: "0 4 * * 1" # 4 AM every Monday
-  # Allows manual triggering
-  workflow_dispatch:
+    - cron: "0 4 * * *" # 4 AM every day
 
 jobs:
   detect-secrets:
