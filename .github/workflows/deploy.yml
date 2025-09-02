@@ -1,13 +1,6 @@
 name: Deploy
 
 on:
-  push:
-    branches: [main]
-  # Only run when the plan workflow completed
-  workflow_run:
-    workflows: ["Plan"]
-    types:
-      - completed
   # Allows manual triggering
   workflow_dispatch:
     inputs:
@@ -16,6 +9,13 @@ on:
         required: true
         default: "9.3.0"
         type: string
+  # Only run when the plan workflow completed
+  workflow_run:
+    workflows: ["Plan"]
+    types:
+      - completed
+    branches:
+      - main
 
 jobs:
   tofu-apply:

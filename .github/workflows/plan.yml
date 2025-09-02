@@ -1,10 +1,6 @@
 name: Plan
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
   # Allows manual triggering
   workflow_dispatch:
   # Only run if Lint workflow completed
