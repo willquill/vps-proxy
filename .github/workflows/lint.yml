@@ -30,7 +30,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: ${{ matrix.working_dir}}
+        working-directory: ${{ env.tf_actions_working_dir }}
 
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.tool }}-${{ matrix.version }}--${{ matrix.working_dir }}
@@ -47,6 +47,8 @@ jobs:
 
       - if: matrix.tool == 'opentofu'
         uses: ./.github/actions/opentofu-setup
+        with:
+          working_directory: ${{ matrix.working_dir }}
 
       - if: matrix.tool == 'opentofu'
         name: OpenTofu Validate
