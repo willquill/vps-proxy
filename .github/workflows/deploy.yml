@@ -1,33 +1,12 @@
 name: Deploy
 
 on:
-  # 1. Run automatically after Plan succeeds
-  workflow_run:
-    workflows: ["Plan"]
-    types: [completed]
-    branches:
-      - main
-
-  # 2. Allow manual start from the Actions tab
+  # 1. Allow manual start from the Actions tab
   workflow_dispatch:
 
 jobs:
-  # Debug conditional for workflow_run
-  debug:
-    name: Debug the Plan workflow
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo '${{ toJSON(github.event.workflow_run) }}'
-
   tofu-apply:
     name: OpenTofu Apply
-    # Run if:
-    #   - triggered by workflow_run AND Plan succeeded, OR
-    #   - triggered manually with workflow_dispatch
-    if: |
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'workflow_run' &&
-       github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     environment: hetzner-cloud
     env:
