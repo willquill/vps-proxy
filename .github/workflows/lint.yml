@@ -13,12 +13,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # - tool: terraform
-          #   version: v1.5.7
-          #   working_dir: [terraform/tfstate]
           - tool: opentofu
             version: v1.10.5
-            working_dir: [terraform, terraform/tfstate]
+            working_dir: terraform
+          - tool: opentofu
+            version: v1.10.5
+            working_dir: terraform/tfstate
     environment: hetzner-cloud
     env: # Required for tofu init
       # AWS keys for S3 state backend
