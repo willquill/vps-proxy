@@ -4,23 +4,7 @@ on:
   # Allows manual triggering
   workflow_dispatch:
   pull_request:
-    branches: [main]
-    paths:
-      - "**/*.yml"
-      - "**/*.yaml"
-      - "ansible/**"
-      - "docker-compose.yml"
-      - ".ansible-lint"
-      - ".yamllint.yml"
   push:
-    branches: [main]
-    paths:
-      - "**/*.yml"
-      - "**/*.yaml"
-      - "ansible/**"
-      - "docker-compose.yml"
-      - ".ansible-lint"
-      - ".yamllint.yml"
 
 jobs:
   tofu-lint:
