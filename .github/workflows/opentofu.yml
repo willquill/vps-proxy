@@ -5,9 +5,51 @@ on:
   workflow_dispatch:
   push:
 
+env: # Required for tofu init
+  # AWS keys for S3 state backend
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  # To populate Terraform variables
+  TF_VAR_repo_owner: ${{ github.repository_owner }}
+  TF_VAR_ssh_authorized_key: ${{ secrets.VPS_PROXY_KEY }}
+
 jobs:
   tofu-lint:
     name: OpenTofu Lint
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - version: v1.10.5
+            working_dir: opentofu
+          - version: v1.10.5
+            working_dir: tfstate
+    environment: hetzner-cloud
+    env:
+      tf_actions_working_dir: ${{ matrix.working_dir }}
+
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.version }}--${{ matrix.working_dir }}
+      cancel-in-progress: true
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: OpenTofu fmt
+        id: fmt
+        run: tofu fmt -check
+        continue-on-error: true
+
+      - uses: ./.github/actions/opentofu-setup
+
+      - name: OpenTofu Validate
+        id: validate
+        run: tofu validate
+
+  tofu-plan:
+    name: OpenTofu Plan
+    needs: tofu-lint
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -20,13 +62,7 @@ jobs:
             version: v1.10.5
             working_dir: tfstate
     environment: hetzner-cloud
-    env: # Required for tofu init
-      # AWS keys for S3 state backend
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      # To populate Terraform variables
-      TF_VAR_repo_owner: ${{ github.repository_owner }}
-      TF_VAR_ssh_authorized_key: ${{ secrets.VPS_PROXY_KEY }}
+    env:
       tf_actions_working_dir: ${{ matrix.working_dir }}
 
     concurrency:
@@ -36,21 +72,9 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - if: matrix.tool == 'opentofu'
-        name: OpenTofu fmt
-        id: fmt
-        run: tofu fmt -check
-        continue-on-error: true
-        # working-directory: ${{ matrix.working_dir }}
-
-      - if: matrix.tool == 'opentofu'
-        uses: ./.github/actions/opentofu-setup
-
-      - if: matrix.tool == 'opentofu'
-        name: OpenTofu Validate
-        id: validate
-        run: tofu validate
-        # working-directory: ${{ matrix.working_dir }}
+      - uses: ./.github/actions/opentofu
+        with:
+          plan: "true"
 
   # Disabled for now because I lint locally
   #   ansible-lint:
