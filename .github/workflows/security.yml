@@ -20,16 +20,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_NOTIFY_USER_LIST: ${{ github.repository_owner }}
-
-  checkov:
-    uses: ./.github/workflows/checkov.yml
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - version: v1.10.5
-            working_dir: opentofu
-          - version: v1.10.5
-            working_dir: tfstate
-    with:
-      directory: ${{ matrix.working_dir }}
