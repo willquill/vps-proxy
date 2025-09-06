@@ -2,7 +2,7 @@ locals {
   labels = {
     "Provisioner" = "GitHub Actions"
     # RFC 3339, based on ISO 8601, in US CST
-    "Last Provisioned" = formatdate("YYYY-MM-DD'T'hh:mm:ss-06:00", timestamp)
+    "Last Provisioned" = formatdate("YYYY-MM-DD'T'hh:mm:ss-06:00", timestamp())
     "Owner"      = var.repo_owner
     "Workflow Actor" = var.workflow_actor
   }
