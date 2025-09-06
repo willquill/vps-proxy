@@ -92,7 +92,7 @@ jobs:
       tofu_version: ${{ matrix.tofu_version }}
 
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.version }}-${{ matrix.working_dir }}
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.tofu_version }}-${{ matrix.working_dir }}
       cancel-in-progress: true
 
     steps:

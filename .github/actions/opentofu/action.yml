@@ -58,14 +58,32 @@ runs:
           echo "HCLOUD_TOKEN is set."
         fi
 
+    - name: Validate
+      if: ${{ inputs.validate == 'true' }}
+      run: |
+        set -e # Run validate and capture without color (recommended for comments)
+        tofu validate -no-color | tee validate.out
+        # Create composite action output
+        {
+          echo "validate_stdout<<EOF"
+          cat validate.out
+          echo "EOF"
+        } >> "$GITHUB_OUTPUT"
+      shell: bash
+      working-directory: ${{ env.tf_actions_working_dir }}
+
     - name: Plan
       if: ${{ inputs.plan == 'true' }}
       id: plan
       run: |
-        tofu plan | tee plan.out
-        echo "stdout<<EOF" >> $GITHUB_OUTPUT
-        cat plan.out >> $GITHUB_OUTPUT
-        echo "EOF" >> $GITHUB_OUTPUT
+        set -e # Run plan and capture without color (recommended for comments)
+        tofu plan -no-color | tee plan.out
+        # Create composite action output
+        {
+          echo "plan_stdout<<EOF"
+          cat plan.out
+          echo "EOF"
+        } >> "$GITHUB_OUTPUT"
       shell: bash
       working-directory: ${{ env.tf_actions_working_dir }}
 
@@ -79,9 +97,9 @@ outputs:
   init_outcome:
     description: "outcome from tofu init"
     value: ${{ steps.init.outcome }}
-  plan_outcome:
-    description: "outcome from tofu plan"
-    value: ${{ steps.plan.outcome }}
+  validate_stdout:
+    description: "stdout from tofu validate"
+    value: ${{ steps.validate.outputs.validate_stdout }}
   plan_stdout:
     description: "stdout from tofu plan"
     value: ${{ steps.plan.outputs.plan_stdout }}
