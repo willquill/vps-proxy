@@ -120,3 +120,15 @@ runs:
       run: tofu apply -auto-approve
       shell: bash
       working-directory: ${{ env.tf_actions_working_dir }}
+
+    - name: Save OpenTofu output
+      if: ${{ inputs.apply == 'true' }}
+      run: tofu output -json > tf_output.json
+      shell: bash
+
+    - name: Upload Terraform output
+      if: ${{ inputs.apply == 'true' }} 
+      uses: actions/upload-artifact@v4
+      with:
+        name: tf-output
+        path: tf_output.json
