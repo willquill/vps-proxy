@@ -1,99 +1,12 @@
 name: Deploy
 
 on:
-  # 1. Run automatically after Plan succeeds
-  workflow_run:
-    workflows: ["Plan"]
-    types: [completed]
-    branches:
-      - main
-
-  # 2. Allow manual start from the Actions tab
+  # 1. Allow manual start from the Actions tab
   workflow_dispatch:
 
 jobs:
-  # Debug conditional for workflow_run
-  debug:
-    name: Debug the Plan workflow
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo '${{ toJSON(github.event.workflow_run) }}'
-
-  tofu-apply:
-    name: OpenTofu Apply
-    # Run if:
-    #   - triggered by workflow_run AND Plan succeeded, OR
-    #   - triggered manually with workflow_dispatch
-    if: |
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'workflow_run' &&
-       github.event.workflow_run.conclusion == 'success')
-    runs-on: ubuntu-latest
-    environment: hetzner-cloud
-    env:
-      # AWS keys for S3 state backend
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      # To populate Terraform variables
-      TF_VAR_repo_owner: ${{ github.repository_owner }}
-      TF_VAR_ssh_authorized_key: ${{ secrets.VPS_PROXY_KEY }}
-      # Hetzner Cloud token required to create resources
-      HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
-
-    defaults:
-      run:
-        working-directory: ${{ env.tf_actions_working_dir || 'terraform' }}
-
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.tool }}-${{ matrix.version }}
-      cancel-in-progress: true
-
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - tool: opentofu
-            version: v1.10.5
-
-    steps:
-      - uses: actions/checkout@v5
-
-      - if: matrix.tool == 'opentofu'
-        uses: opentofu/setup-opentofu@v1
-        with:
-          tofu_version: ${{ matrix.version }}
-          # Must be true to make STDOUT, STDERR, and exit code available
-          tofu_wrapper: true
-
-      - name: OpenTofu Init
-        id: init
-        run: tofu init
-
-      - name: Check HCLOUD_TOKEN is set
-        run: |
-          if [ -z "${HCLOUD_TOKEN}" ]; then
-            echo "HCLOUD_TOKEN is not set!"
-            exit 1
-          else
-            echo "HCLOUD_TOKEN is set."
-          fi
-
-      - name: OpenTofu Apply
-        id: apply
-        run: tofu apply -auto-approve
-
-      - name: Save OpenTofu output
-        run: tofu output -json > tf_output.json
-
-      - name: Upload Terraform output
-        uses: actions/upload-artifact@v4
-        with:
-          name: tf-output
-          path: tf_output.json
-
   ansible-deploy:
     name: Execute Ansible Playbook
-    needs: [tofu-apply]
     runs-on: ubuntu-latest
     environment: hetzner-cloud
     # Note: We do not need to set each env because instead of envvars,
