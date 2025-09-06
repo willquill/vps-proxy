@@ -2,14 +2,19 @@
 
 !!!! THIS IS A WIP !!!!
 
-The aim is to deploy the following to a VPS:
+This does the following:
 
-- Wireguard
-- Traefik (listens on 22 for GitLab, 443, and 80)
-- Authentik
-- Gatus
+- Creates a firewall and virtual private server (VPS) in Hetzner Cloud
+- Installs, configures, and starts Wireguard on the VPS
+- Installs Docker on the VPS and executes a docker compose file to spin up docker services
+
+Intention:
+
+- The VPS runs Traefik, Authentik, Gatus, and others as docker services to act as a reverse proxy and IDP for requests that are ultimately forwarded elsewhere
 
 ## Overview
+
+![Architecture Diagram](architecture_diagram.png)
 
 ## Routing
 
