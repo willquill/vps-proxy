@@ -45,12 +45,8 @@ jobs:
             working_dir: tfstate
     environment: hetzner-cloud
     env:
-      # This working dir envvar needed for upload artifact step
       tf_actions_working_dir: ${{ matrix.working_dir }}
       tofu_version: ${{ matrix.tofu_version }}
-    defaults:
-      run:
-        working-directory: ${{ matrix.working_dir }}
 
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.tofu_version }}--${{ matrix.working_dir }}
@@ -93,11 +89,8 @@ jobs:
             working_dir: opentofu
     environment: hetzner-cloud
     env:
+      tf_actions_working_dir: ${{ matrix.working_dir }}
       tofu_version: ${{ matrix.tofu_version }}
-    defaults:
-      run:
-        working-directory: ${{ matrix.working_dir }}
-        shell: bash
 
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.tofu_version }}-${{ matrix.working_dir }}
@@ -185,11 +178,8 @@ jobs:
             working_dir: opentofu
     environment: hetzner-cloud
     env:
+      tf_actions_working_dir: ${{ matrix.working_dir }}
       tofu_version: ${{ matrix.tofu_version }}
-    defaults:
-      run:
-        working-directory: ${{ matrix.working_dir }}
-        shell: bash
 
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.tofu_version }}-${{ matrix.working_dir }}
