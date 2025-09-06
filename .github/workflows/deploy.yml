@@ -80,12 +80,12 @@ jobs:
         run: |
           ansible-playbook \
             -i inventory \
-            -- check \
+            --check \
             -e "ansible_ssh_private_key_file=~/.ssh/id_ed25519" \
             -e "repo_url=https://github.com/${{ github.repository }}.git" \
-              -e "repo_dest=/home/${{ github.repository_owner }}/vps-proxy" \
-              -e "vps_host=${{ env.SERVER_IPV4 }}" \
-              -e "user_name=${{ github.repository_owner }}" \
+            -e "repo_dest=/home/${{ github.repository_owner }}/vps-proxy" \
+            -e "vps_host=${{ env.SERVER_IPV4 }}" \
+            -e "user_name=${{ github.repository_owner }}" \
             -e "traefik_username=${{ secrets.TRAEFIK_BASIC_AUTH_USERNAME }}" \
             -e "traefik_password=${{ secrets.TRAEFIK_BASIC_AUTH_PASSWORD }}" \
             -e "acme_email=${{ secrets.ACME_EMAIL }}" \
@@ -102,15 +102,16 @@ jobs:
 
       # ---------- Run Ansible ----------
       - name: Run ansible playbook
-        if: ${{ success() && steps.ansible-check.outcome == 'success' }}
+        # Only run if every previous step succeeded
+        if: ${{ success() }}
         run: |
           ansible-playbook \
             -i inventory \
             -e "ansible_ssh_private_key_file=~/.ssh/id_ed25519" \
             -e "repo_url=https://github.com/${{ github.repository }}.git" \
-              -e "repo_dest=/home/${{ github.repository_owner }}/vps-proxy" \
-              -e "vps_host=${{ env.SERVER_IPV4 }}" \
-              -e "user_name=${{ github.repository_owner }}" \
+            -e "repo_dest=/home/${{ github.repository_owner }}/vps-proxy" \
+            -e "vps_host=${{ env.SERVER_IPV4 }}" \
+            -e "user_name=${{ github.repository_owner }}" \
             -e "traefik_username=${{ secrets.TRAEFIK_BASIC_AUTH_USERNAME }}" \
             -e "traefik_password=${{ secrets.TRAEFIK_BASIC_AUTH_PASSWORD }}" \
             -e "acme_email=${{ secrets.ACME_EMAIL }}" \
