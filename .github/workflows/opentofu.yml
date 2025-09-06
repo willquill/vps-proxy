@@ -54,14 +54,14 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: tofu init
+        id: init
+        uses: ./.github/actions/opentofu
+
       - name: tofu fmt
         id: fmt
         run: tofu fmt -check
         continue-on-error: true
-
-      - name: tofu init
-        id: init
-        uses: ./.github/actions/opentofu
 
       - name: tofu Validate
         id: validate
