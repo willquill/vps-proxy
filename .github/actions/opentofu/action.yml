@@ -72,6 +72,12 @@ runs:
       shell: bash
       working-directory: ${{ env.tf_actions_working_dir }}
 
+    - name: Set created timestamp (TZ from env secret)
+      shell: bash
+      run: |
+        CREATED=$(date +"%Y-%m-%dT%H:%M:%S%:z")
+        echo "TF_VAR_created_timestamp=$CREATED" >> $GITHUB_ENV
+
     - name: Plan
       if: ${{ inputs.plan == 'true' }}
       id: plan

@@ -38,3 +38,7 @@ variable "owner" {
   type        = string
   default     = null
 }
+
+variable "created_timestamp" {
+  type = string
+}
