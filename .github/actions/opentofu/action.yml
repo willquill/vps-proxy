@@ -132,4 +132,4 @@ runs:
       uses: actions/upload-artifact@v4
       with:
         name: tf-output
-        path: ${{ env.tf_actions_working_dir }}tf_output.json
+        path: ${{ env.tf_actions_working_dir }}/tf_output.json
