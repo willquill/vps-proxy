@@ -71,9 +71,9 @@ jobs:
           validate: "true"
 
     outputs:
-      fmt_outcome: ${{ steps.tofu-fmt.fmt_outcome }}
-      validate_outcome: ${{ steps.tofu-validate.validate_outcome }}
-      validate_stdout: ${{ steps.tofu-validate.validate_stdout }}
+      fmt_outcome: ${{ steps.tofu-fmt.outputs.fmt_outcome }}
+      validate_outcome: ${{ steps.tofu-validate.outputs.validate_outcome }}
+      validate_stdout: ${{ steps.tofu-validate.outputs.validate_stdout }}
 
   plan:
     name: Plan
