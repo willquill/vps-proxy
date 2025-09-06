@@ -61,8 +61,8 @@ runs:
     - name: Validate
       if: ${{ inputs.validate == 'true' }}
       run: |
-        set -e # Run validate and capture without color (recommended for comments)
-        tofu validate -no-color | tee validate.out
+        set -e
+        tofu validate | tee validate.out
         # Create composite action output
         {
           echo "validate_stdout<<EOF"
@@ -100,6 +100,9 @@ outputs:
   validate_stdout:
     description: "stdout from tofu validate"
     value: ${{ steps.validate.outputs.validate_stdout }}
+  plan_outcome:
+    description: "outcome from tofu plan"
+    value: ${{ steps.plan.outcome }}
   plan_stdout:
     description: "stdout from tofu plan"
     value: ${{ steps.plan.outputs.plan_stdout }}
