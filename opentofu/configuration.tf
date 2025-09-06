@@ -33,12 +33,7 @@ variable "firewall_rules_tcp_inbound" {
   ]
 }
 
-variable "owner" {
-  description = "Resource owner"
-  type        = string
-  default     = null
-}
-
 variable "created_timestamp" {
-  type = string
+  description = "Timestamp just before the plan was executed"
+  type        = string
 }

@@ -35,6 +35,7 @@ runs:
         tofu_version: ${{ inputs.tofu_version }}
 
     - name: Init
+      id: init
       if: ${{ inputs.init == 'true' }}
       run: tofu init
       shell: bash

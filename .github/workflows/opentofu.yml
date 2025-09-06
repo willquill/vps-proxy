@@ -136,7 +136,7 @@ jobs:
 
             </details>
 
-            #### OpenTofu Plan 📖\`${{ steps.plan.outcome }}\`
+            #### OpenTofu Plan 📖\`${{ steps.plan.outputs.plan_outcome }}\`
 
             <details><summary>Show Plan</summary>
 
