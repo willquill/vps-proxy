@@ -26,9 +26,6 @@ inputs:
     required: false
     default: 'false'
 outputs:
-  init_outcome:
-    description: "outcome from tofu init"
-    value: ${{ steps.init.outcome }}
   fmt_outcome:
     description: "outcome from tofu fmt"
     value: ${{ steps.fmt.outcome }}
@@ -77,6 +74,7 @@ runs:
         fi
 
     - name: Validate
+      id: validate
       if: ${{ inputs.validate == 'true' }}
       run: |
         set -e
@@ -91,9 +89,12 @@ runs:
       working-directory: ${{ env.tf_actions_working_dir }}
 
     - name: Set created timestamp (TZ from env secret)
+      if: ${{ inputs.plan == 'true' || inputs.apply == 'true' }}
       shell: bash
+      # Not all characters allowed in a Hetzner cloud label
+      # https://docs.hetzner.cloud/reference/cloud#labels
       run: |
-        CREATED=$(date +"%Y-%m-%dT%H:%M:%S%:z")
+        CREATED=$(date +"%Y-%m-%dT%H.%M.%S%z")
         echo "TF_VAR_created_timestamp=$CREATED" >> $GITHUB_ENV
 
     - name: Plan
