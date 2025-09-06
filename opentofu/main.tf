@@ -1,3 +1,15 @@
+locals {
+  # Ensure no keys or labels have spaces
+  labels = {
+    for k, v in {
+      "Provisioner"      = "GitHub Actions"
+      "Last-Provisioned" = var.created_timestamp
+      "Owner"            = var.repo_owner
+      "Workflow-Actor"   = var.workflow_actor
+    } : replace(k, " ", "-") => replace(v, " ", "-")
+  }
+}
+
 resource "hcloud_firewall" "vps_proxy" {
   name = "vps-proxy"
 
@@ -21,6 +33,8 @@ resource "hcloud_firewall" "vps_proxy" {
       source_ips = ["0.0.0.0/0", "::/0"]
     }
   }
+
+  labels = local.labels
 }
 
 resource "hcloud_server" "server" {
@@ -34,6 +48,8 @@ resource "hcloud_server" "server" {
     name               = var.repo_owner
     ssh_authorized_key = var.ssh_authorized_key
   })
+
+  labels = local.labels
 }
 
 output "server_id" {

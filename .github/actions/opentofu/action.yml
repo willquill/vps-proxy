@@ -1,0 +1,122 @@
+name: OpenTofu
+
+description: Executes OpenTofu Actions
+inputs:
+  tofu_version:
+    description: 'Version of OpenTofu to use'
+    required: true
+  init:
+    description: 'Run tofu init'
+    required: false
+    default: 'true'
+  fmt:
+    description: 'Run tofu fmt'
+    required: false
+    default: 'false'
+  validate:
+    description: 'Run tofu validate'
+    required: false
+    default: 'false'
+  plan:
+    description: 'Run tofu plan'
+    required: false
+    default: 'false'
+  apply:
+    description: 'Run tofu apply'
+    required: false
+    default: 'false'
+outputs:
+  fmt_outcome:
+    description: "outcome from tofu fmt"
+    value: ${{ steps.fmt.outcome }}
+  validate_outcome:
+    description: "outcome from tofu validate"
+    value: ${{ steps.validate.outcome }}
+  validate_stdout:
+    description: "stdout from tofu validate"
+    value: ${{ steps.validate.outputs.validate_stdout }}
+  plan_outcome:
+    description: "outcome from tofu plan"
+    value: ${{ steps.plan.outcome }}
+  plan_stdout:
+    description: "stdout from tofu plan"
+    value: ${{ steps.plan.outputs.plan_stdout }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup
+      uses: opentofu/setup-opentofu@v1
+      with:
+        tofu_version: ${{ inputs.tofu_version }}
+
+    - name: Init
+      id: init
+      if: ${{ inputs.init == 'true' }}
+      run: tofu init
+      shell: bash
+      working-directory: ${{ env.tf_actions_working_dir }}
+
+    - name: Format
+      id: fmt
+      if: ${{ inputs.fmt == 'true' }}
+      run: tofu fmt --check
+      continue-on-error: true
+      shell: bash
+      working-directory: ${{ env.tf_actions_working_dir }}
+
+    - name: Check HCLOUD_TOKEN is set
+      if: ${{ inputs.plan == 'true' || inputs.apply == 'true' }}
+      shell: bash
+      run: |
+        if [ -z "${HCLOUD_TOKEN}" ]; then
+          echo "HCLOUD_TOKEN is not set!"
+          exit 1
+        else
+          echo "HCLOUD_TOKEN is set."
+        fi
+
+    - name: Validate
+      id: validate
+      if: ${{ inputs.validate == 'true' }}
+      run: |
+        set -e
+        tofu validate -no-color | tee validate.out
+        # Create composite action output
+        {
+          echo "validate_stdout<<EOF"
+          cat validate.out
+          echo "EOF"
+        } >> "$GITHUB_OUTPUT"
+      shell: bash
+      working-directory: ${{ env.tf_actions_working_dir }}
+
+    - name: Set created timestamp (TZ from env secret)
+      if: ${{ inputs.plan == 'true' || inputs.apply == 'true' }}
+      shell: bash
+      # Not all characters allowed in a Hetzner cloud label
+      # https://docs.hetzner.cloud/reference/cloud#labels
+      run: |
+        CREATED=$(date +"%Y-%m-%dT%H.%M.%S%z")
+        echo "TF_VAR_created_timestamp=$CREATED" >> $GITHUB_ENV
+
+    - name: Plan
+      if: ${{ inputs.plan == 'true' }}
+      id: plan
+      run: |
+        set -e # Run plan and capture without color (recommended for comments)
+        tofu plan -no-color | tee plan.out
+        # Create composite action output
+        {
+          echo "plan_stdout<<EOF"
+          cat plan.out
+          echo "EOF"
+        } >> "$GITHUB_OUTPUT"
+      shell: bash
+      working-directory: ${{ env.tf_actions_working_dir }}
+
+    - name: Apply
+      if: ${{ inputs.apply == 'true' }}
+      run: tofu apply -auto-approve
+      shell: bash
+      working-directory: ${{ env.tf_actions_working_dir }}
