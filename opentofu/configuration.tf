@@ -2,9 +2,15 @@
 # Values supplied by GitHub Actions workflow envars:
 # env:
 #   TF_VAR_repo_owner: ${{ github.repository_owner }}
+#   TF_VAR_workflow_actor: ${{ github.actor }}
 #   TF_VAR_ssh_authorized_key: ${{ secrets.VPS_PROXY_KEY }}
 variable "repo_owner" {
   description = "GitHub repository owner"
+  type        = string
+}
+
+variable "workflow_actor" {
+  description = "GitHub workflow actor"
   type        = string
 }
 
@@ -25,4 +31,10 @@ variable "firewall_rules_tcp_inbound" {
     "22",    # Traefik SSH to git server
     "636",   # Traefik LDAPS to IDP
   ]
+}
+
+variable "owner" {
+  description = "Resource owner"
+  type        = string
+  default     = null
 }

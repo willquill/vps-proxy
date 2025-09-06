@@ -14,6 +14,7 @@ env:
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   # To populate Terraform variables
   TF_VAR_repo_owner: ${{ github.repository_owner }}
+  TF_VAR_workflow_actor: ${{ github.actor }}
   TF_VAR_ssh_authorized_key: ${{ secrets.VPS_PROXY_KEY }}
   # Hetzner Cloud token required to create resources
   HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
