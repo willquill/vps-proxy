@@ -29,6 +29,9 @@ outputs:
   fmt_outcome:
     description: "outcome from tofu fmt"
     value: ${{ steps.fmt.outcome }}
+  validate_outcome:
+    description: "outcome from tofu validate"
+    value: ${{ steps.validate.outcome }}
   validate_stdout:
     description: "stdout from tofu validate"
     value: ${{ steps.validate.outputs.validate_stdout }}
@@ -78,7 +81,7 @@ runs:
       if: ${{ inputs.validate == 'true' }}
       run: |
         set -e
-        tofu validate | tee validate.out
+        tofu validate -no-color | tee validate.out
         # Create composite action output
         {
           echo "validate_stdout<<EOF"
