@@ -6,7 +6,7 @@ terraform {
     }
   }
   # Uses OpenTofu
-  required_version = "1.10.5"
+  required_version = ">= 1.10, < 1.11"
 }
 
 provider "aws" {
