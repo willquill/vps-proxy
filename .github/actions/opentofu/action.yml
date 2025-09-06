@@ -54,20 +54,15 @@ runs:
       id: init
       if: ${{ inputs.init == 'true' }}
       run: tofu init
-      shell: bash
-      working-directory: ${{ env.tf_actions_working_dir }}
 
     - name: Format
       id: fmt
       if: ${{ inputs.fmt == 'true' }}
       run: tofu fmt --check
       continue-on-error: true
-      shell: bash
-      working-directory: ${{ env.tf_actions_working_dir }}
 
     - name: Check HCLOUD_TOKEN is set
       if: ${{ inputs.plan == 'true' || inputs.apply == 'true' }}
-      shell: bash
       run: |
         if [ -z "${HCLOUD_TOKEN}" ]; then
           echo "HCLOUD_TOKEN is not set!"
@@ -88,12 +83,9 @@ runs:
           cat validate.out
           echo "EOF"
         } >> "$GITHUB_OUTPUT"
-      shell: bash
-      working-directory: ${{ env.tf_actions_working_dir }}
 
     - name: Set created timestamp (TZ from env secret)
       if: ${{ inputs.plan == 'true' || inputs.apply == 'true' }}
-      shell: bash
       # Not all characters allowed in a Hetzner cloud label
       # https://docs.hetzner.cloud/reference/cloud#labels
       run: |
@@ -112,25 +104,18 @@ runs:
           cat plan.out
           echo "EOF"
         } >> "$GITHUB_OUTPUT"
-      shell: bash
-      working-directory: ${{ env.tf_actions_working_dir }}
 
     - name: Apply
       if: ${{ inputs.apply == 'true' }}
       run: tofu apply -auto-approve
-      shell: bash
-      working-directory: ${{ env.tf_actions_working_dir }}
 
     - name: Save OpenTofu output
       if: ${{ inputs.apply == 'true' }}
       run: tofu output -json > tf_output.json
-      shell: bash
-      working-directory: ${{ env.tf_actions_working_dir }}
 
     - name: Upload Terraform output
       if: ${{ inputs.apply == 'true' }} 
       uses: actions/upload-artifact@v4
-      working-directory: ${{ env.tf_actions_working_dir }}
       with:
         name: tf-output
-        path: tf_output.json
+        path: ${{ env.tf_actions_working_dir }}/tf_output.json
