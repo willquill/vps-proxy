@@ -25,6 +25,22 @@ inputs:
     description: 'Run tofu apply'
     required: false
     default: 'false'
+outputs:
+  init_outcome:
+    description: "outcome from tofu init"
+    value: ${{ steps.init.outcome }}
+  fmt_outcome:
+    description: "outcome from tofu fmt"
+    value: ${{ steps.fmt.outcome }}
+  validate_stdout:
+    description: "stdout from tofu validate"
+    value: ${{ steps.validate.outputs.validate_stdout }}
+  plan_outcome:
+    description: "outcome from tofu plan"
+    value: ${{ steps.plan.outcome }}
+  plan_stdout:
+    description: "stdout from tofu plan"
+    value: ${{ steps.plan.outputs.plan_stdout }}
 
 runs:
   using: "composite"
@@ -42,6 +58,7 @@ runs:
       working-directory: ${{ env.tf_actions_working_dir }}
 
     - name: Format
+      id: fmt
       if: ${{ inputs.fmt == 'true' }}
       run: tofu fmt --check
       continue-on-error: true
@@ -99,17 +116,3 @@ runs:
       run: tofu apply -auto-approve
       shell: bash
       working-directory: ${{ env.tf_actions_working_dir }}
-
-outputs:
-  init_outcome:
-    description: "outcome from tofu init"
-    value: ${{ steps.init.outcome }}
-  validate_stdout:
-    description: "stdout from tofu validate"
-    value: ${{ steps.validate.outputs.validate_stdout }}
-  plan_outcome:
-    description: "outcome from tofu plan"
-    value: ${{ steps.plan.outcome }}
-  plan_stdout:
-    description: "stdout from tofu plan"
-    value: ${{ steps.plan.outputs.plan_stdout }}

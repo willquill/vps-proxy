@@ -1,9 +1,9 @@
 locals {
   labels = {
     "Provisioner" = "GitHub Actions"
-    "Last Provisioned" = tostring(var.created_timestamp)
+    "Last-Provisioned" = var.created_timestamp
     "Owner"      = var.repo_owner
-    "Workflow Actor" = var.workflow_actor
+    "Workflow-Actor" = var.workflow_actor
   }
 }
 

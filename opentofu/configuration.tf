@@ -14,6 +14,11 @@ variable "workflow_actor" {
   type        = string
 }
 
+variable "created_timestamp" {
+  description = "Timestamp just before the plan was executed"
+  type        = string
+}
+
 variable "ssh_authorized_key" {
   description = "SSH public key for cloud-init"
   type        = string
@@ -31,9 +36,4 @@ variable "firewall_rules_tcp_inbound" {
     "22",    # Traefik SSH to git server
     "636",   # Traefik LDAPS to IDP
   ]
-}
-
-variable "created_timestamp" {
-  description = "Timestamp just before the plan was executed"
-  type        = string
 }
