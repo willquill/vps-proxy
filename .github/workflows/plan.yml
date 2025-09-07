@@ -6,7 +6,7 @@ on:
 
   # Only run after security completes
   workflow_run:
-    workflows: [Security, OpenTofu Lint]
+    workflows: [Security, Lint]
     types: [completed]
 
 env:
@@ -23,7 +23,7 @@ env:
 
 jobs:
   plan:
-    name: Plan
+    name: OpenTofu Plan
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true

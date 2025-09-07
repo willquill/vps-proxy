@@ -1,4 +1,4 @@
-name: OpenTofu Lint
+name: Lint
 
 on:
   # Allows manual triggering
@@ -22,7 +22,7 @@ env:
 
 jobs:
   lint:
-    name: Lint
+    name: OpenTofu Lint
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
