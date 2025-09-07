@@ -22,7 +22,7 @@ env:
 
 jobs:
   lint:
-    name: OpenTofu Lint
+    name: tofu lint
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
@@ -44,7 +44,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Tofu Format
+      - name: tofu format
         id: tofu-fmt
         uses: ./.github/actions/opentofu
         with:
@@ -59,7 +59,7 @@ jobs:
           tofu_version: ${{ matrix.tofu_version }}
           validate: "true"
 
-      - name: Lint Comment
+      - name: lint comment
         uses: actions/github-script@v6
         if: ${{ github.event_name == 'pull_request' }}
         with:

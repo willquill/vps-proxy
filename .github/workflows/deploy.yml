@@ -6,7 +6,7 @@ on:
 
 jobs:
   tofu-apply:
-    name: OpenTofu Apply
+    name: tofu apply
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     strategy:
@@ -45,7 +45,7 @@ jobs:
           apply: "true"
 
   ansible-deploy:
-    name: Execute Ansible Playbook
+    name: ansible-playbook
     needs:
       - tofu-apply
     runs-on: ubuntu-latest
