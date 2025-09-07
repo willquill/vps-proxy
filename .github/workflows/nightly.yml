@@ -1,0 +1,31 @@
+name: Nightly
+
+on:
+  # Allows manual triggering
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * *" # 6 AM every day
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GITLEAKS_NOTIFY_USER_LIST: ${{ github.repository_owner }}
+
+jobs:
+  security:
+    name: Detect Secrets
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - working_dir: opentofu
+          - working_dir: tfstate
+
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.working_dir }}
+      cancel-in-progress: true
+
+    steps:
+      - uses: ./.github/actions/security
+        with:
+          working_dir: ${{ matrix.working_dir }}
