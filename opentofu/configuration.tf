@@ -7,21 +7,25 @@
 variable "repo_owner" {
   description = "GitHub repository owner"
   type        = string
+  default     = ""
 }
 
 variable "workflow_actor" {
   description = "GitHub workflow actor"
   type        = string
+  default     = ""
 }
 
 variable "created_timestamp" {
   description = "Timestamp just before the plan was executed"
   type        = string
+  default     = ""
 }
 
 variable "ssh_authorized_key" {
   description = "SSH public key for cloud-init"
   type        = string
+  default     = ""
 }
 
 # Hetzner Cloud Firewall variable
