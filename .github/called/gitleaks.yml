@@ -1,0 +1,16 @@
+on:
+  workflow_call:
+
+jobs:
+  detect-secrets:
+    name: Detect Secrets with Gitleaks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
+          GITLEAKS_NOTIFY_USER_LIST: ${{ env.GITLEAKS_NOTIFY_USER_LIST }}
+          
