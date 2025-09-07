@@ -5,6 +5,8 @@ on:
   workflow_dispatch:
   pull_request:
   push:
+    branches:
+      - main
 
 env:
   TZ: ${{ secrets.TZ }}
@@ -25,7 +27,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Debug
-        run: echo ${{ github.event_name }}
+        run: echo ${{ github }}
   lint:
     name: Lint
     runs-on: ubuntu-latest
