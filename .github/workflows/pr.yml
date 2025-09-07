@@ -19,7 +19,7 @@ env:
 
 jobs:
   security:
-    name: Detect Secrets
+    name: Security Scans
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
