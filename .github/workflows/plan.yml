@@ -3,11 +3,10 @@ name: Plan
 on:
   # Allows manual triggering
   workflow_dispatch:
-
-  # Only run after security completes
-  workflow_run:
-    workflows: [Security, Lint]
-    types: [completed]
+  pull_request:
+  push:
+    branches:
+      - main
 
 env:
   TZ: ${{ secrets.TZ }}
@@ -22,9 +21,44 @@ env:
   HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
 
 jobs:
+  gate:
+    name: gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for Security workflow
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const targetName = 'Security'; // must exactly match the name: in the security workflow file
+            const maxAttempts = 6;
+            const delayMs = 10000;
+            function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+            for (let i=0; i<maxAttempts; i++) {
+              const runs = await github.rest.actions.listWorkflowRunsForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                event: 'pull_request',
+                per_page: 50
+              });
+              const run = runs.data.workflow_runs.find(r => r.name === targetName && r.head_sha === context.sha);
+              if (run) {
+                if (run.status === 'completed') {
+                  if (run.conclusion !== 'success') {
+                    core.setFailed(`Security workflow conclusion: ${run.conclusion}`);
+                  }
+                  return;
+                }
+              }
+              await sleep(delayMs);
+            }
+            core.setFailed('Timed out waiting for security workflow to complete');
+
   plan:
     name: OpenTofu Plan
     runs-on: ubuntu-latest
+    needs:
+      - gate
     strategy:
       fail-fast: true
       matrix:
@@ -46,13 +80,7 @@ jobs:
       - name: Debug
         id: debug
         run: |
-          echo ${{ github.action }}
-          echo ${{ github.event_name }}
-          echo ${{ github.actor }}
-          echo ${{ github.workspace }}
-          echo ${{ github.repository }}
-          echo ${{ github.ref }}
-          echo ${{ github.sha }}
+          echo ${{ github | toJson }}
 
       - name: Plan
         id: plan
