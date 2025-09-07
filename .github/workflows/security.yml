@@ -1,4 +1,4 @@
-name: Security
+name: Nightly
 
 on:
   # Allows manual triggering
@@ -6,48 +6,28 @@ on:
   push:
   # Run on a schedule to catch new vulnerabilities
   schedule:
-    - cron: "0 4 * * *" # 4 AM every day
+    - cron: "0 6 * * *" # 6 AM every day
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GITLEAKS_NOTIFY_USER_LIST: ${{ github.repository_owner }}
 
 jobs:
-  detect-secrets:
-    name: Detect Secrets with Gitleaks
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-      - uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_NOTIFY_USER_LIST: ${{ github.repository_owner }}
-
-  tf-checkov:
-    name: OpenTofu Checkov
+  security:
+    name: Detect Secrets
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         include:
-          - tofu_version: "~>1.10.6"
-            working_dir: opentofu
-          - tofu_version: "~>1.10.6"
-            working_dir: tfstate
-    environment: hetzner-cloud
+          - working_dir: opentofu
+          - working_dir: tfstate
 
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.working_dir }}
       cancel-in-progress: true
 
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v4
+      - uses: ./.github/actions/security
         with:
-          python-version: 3.8
-      - name: Test with Checkov
-        id: checkov
-        uses: bridgecrewio/checkov-action@master
-        with:
-          directory: ${{ matrix.working_dir }}
-          framework: terraform
-          skip_check: CKV_TF_1
+          working_dir: ${{ matrix.working_dir }}
