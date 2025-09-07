@@ -19,6 +19,13 @@ env:
   HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
 
 jobs:
+  debug:
+    name: Debug
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Debug
+        run: echo ${{ github.event_name }}
   lint:
     name: Lint
     runs-on: ubuntu-latest
