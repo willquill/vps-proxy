@@ -33,9 +33,14 @@ jobs:
       cancel-in-progress: true
 
     steps:
+      - uses: actions/checkout@v5
+
       - uses: ./.github/actions/security
         with:
           working_dir: ${{ matrix.working_dir }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_NOTIFY_USER_LIST: ${{ secrets.GITLEAKS_NOTIFY_USER_LIST }}
 
   tofu-lint:
     name: tofu lint
