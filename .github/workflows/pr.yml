@@ -1,12 +1,9 @@
-name: Plan
+name: PR
 
 on:
   # Allows manual triggering
   workflow_dispatch:
   pull_request:
-  push:
-    branches:
-      - main
 
 env:
   TZ: ${{ secrets.TZ }}
@@ -21,44 +18,115 @@ env:
   HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
 
 jobs:
-  gate:
-    name: gate
+  security:
+    name: Detect Secrets
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - working_dir: opentofu
+          - working_dir: tfstate
+
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.working_dir }}
+      cancel-in-progress: true
+
     steps:
-      - name: Wait for Security workflow
+      - uses: ./.github/actions/security
+        with:
+          working_dir: ${{ matrix.working_dir }}
+
+  tofu-lint:
+    name: tofu lint
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - tofu_version: "~>1.10.6"
+            working_dir: opentofu
+          - tofu_version: "~>1.10.6"
+            working_dir: tfstate
+    environment: hetzner-cloud
+    env:
+      tf_actions_working_dir: ${{ matrix.working_dir }}
+      tofu_version: ${{ matrix.tofu_version }}
+
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.tofu_version }}-${{ matrix.working_dir }}
+      cancel-in-progress: true
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: tofu format
+        id: tofu-fmt
+        uses: ./.github/actions/opentofu
+        with:
+          tofu_version: ${{ matrix.tofu_version }}
+          init: "false"
+          fmt: "true"
+
+      - name: Tofu Validate
+        id: tofu-validate
+        uses: ./.github/actions/opentofu
+        with:
+          tofu_version: ${{ matrix.tofu_version }}
+          validate: "true"
+
+      - name: lint comment
         uses: actions/github-script@v6
+        if: ${{ github.event_name == 'pull_request' }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const targetName = 'Security'; // must exactly match the name: in the security workflow file
-            const maxAttempts = 10;
-            const delayMs = 15000;
-            function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
-            for (let i=0; i<maxAttempts; i++) {
-              const runs = await github.rest.actions.listWorkflowRunsForRepo({
+            // 1. Retrieve existing bot comments for the PR
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            })
+            const botComment = comments.find(comment => {
+              return comment.user.type === 'Bot' && comment.body.includes('OpenTofu Format and Validate')
+            })
+
+            // 2. Prepare format of the comment
+            const output = `#### OpenTofu Format and Validate 🖌\`${{ steps.tofu-fmt.outputs.fmt_outcome }}\`
+            #### OpenTofu Validation 🤖\`${{ steps.tofu-validate.outputs.validate_outcome }}\`
+            <details><summary>Validation Output</summary>
+
+            \`\`\`\n
+            ${{ steps.tofu-validate.outputs.validate_stdout }}
+            \`\`\`
+
+            </details>
+
+            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.tf_actions_working_dir }}\`, Workflow: \`${{ github.workflow }}\`*`;
+
+            // 3. If we have a comment, update it, otherwise create a new one
+            if (botComment) {
+              github.rest.issues.updateComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                event: 'pull_request',
-                per_page: 50
-              });
-              const run = runs.data.workflow_runs.find(r => r.name === targetName && r.head_sha === context.sha);
-              if (run) {
-                if (run.status === 'completed') {
-                  if (run.conclusion !== 'success') {
-                    core.setFailed(`Security workflow conclusion: ${run.conclusion}`);
-                  }
-                  return;
-                }
-              }
-              await sleep(delayMs);
+                comment_id: botComment.id,
+                body: output
+              })
+            } else {
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: output
+              })
             }
-            core.setFailed('Timed out waiting for security workflow to complete');
 
-  plan:
+  tofu-plan:
     name: tofu plan
     runs-on: ubuntu-latest
     needs:
-      - gate
+      - security
+      - tofu-lint
     strategy:
       fail-fast: true
       matrix:

@@ -3,8 +3,6 @@ name: Nightly
 on:
   # Allows manual triggering
   workflow_dispatch:
-  push:
-  # Run on a schedule to catch new vulnerabilities
   schedule:
     - cron: "0 6 * * *" # 6 AM every day
 
