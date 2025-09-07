@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  apply:
+  tofu-apply:
     name: OpenTofu Apply
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
@@ -46,6 +46,8 @@ jobs:
 
   ansible-deploy:
     name: Execute Ansible Playbook
+    needs:
+      - tofu-apply
     runs-on: ubuntu-latest
     environment: hetzner-cloud
     # Note: We do not need to set each env because instead of envvars,

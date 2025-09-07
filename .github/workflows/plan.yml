@@ -6,7 +6,7 @@ on:
 
   # Only run after security completes
   workflow_run:
-    workflows: [Security, Lint]
+    workflows: [Security]
     types: [completed]
 
 env:
