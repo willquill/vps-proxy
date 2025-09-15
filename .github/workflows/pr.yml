@@ -69,6 +69,8 @@ jobs:
       cancel-in-progress: true
 
     steps:
+      - uses: actions/checkout@v5
+
       - uses: ./.github/called/test-lint-plan
         with:
           tf_actions_working_dir: ${{ env.tf_actions_working_dir }}
