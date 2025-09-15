@@ -1,8 +1,9 @@
-name: Nightly
+name: Security
 
 on:
   # Allows manual triggering
   workflow_dispatch:
+  # Daily at 6 AM
   schedule:
     - cron: "0 6 * * *" # 6 AM every day
 
@@ -12,7 +13,7 @@ env:
 
 jobs:
   security:
-    name: Detect Secrets
+    name: Security Scans
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -26,6 +27,6 @@ jobs:
       cancel-in-progress: true
 
     steps:
-      - uses: ./.github/actions/security
+      - uses: ./.github/called/security
         with:
           working_dir: ${{ matrix.working_dir }}
