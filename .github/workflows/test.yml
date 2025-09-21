@@ -24,7 +24,7 @@ jobs:
         scenario:
           - debian-13
     steps:
-      - name: Checkout
+      - name: Checkouteve
         uses: actions/checkout@v5
 
       # ---------- Setup tooling ----------

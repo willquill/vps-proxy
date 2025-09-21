@@ -1,9 +1,8 @@
-name: Security
+name: Nightly
 
 on:
   # Allows manual triggering
   workflow_dispatch:
-  # Daily at 6 AM
   schedule:
     - cron: "0 6 * * *" # 6 AM every day
 
@@ -27,8 +26,6 @@ jobs:
       cancel-in-progress: true
 
     steps:
-      - uses: actions/checkout@v5
-
-      - uses: ./.github/called/security
+      - uses: ./.github/actions/security
         with:
           working_dir: ${{ matrix.working_dir }}

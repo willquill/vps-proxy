@@ -5,16 +5,15 @@ inputs:
   tofu_version:
     description: 'Version of OpenTofu to use'
     required: true
+  working_dir:
+    description: 'Working directory for the action'
+    required: true
   init:
     description: 'Run tofu init'
     required: false
     default: 'true'
-  fmt:
-    description: 'Run tofu fmt'
-    required: false
-    default: 'false'
-  validate:
-    description: 'Run tofu validate'
+  lint:
+    description: 'Run tofu lint (fmt + validate)'
     required: false
     default: 'false'
   plan:
@@ -55,18 +54,18 @@ runs:
       if: ${{ inputs.init == 'true' }}
       run: tofu init
       shell: bash
-      working-directory: ${{ env.tf_actions_working_dir }}
+      working-directory: ${{ inputs.working_dir }}
 
     - name: Format
       id: fmt
-      if: ${{ inputs.fmt == 'true' }}
+      if: ${{ inputs.lint == 'true' }}
       run: tofu fmt --check
       continue-on-error: true
       shell: bash
-      working-directory: ${{ env.tf_actions_working_dir }}
+      working-directory: ${{ inputs.working_dir }}
 
+    # Validate, plan, and apply require this
     - name: Check HCLOUD_TOKEN is set
-      if: ${{ inputs.plan == 'true' || inputs.apply == 'true' }}
       shell: bash
       run: |
         if [ -z "${HCLOUD_TOKEN}" ]; then
@@ -78,7 +77,7 @@ runs:
 
     - name: Validate
       id: validate
-      if: ${{ inputs.validate == 'true' }}
+      if: ${{ inputs.lint == 'true' }}
       run: |
         set -e
         tofu validate -no-color | tee validate.out
@@ -89,7 +88,53 @@ runs:
           echo "EOF"
         } >> "$GITHUB_OUTPUT"
       shell: bash
-      working-directory: ${{ env.tf_actions_working_dir }}
+      working-directory: ${{ inputs.working_dir }}
+
+    - name: lint comment
+      uses: actions/github-script@v6
+      if: ${{ inputs.lint == 'true' && github.event_name == 'pull_request' }}
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          // 1. Retrieve existing bot comments for the PR
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+          })
+          const botComment = comments.find(comment => {
+            return comment.user.type === 'Bot' && comment.body.includes('OpenTofu Format and Validate')
+          })
+
+          // 2. Prepare format of the comment
+          const output = `#### OpenTofu Format and Validate 🖌\`${{ steps.tofu-fmt.outputs.fmt_outcome }}\`
+          #### OpenTofu Validation 🤖\`${{ steps.tofu-validate.outputs.validate_outcome }}\`
+          <details><summary>Validation Output</summary>
+
+          \`\`\`\n
+          ${{ steps.tofu-validate.outputs.validate_stdout }}
+          \`\`\`
+
+          </details>
+
+          *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ inputs.working_dir }}\`, Workflow: \`${{ github.workflow }}\`*`;
+
+          // 3. If we have a comment, update it, otherwise create a new one
+          if (botComment) {
+            github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: botComment.id,
+              body: output
+            })
+          } else {
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+          }
 
     - name: Set created timestamp (TZ from env secret)
       if: ${{ inputs.plan == 'true' || inputs.apply == 'true' }}
@@ -113,23 +158,71 @@ runs:
           echo "EOF"
         } >> "$GITHUB_OUTPUT"
       shell: bash
-      working-directory: ${{ env.tf_actions_working_dir }}
+      working-directory: ${{ inputs.working_dir }}
+
+    - name: Plan Comment
+      uses: ./.github/actions/opentofu
+      if: ${{ inputs.plan == 'true' && github.event_name == 'pull_request' }}
+      env:
+        PLAN: "tofu plan -no-color\n${{ steps.plan.outputs.plan_stdout }}"
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          // 1. Retrieve existing bot comments for the PR
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+          })
+          const botComment = comments.find(comment => {
+            return comment.user.type === 'Bot' && comment.body.includes('OpenTofu Plan')
+          })
+
+          // 2. Prepare format of the comment
+          const output = `#### OpenTofu Plan 📖\`${{ steps.plan.outputs.plan_outcome }}\`
+
+          <details><summary>Show Plan</summary>
+
+          \`\`\`\n
+          ${process.inputs.PLAN}
+          \`\`\`
+
+          </details>
+
+          *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ inputs.tf_actions_working_dir }}\`, Workflow: \`${{ github.workflow }}\`*`;
+
+          // 3. If we have a comment, update it, otherwise create a new one
+          if (botComment) {
+            github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: botComment.id,
+              body: output
+            })
+          } else {
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+          }
 
     - name: Apply
       if: ${{ inputs.apply == 'true' }}
       run: tofu apply -auto-approve
       shell: bash
-      working-directory: ${{ env.tf_actions_working_dir }}
+      working-directory: ${{ inputs.working_dir }}
 
     - name: Save OpenTofu output
       if: ${{ inputs.apply == 'true' }}
       run: tofu output -json > tf_output.json
       shell: bash
-      working-directory: ${{ env.tf_actions_working_dir }}
+      working-directory: ${{ inputs.working_dir }}
 
     - name: Upload Terraform output
       if: ${{ inputs.apply == 'true' }} 
       uses: actions/upload-artifact@v4
       with:
         name: tf-output
-        path: ${{ env.tf_actions_working_dir }}/tf_output.json
+        path: ${{ inputs.working_dir }}/tf_output.json

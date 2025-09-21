@@ -1,9 +1,10 @@
-on:
-  workflow_call:
-    inputs:
-      working_dir:
-        description: 'Working directory for the action'
-        required: true
+name: Security
+
+description: Executes Security Actions
+inputs:
+  working_dir:
+    description: 'Working directory for the action'
+    required: true
 
 runs:
   using: "composite"
@@ -11,9 +12,8 @@ runs:
     - uses: actions/checkout@v5
       with:
         fetch-depth: 0
-
+        
     - uses: gitleaks/gitleaks-action@v2
-      description: Detect Secrets with Gitleaks
       env:
         GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
         GITLEAKS_NOTIFY_USER_LIST: ${{ env.GITLEAKS_NOTIFY_USER_LIST }}
