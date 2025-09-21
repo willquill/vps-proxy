@@ -11,6 +11,9 @@ inputs:
   github_token:
     description: 'GitHub token to post comments on PRs'
     required: false
+  event_name:
+    description: 'GitHub event name, e.g. push or pull_request'
+    required: false
   init:
     description: 'Run tofu init'
     required: false
@@ -95,7 +98,7 @@ runs:
 
     - name: lint comment
       uses: actions/github-script@v6
-      if: ${{ inputs.lint == 'true' && github.event_name == 'pull_request' }}
+      if: ${{ inputs.lint == 'true' && inputs.event_name == 'pull_request' }}
       with:
         github-token: ${{ inputs.github_token }}
         script: |
@@ -120,7 +123,7 @@ runs:
 
           </details>
 
-          *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ inputs.working_dir }}\`, Workflow: \`${{ github.workflow }}\`*`;
+          *Pusher: @${{ github.actor }}, Action: \`${{ inputs.event_name }}\`, Working Directory: \`${{ inputs.working_dir }}\`, Workflow: \`${{ github.workflow }}\`*`;
 
           // 3. If we have a comment, update it, otherwise create a new one
           if (botComment) {
@@ -165,7 +168,7 @@ runs:
 
     - name: Plan Comment
       uses: ./.github/actions/opentofu
-      if: ${{ inputs.plan == 'true' && github.event_name == 'pull_request' }}
+      if: ${{ inputs.plan == 'true' && inputs.event_name == 'pull_request' }}
       env:
         PLAN: "tofu plan -no-color\n${{ steps.plan.outputs.plan_stdout }}"
       with:
@@ -192,7 +195,7 @@ runs:
 
           </details>
 
-          *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ inputs.tf_actions_working_dir }}\`, Workflow: \`${{ github.workflow }}\`*`;
+          *Pusher: @${{ github.actor }}, Action: \`${{ inputs.event_name }}\`, Working Directory: \`${{ inputs.tf_actions_working_dir }}\`, Workflow: \`${{ github.workflow }}\`*`;
 
           // 3. If we have a comment, update it, otherwise create a new one
           if (botComment) {

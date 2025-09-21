@@ -93,4 +93,5 @@ jobs:
           tofu_version: ${{ matrix.tofu_version }}
           working_dir: ${{ matrix.working_dir }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          event_name: ${{ github.event_name }}
           plan: "true"
