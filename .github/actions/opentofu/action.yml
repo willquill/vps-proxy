@@ -94,7 +94,7 @@ runs:
       uses: actions/github-script@v6
       if: ${{ inputs.lint == 'true' && github.event_name == 'pull_request' }}
       with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
+        github-token: ${{ inputs.github_token }}
         script: |
           // 1. Retrieve existing bot comments for the PR
           const { data: comments } = await github.rest.issues.listComments({
@@ -166,7 +166,7 @@ runs:
       env:
         PLAN: "tofu plan -no-color\n${{ steps.plan.outputs.plan_stdout }}"
       with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
+        github-token: ${{ inputs.github_token }}
         script: |
           // 1. Retrieve existing bot comments for the PR
           const { data: comments } = await github.rest.issues.listComments({

@@ -70,6 +70,7 @@ jobs:
         with:
           tofu_version: ${{ matrix.tofu_version }}
           working_dir: ${{ matrix.working_dir }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           event_name: ${{ github.event_name }}
           lint: "true"
 
@@ -94,5 +95,6 @@ jobs:
       - uses: ./.github/actions/opentofu
         with:
           tofu_version: ${{ matrix.tofu_version }}
-          tofu_directory: ${{ matrix.working_dir }}
+          working_dir: ${{ matrix.working_dir }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           plan: "true"
