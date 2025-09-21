@@ -5,9 +5,6 @@ on:
   workflow_dispatch:
   pull_request:
 
-env:
-  GITLEAKS_NOTIFY_USER_LIST: ${{ github.repository_owner }}
-
 jobs:
   security:
     name: Security Scans
@@ -28,6 +25,8 @@ jobs:
       - uses: ./.github/actions/security
         with:
           working_dir: ${{ matrix.working_dir }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          gitleaks_notify_user_list: ${{ github.repository_owner }}
 
   tofu-lint:
     needs: security
