@@ -8,6 +8,9 @@ inputs:
   working_dir:
     description: 'Working directory for the action'
     required: true
+  github_token:
+    description: 'GitHub token to post comments on PRs'
+    required: false
   init:
     description: 'Run tofu init'
     required: false
