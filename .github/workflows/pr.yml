@@ -22,6 +22,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+        with:
+          # This provides full history for accurate scanning
+          fetch-depth: 0
       - uses: ./.github/actions/security
         with:
           working_dir: ${{ matrix.working_dir }}
