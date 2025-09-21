@@ -11,7 +11,7 @@ runs:
   steps:
     - uses: gitleaks/gitleaks-action@v2
       env:
-        GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         GITLEAKS_NOTIFY_USER_LIST: ${{ env.GITLEAKS_NOTIFY_USER_LIST }}
 
     - name: Set up Python 3.8
