@@ -1,4 +1,4 @@
-name: Lint and Plan
+name: Lint & Plan
 
 on:
   # Allows manual triggering
@@ -6,8 +6,23 @@ on:
   pull_request:
 
 jobs:
-  security:
-    name: Security Scans
+  # FIXME: Duplicated in nightly, turn into Workflow
+  security-git-leaks:
+    name: Gitleaks Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # This provides full history for accurate scanning
+          fetch-depth: 0
+      - uses: ./.github/actions/security
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          gitleaks_notify_user_list: ${{ github.repository_owner }}
+
+  security-tfsec:
+    name: Tfsec Scan
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -22,9 +37,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
-        with:
-          # This provides full history for accurate scanning
-          fetch-depth: 0
+
       - uses: ./.github/actions/security
         with:
           working_dir: ${{ matrix.working_dir }}
@@ -32,7 +45,7 @@ jobs:
           gitleaks_notify_user_list: ${{ github.repository_owner }}
 
   tofu-lint:
-    needs: security
+    needs: security-tfsec
     runs-on: ubuntu-latest
     environment: hetzner-cloud
     strategy:
@@ -61,7 +74,7 @@ jobs:
           lint: "true"
 
   tofu-plan:
-    needs: security
+    needs: security-tfsec
     runs-on: ubuntu-latest
     environment: hetzner-cloud
     strategy:
