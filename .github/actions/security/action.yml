@@ -5,26 +5,39 @@ inputs:
   working_dir:
     description: 'Working directory for the action'
     required: true
+  gitleaks_scan:
+    description: 'Enable gitleaks scan'
+    required: false
+    default: 'false'
+  tf_enabled:
+    description: 'Enable tfsec scan'
+    required: false
+    default: 'false'
+  github_token:
+    description: 'GitHub token for the action'
+    required: true
+  gitleaks_notify_user_list:
+    description: 'User list to notify in case of gitleaks findings'
+    required: true
 
 runs:
   using: "composite"
   steps:
-    - uses: actions/checkout@v5
-      with:
-        fetch-depth: 0
-        
     - uses: gitleaks/gitleaks-action@v2
+      if: ${{ inputs.gitleaks_scan == 'true' }}
       env:
-        GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
-        GITLEAKS_NOTIFY_USER_LIST: ${{ env.GITLEAKS_NOTIFY_USER_LIST }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+        GITLEAKS_NOTIFY_USER_LIST: ${{ inputs.gitleaks_notify_user_list }}
 
     - name: Set up Python 3.8
+      if: ${{ inputs.tf_enabled == 'true' }}
       uses: actions/setup-python@v4
       with:
         python-version: 3.8
 
     - name: Test with Checkov
       uses: bridgecrewio/checkov-action@master
+      if: ${{ inputs.tf_enabled == 'true' }}
       with:
         directory: ${{ inputs.working_dir }}
         framework: terraform

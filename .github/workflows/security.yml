@@ -1,0 +1,59 @@
+name: Security
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * *" # 6 AM every day
+
+env:
+  TZ: ${{ secrets.TZ }}
+  # AWS keys for S3 state backend
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  # To populate Terraform variables
+  TF_VAR_repo_owner: ${{ github.repository_owner }}
+  TF_VAR_workflow_actor: ${{ github.actor }}
+  TF_VAR_ssh_authorized_key: ${{ secrets.VPS_PROXY_KEY }}
+  # Hetzner Cloud token required to create resources
+  HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+
+jobs:
+  security-git-leaks:
+    name: Gitleaks Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # This provides full history for accurate scanning
+          fetch-depth: 0
+      - uses: ./.github/actions/security
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          gitleaks_notify_user_list: ${{ github.repository_owner }}
+          gitleaks_scan: "true"
+
+  security-tfsec:
+    name: Tfsec Scan
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - working_dir: opentofu
+          - working_dir: tfstate
+
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.working_dir }}
+      cancel-in-progress: true
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: ./.github/actions/security
+        with:
+          working_dir: ${{ matrix.working_dir }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          gitleaks_notify_user_list: ${{ github.repository_owner }}
+          tf_enabled: "true"
