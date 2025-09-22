@@ -113,12 +113,12 @@ runs:
           })
 
           // 2. Prepare format of the comment
-          const output = `#### OpenTofu Format and Validate 🖌\`${{ steps.tofu-fmt.outputs.fmt_outcome }}\`
-          #### OpenTofu Validation 🤖\`${{ steps.tofu-validate.outputs.validate_outcome }}\`
+          const output = `#### OpenTofu Format and Validate 🖌\`${{ steps.fmt.outputs.fmt_outcome }}\`
+          #### OpenTofu Validation 🤖\`${{ steps.validate.outputs.validate_outcome }}\`
           <details><summary>Validation Output</summary>
 
           \`\`\`\n
-          ${{ steps.tofu-validate.outputs.validate_stdout }}
+          ${{ steps.validate.outputs.validate_stdout }}
           \`\`\`
 
           </details>
@@ -195,7 +195,7 @@ runs:
 
           </details>
 
-          *Pusher: @${{ github.actor }}, Action: \`${{ inputs.event_name }}\`, Working Directory: \`${{ inputs.tf_actions_working_dir }}\`, Workflow: \`${{ github.workflow }}\`*`;
+          *Pusher: @${{ github.actor }}, Action: \`${{ inputs.event_name }}\`, Working Directory: \`${{ inputs.working_dir }}\`, Workflow: \`${{ github.workflow }}\`*`;
 
           // 3. If we have a comment, update it, otherwise create a new one
           if (botComment) {
