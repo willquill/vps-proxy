@@ -8,9 +8,9 @@ inputs:
   working_dir:
     description: 'Working directory for the action'
     required: true
-  github_token:
-    description: 'GitHub token to post comments on PRs'
-    required: false
+  # github_token:
+  #   description: 'GitHub token to post comments on PRs'
+  #   required: false
   event_name:
     description: 'GitHub event name, e.g. push or pull_request'
     required: false
@@ -65,7 +65,10 @@ runs:
     - name: Format
       id: fmt
       if: ${{ inputs.lint == 'true' }}
-      run: tofu fmt --check
+      run: |
+        set -e
+        tofu fmt --check
+        echo "fmt_outcome=$?" >> $GITHUB_OUTPUT
       continue-on-error: true
       shell: bash
       working-directory: ${{ inputs.working_dir }}
@@ -100,7 +103,7 @@ runs:
       uses: actions/github-script@v6
       if: ${{ inputs.lint == 'true' && inputs.event_name == 'pull_request' }}
       with:
-        github-token: ${{ inputs.github_token }}
+        #github-token: ${{ inputs.github_token }}
         script: |
           // 1. Retrieve existing bot comments for the PR
           const { data: comments } = await github.rest.issues.listComments({
@@ -172,7 +175,7 @@ runs:
       env:
         PLAN: "tofu plan -no-color\n${{ steps.plan.outputs.plan_stdout }}"
       with:
-        github-token: ${{ inputs.github_token }}
+        #github-token: ${{ inputs.github_token }}
         script: |
           // 1. Retrieve existing bot comments for the PR
           const { data: comments } = await github.rest.issues.listComments({
