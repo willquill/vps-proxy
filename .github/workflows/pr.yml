@@ -79,7 +79,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: tofu fmt
+      - name: Tofu fmt
         id: tofu-fmt
         uses: ./.github/actions/opentofu
         with:
@@ -87,7 +87,7 @@ jobs:
           init: "false"
           fmt: "true"
 
-      - name: tofu Validate
+      - name: Tofu Validate
         id: tofu-validate
         uses: ./.github/actions/opentofu
         with:
@@ -101,7 +101,9 @@ jobs:
 
   tofu-plan:
     name: Tofu Plan
-    needs: security-tfsec
+    needs:
+      - security-tfsec
+      - tofu-lint
     runs-on: ubuntu-latest
 
     strategy:
