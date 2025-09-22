@@ -1,17 +1,24 @@
-name: Nightly
-
+name: Security
 on:
-  # Allows manual triggering
-  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [main]
   schedule:
     - cron: "0 6 * * *" # 6 AM every day
 
 env:
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  GITLEAKS_NOTIFY_USER_LIST: ${{ github.repository_owner }}
+  TZ: ${{ secrets.TZ }}
+  # AWS keys for S3 state backend
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  # To populate Terraform variables
+  TF_VAR_repo_owner: ${{ github.repository_owner }}
+  TF_VAR_workflow_actor: ${{ github.actor }}
+  TF_VAR_ssh_authorized_key: ${{ secrets.VPS_PROXY_KEY }}
+  # Hetzner Cloud token required to create resources
+  HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
 
 jobs:
-  # FIXME: Duplicated in Lint & Plan, turn into Workflow
   security-git-leaks:
     name: Gitleaks Scan
     runs-on: ubuntu-latest

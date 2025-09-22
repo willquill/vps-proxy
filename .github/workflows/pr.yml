@@ -1,10 +1,8 @@
 name: Lint & Plan
 on:
-  # Allows manual triggering
-  workflow_dispatch:
-  pull_request:
-  push:
-    branches: [main]
+  workflow_run:
+    workflows: ["Security"] # name of the upstream workflow
+    types: [completed]
 
 env:
   TZ: ${{ secrets.TZ }}
@@ -19,47 +17,10 @@ env:
   HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
 
 jobs:
-  # FIXME: Duplicated in nightly, turn into Workflow
-  security-git-leaks:
-    name: Gitleaks Scan
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          # This provides full history for accurate scanning
-          fetch-depth: 0
-      - uses: ./.github/actions/security
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          gitleaks_notify_user_list: ${{ github.repository_owner }}
-
-  security-tfsec:
-    name: Tfsec Scan
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - working_dir: opentofu
-          - working_dir: tfstate
-
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.working_dir }}
-      cancel-in-progress: true
-
-    steps:
-      - uses: actions/checkout@v5
-
-      - uses: ./.github/actions/security
-        with:
-          working_dir: ${{ matrix.working_dir }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          gitleaks_notify_user_list: ${{ github.repository_owner }}
-
   tofu-lint:
     name: Tofu Lint
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success'}}
     strategy:
       fail-fast: false
       matrix:
@@ -103,10 +64,9 @@ jobs:
   tofu-plan:
     name: Tofu Plan
     needs:
-      - security-tfsec
       - tofu-lint
     runs-on: ubuntu-latest
-
+    if: ${{ github.event.workflow_run.conclusion == 'success'}}
     strategy:
       fail-fast: false
       matrix:
@@ -174,7 +134,7 @@ jobs:
 
             *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.tf_actions_working_dir }}\`, Workflow: \`${{ github.workflow }}\`*`;
 
-            *Last updated: ${new Date().toLocaleString('en-US', { timeZone: 'America/Chicago' })}`*`;
+            *Last updated: ${new Date().toLocaleString('en-US', { timeZone: 'America/Chicago' })}*`;
 
             // 3. If we have a comment, update it, otherwise create a new one
             if (botComment) {
