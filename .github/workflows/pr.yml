@@ -17,65 +17,9 @@ env:
   HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
 
 jobs:
-  wait-for-security:
-    name: Wait for Security
-    runs-on: ubuntu-latest
-    steps:
-      - name: Wait for Security workflow
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const targetName = 'Security';
-            const maxAttempts = 60; // 10 minutes
-            const delayMs = 10000;
-            function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
-
-            console.log(`Looking for workflow: "${targetName}"`);
-            console.log(`Event: ${context.eventName}`);
-            console.log(`SHA: ${context.sha}`);
-
-            for (let i=0; i<maxAttempts; i++) {
-              console.log(`Attempt ${i+1}/${maxAttempts}`);
-              
-              const runs = await github.rest.actions.listWorkflowRunsForRepo({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                per_page: 50
-              });
-              
-              console.log(`Found ${runs.data.workflow_runs.length} total workflow runs`);
-              
-              // Look for ANY security workflow run for this SHA, regardless of event
-              const run = runs.data.workflow_runs.find(r => {
-                console.log(`Checking run: ${r.name}, SHA: ${r.head_sha}, Status: ${r.status}, Event: ${r.event}`);
-                return r.name === targetName && r.head_sha === context.sha;
-              });
-              
-              if (run) {
-                console.log(`Found matching run: Status=${run.status}, Conclusion=${run.conclusion}`);
-                if (run.status === 'completed') {
-                  if (run.conclusion !== 'success') {
-                    core.setFailed(`Security workflow conclusion: ${run.conclusion}`);
-                  }
-                  console.log('Security workflow completed successfully!');
-                  return;
-                }
-                console.log('Security workflow still running...');
-              } else {
-                console.log('No matching security workflow run found yet');
-              }
-              
-              if (i < maxAttempts - 1) {
-                await sleep(delayMs);
-              }
-            }
-            core.setFailed('Timed out waiting for security workflow to complete');
-
   tofu-lint:
     name: Tofu Lint
     runs-on: ubuntu-latest
-    needs: wait-for-security
     strategy:
       fail-fast: false
       matrix:
@@ -95,6 +39,18 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+
+      # Waits for Security workflow to complete for the same commit
+      - name: Wait for Security Workflow
+        uses: kamilchodola/wait-for-workflow-action@1.1.0
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          workflow_id: "security.yml"
+          max_wait_minutes: "3"
+          interval: "5"
+          timeout: "60"
+          org_name: ${{ github.repository_owner }}
+          repo_name: ${{ github.repository }}
 
       - name: Tofu fmt
         id: tofu-fmt
