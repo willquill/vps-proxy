@@ -34,7 +34,7 @@ write_files:
       X11Forwarding no
       AllowAgentForwarding no
       AuthorizedKeysFile .ssh/authorized_keys
-      AllowUsers $(name)
+      AllowUsers ${name}
   - path: /etc/systemd/system/ssh.socket.d/listen.conf
     content: |
       [Socket]

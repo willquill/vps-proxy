@@ -49,7 +49,7 @@ jobs:
           apply: "true"
 
   ansible-deploy:
-    name: ansible-playbook
+    name: Ansible Playbook Run
     needs:
       - tofu-apply
     runs-on: ubuntu-latest
