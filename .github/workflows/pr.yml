@@ -30,23 +30,45 @@ jobs:
             const maxAttempts = 60; // 10 minutes
             const delayMs = 10000;
             function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+            console.log(`Looking for workflow: "${targetName}"`);
+            console.log(`Event: ${context.eventName}`);
+            console.log(`SHA: ${context.sha}`);
+
             for (let i=0; i<maxAttempts; i++) {
+              console.log(`Attempt ${i+1}/${maxAttempts}`);
+              
               const runs = await github.rest.actions.listWorkflowRunsForRepo({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                event: context.eventName,
                 per_page: 50
               });
-              const run = runs.data.workflow_runs.find(r => r.name === targetName && r.head_sha === context.sha);
+              
+              console.log(`Found ${runs.data.workflow_runs.length} total workflow runs`);
+              
+              // Look for ANY security workflow run for this SHA, regardless of event
+              const run = runs.data.workflow_runs.find(r => {
+                console.log(`Checking run: ${r.name}, SHA: ${r.head_sha}, Status: ${r.status}, Event: ${r.event}`);
+                return r.name === targetName && r.head_sha === context.sha;
+              });
+              
               if (run) {
+                console.log(`Found matching run: Status=${run.status}, Conclusion=${run.conclusion}`);
                 if (run.status === 'completed') {
                   if (run.conclusion !== 'success') {
                     core.setFailed(`Security workflow conclusion: ${run.conclusion}`);
                   }
+                  console.log('Security workflow completed successfully!');
                   return;
                 }
+                console.log('Security workflow still running...');
+              } else {
+                console.log('No matching security workflow run found yet');
               }
-              await sleep(delayMs);
+              
+              if (i < maxAttempts - 1) {
+                await sleep(delayMs);
+              }
             }
             core.setFailed('Timed out waiting for security workflow to complete');
 
