@@ -156,7 +156,7 @@ jobs:
             <details><summary>Validation Output</summary>
 
             \`\`\`\n
-            ${{ needs.lint.outputs.validate_stdout }}
+            ${{ needs.tofu-lint.outputs.validate_stdout }}
             \`\`\`
 
             </details>
