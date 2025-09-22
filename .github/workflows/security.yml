@@ -32,6 +32,7 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           gitleaks_notify_user_list: ${{ github.repository_owner }}
+          gitleaks_scan: "true"
 
   security-tfsec:
     name: Tfsec Scan
@@ -55,3 +56,4 @@ jobs:
           working_dir: ${{ matrix.working_dir }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           gitleaks_notify_user_list: ${{ github.repository_owner }}
+          tf_enabled: "true"

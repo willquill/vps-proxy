@@ -8,11 +8,11 @@ inputs:
   gitleaks_scan:
     description: 'Enable gitleaks scan'
     required: false
-    default: 'true'
+    default: 'false'
   tf_enabled:
     description: 'Enable tfsec scan'
     required: false
-    default: 'true'
+    default: 'false'
   github_token:
     description: 'GitHub token for the action'
     required: true
