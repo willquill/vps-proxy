@@ -1,9 +1,10 @@
-name: PR
-
+name: Lint & Plan
 on:
   # Allows manual triggering
   workflow_dispatch:
   pull_request:
+  push:
+    branches: [main]
 
 env:
   TZ: ${{ secrets.TZ }}
@@ -173,7 +174,7 @@ jobs:
 
             *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.tf_actions_working_dir }}\`, Workflow: \`${{ github.workflow }}\`*`;
 
-            *Last updated: ${new Date().toLocaleString('en-US', { timeZone: 'America/Chicago' })}*;
+            *Last updated: ${new Date().toLocaleString('en-US', { timeZone: 'America/Chicago' })}`*`;
 
             // 3. If we have a comment, update it, otherwise create a new one
             if (botComment) {
@@ -191,34 +192,3 @@ jobs:
                 body: output
               })
             }
-
-  apply:
-    name: Tofu Apply
-    needs:
-      - tofu-plan
-    runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - tofu_version: "~>1.10.6"
-            working_dir: opentofu
-    environment: hetzner-cloud
-    env:
-      tf_actions_working_dir: ${{ matrix.working_dir }}
-      tofu_version: ${{ matrix.tofu_version }}
-
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.tofu_version }}-${{ matrix.working_dir }}
-      cancel-in-progress: true
-
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Apply
-        id: apply
-        uses: ./.github/actions/opentofu
-        with:
-          tofu_version: ${{ matrix.tofu_version }}
-          apply: "true"
