@@ -1,4 +1,4 @@
-name: OpenTofu
+name: PR
 
 on:
   # Allows manual triggering
@@ -57,7 +57,7 @@ jobs:
           gitleaks_notify_user_list: ${{ github.repository_owner }}
 
   tofu-lint:
-    name: Lint
+    name: Tofu Lint
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -100,7 +100,7 @@ jobs:
       validate_stdout: ${{ steps.tofu-validate.outputs.validate_stdout }}
 
   tofu-plan:
-    name: Plan
+    name: Tofu Plan
     needs:
       - security-tfsec
       - tofu-lint
@@ -173,6 +173,8 @@ jobs:
 
             *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.tf_actions_working_dir }}\`, Workflow: \`${{ github.workflow }}\`*`;
 
+            *Last updated: ${new Date().toUTCString()}*;
+
             // 3. If we have a comment, update it, otherwise create a new one
             if (botComment) {
               github.rest.issues.updateComment({
@@ -191,7 +193,7 @@ jobs:
             }
 
   apply:
-    name: Apply
+    name: Tofu Apply
     needs:
       - tofu-plan
     runs-on: ubuntu-latest
