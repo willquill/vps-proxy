@@ -1,4 +1,4 @@
-name: Lint & Plan
+name: OpenTofu
 
 on:
   # Allows manual triggering
@@ -57,7 +57,7 @@ jobs:
           gitleaks_notify_user_list: ${{ github.repository_owner }}
 
   tofu-lint:
-    name: Tofu Lint
+    name: Lint
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -100,7 +100,7 @@ jobs:
       validate_stdout: ${{ steps.tofu-validate.outputs.validate_stdout }}
 
   tofu-plan:
-    name: Tofu Plan
+    name: Plan
     needs:
       - security-tfsec
       - tofu-lint
@@ -191,7 +191,7 @@ jobs:
             }
 
   apply:
-    name: Tofu Apply
+    name: Apply
     needs:
       - tofu-plan
     runs-on: ubuntu-latest
