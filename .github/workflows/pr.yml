@@ -1,8 +1,8 @@
 name: Lint & Plan
 on:
-  workflow_run:
-    workflows: ["Security"]
-    types: [completed]
+  pull_request:
+  push:
+    branches: [main]
 
 env:
   TZ: ${{ secrets.TZ }}
@@ -17,10 +17,43 @@ env:
   HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
 
 jobs:
+  wait-for-security:
+    name: Wait for Security
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for Security workflow
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const targetName = 'Security';
+            const maxAttempts = 60; // 10 minutes
+            const delayMs = 10000;
+            function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+            for (let i=0; i<maxAttempts; i++) {
+              const runs = await github.rest.actions.listWorkflowRunsForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                event: context.eventName,
+                per_page: 50
+              });
+              const run = runs.data.workflow_runs.find(r => r.name === targetName && r.head_sha === context.sha);
+              if (run) {
+                if (run.status === 'completed') {
+                  if (run.conclusion !== 'success') {
+                    core.setFailed(`Security workflow conclusion: ${run.conclusion}`);
+                  }
+                  return;
+                }
+              }
+              await sleep(delayMs);
+            }
+            core.setFailed('Timed out waiting for security workflow to complete');
+
   tofu-lint:
     name: Tofu Lint
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success'}}
+    needs: wait-for-security
     strategy:
       fail-fast: false
       matrix:
@@ -66,7 +99,6 @@ jobs:
     needs:
       - tofu-lint
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success'}}
     strategy:
       fail-fast: false
       matrix:
