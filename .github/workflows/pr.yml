@@ -1,8 +1,8 @@
-name: Lint & Plan
+name: PR
 on:
-  workflow_run:
-    workflows: ["Security"]
-    types: [completed]
+  pull_request:
+  push:
+    branches: [main]
 
 env:
   TZ: ${{ secrets.TZ }}
@@ -20,7 +20,6 @@ jobs:
   tofu-lint:
     name: Tofu Lint
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success'}}
     strategy:
       fail-fast: false
       matrix:
@@ -40,6 +39,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+
+      # Waits for Security workflow to complete for the same commit
+      - name: Wait on Security Workflow
+        uses: lucasssvaz/wait-on-workflow@v1
+        with:
+          workflow: security.yml
+          max-wait: 3
+          interval: 10
+          timeout: 5
+          sha: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Tofu fmt
         id: tofu-fmt
@@ -66,7 +75,6 @@ jobs:
     needs:
       - tofu-lint
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success'}}
     strategy:
       fail-fast: false
       matrix:
@@ -132,7 +140,7 @@ jobs:
 
             </details>
 
-            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.tf_actions_working_dir }}\`, Workflow: \`${{ github.workflow }}\`*`;
+            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.tf_actions_working_dir }}\`, Workflow: \`${{ github.workflow }}\`*
 
             *Last updated: ${new Date().toLocaleString('en-US', { timeZone: 'America/Chicago' })}*`;
 
