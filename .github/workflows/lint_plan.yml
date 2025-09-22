@@ -1,7 +1,7 @@
 name: Lint & Plan
 on:
   workflow_run:
-    workflows: ["Security"] # name of the upstream workflow
+    workflows: ["Security"]
     types: [completed]
 
 env:
