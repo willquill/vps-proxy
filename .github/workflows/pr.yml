@@ -57,9 +57,8 @@ jobs:
           gitleaks_notify_user_list: ${{ github.repository_owner }}
 
   tofu-lint:
-    needs: security-tfsec
+    name: Tofu Lint
     runs-on: ubuntu-latest
-    environment: hetzner-cloud
     strategy:
       fail-fast: false
       matrix:
@@ -68,25 +67,89 @@ jobs:
             working_dir: opentofu
           - tofu_version: "~>1.10.6"
             working_dir: tfstate
+    environment: hetzner-cloud
+    env:
+      tf_actions_working_dir: ${{ matrix.working_dir }}
+      tofu_version: ${{ matrix.tofu_version }}
 
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.working_dir }}
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.tofu_version }}--${{ matrix.working_dir }}
       cancel-in-progress: true
 
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/opentofu
+
+      - name: tofu fmt
+        id: tofu-fmt
+        uses: ./.github/actions/opentofu
         with:
           tofu_version: ${{ matrix.tofu_version }}
-          working_dir: ${{ matrix.working_dir }}
-          #github_token: ${{ secrets.GITHUB_TOKEN }}
-          event_name: ${{ github.event_name }}
-          lint: "true"
+          init: "false"
+          fmt: "true"
+
+      - name: tofu Validate
+        id: tofu-validate
+        uses: ./.github/actions/opentofu
+        with:
+          tofu_version: ${{ matrix.tofu_version }}
+          validate: "true"
+
+      - name: lint comment
+        uses: actions/github-script@v6
+        if: ${{ inputs.lint == 'true' && inputs.event_name == 'pull_request' }}
+        with:
+          #github-token: ${{ inputs.github_token }}
+          script: |
+            // 1. Retrieve existing bot comments for the PR
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            })
+            const botComment = comments.find(comment => {
+              return comment.user.type === 'Bot' && comment.body.includes('OpenTofu Format and Validate')
+            })
+
+            // 2. Prepare format of the comment
+            const output = `#### OpenTofu Format and Validate 🖌\`${{ steps.fmt.outputs.fmt_outcome }}\`
+            #### OpenTofu Validation 🤖\`${{ steps.validate.outputs.validate_outcome }}\`
+            <details><summary>Validation Output</summary>
+
+            \`\`\`\n
+            ${{ steps.validate.outputs.validate_stdout }}
+            \`\`\`
+
+            </details>
+
+            *Pusher: @${{ github.actor }}, Action: \`${{ inputs.event_name }}\`, Working Directory: \`${{ inputs.working_dir }}\`, Workflow: \`${{ github.workflow }}\`*`;
+
+            // 3. If we have a comment, update it, otherwise create a new one
+            if (botComment) {
+              github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: output
+              })
+            } else {
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: output
+              })
+            }
+
+    outputs:
+      fmt_outcome: ${{ steps.tofu-fmt.outputs.fmt_outcome }}
+      validate_outcome: ${{ steps.tofu-validate.outputs.validate_outcome }}
+      validate_stdout: ${{ steps.tofu-validate.outputs.validate_stdout }}
 
   tofu-plan:
+    name: Tofu Plan
     needs: security-tfsec
     runs-on: ubuntu-latest
-    environment: hetzner-cloud
+
     strategy:
       fail-fast: false
       matrix:
@@ -94,16 +157,110 @@ jobs:
           - tofu_version: "~>1.10.6"
             working_dir: opentofu
 
+    environment: hetzner-cloud
+    env:
+      tf_actions_working_dir: ${{ matrix.working_dir }}
+      tofu_version: ${{ matrix.tofu_version }}
+
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.working_dir }}
       cancel-in-progress: true
 
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/opentofu
+
+      - name: Plan
+        id: plan
+        uses: ./.github/actions/opentofu
         with:
           tofu_version: ${{ matrix.tofu_version }}
-          working_dir: ${{ matrix.working_dir }}
-          #github_token: ${{ secrets.GITHUB_TOKEN }}
-          event_name: ${{ github.event_name }}
           plan: "true"
+
+      - name: Plan Comment
+        uses: actions/github-script@v6
+        if: ${{ github.event_name == 'pull_request' }}
+        env:
+          PLAN: "tofu plan -no-color\n${{ steps.plan.outputs.plan_stdout }}"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            // 1. Retrieve existing bot comments for the PR
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            })
+            const botComment = comments.find(comment => {
+              return comment.user.type === 'Bot' && comment.body.includes('OpenTofu Format and Style')
+            })
+
+            // 2. Prepare format of the comment
+            const output = `#### OpenTofu Format and Style 🖌\`${{ needs.lint.outputs.fmt_outcome }}\`
+            #### OpenTofu Validation 🤖\`${{ needs.lint.outputs.validate_outcome }}\`
+            <details><summary>Validation Output</summary>
+
+            \`\`\`\n
+            ${{ needs.lint.outputs.validate_stdout }}
+            \`\`\`
+
+            </details>
+
+            #### OpenTofu Plan 📖\`${{ steps.plan.outputs.plan_outcome }}\`
+
+            <details><summary>Show Plan</summary>
+
+            \`\`\`\n
+            ${process.env.PLAN}
+            \`\`\`
+
+            </details>
+
+            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.tf_actions_working_dir }}\`, Workflow: \`${{ github.workflow }}\`*`;
+
+            // 3. If we have a comment, update it, otherwise create a new one
+            if (botComment) {
+              github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: output
+              })
+            } else {
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: output
+              })
+            }
+
+  apply:
+    name: Tofu Apply
+    needs:
+      - tofu-plan
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - tofu_version: "~>1.10.6"
+            working_dir: opentofu
+    environment: hetzner-cloud
+    env:
+      tf_actions_working_dir: ${{ matrix.working_dir }}
+      tofu_version: ${{ matrix.tofu_version }}
+
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.tofu_version }}-${{ matrix.working_dir }}
+      cancel-in-progress: true
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Apply
+        id: apply
+        uses: ./.github/actions/opentofu
+        with:
+          tofu_version: ${{ matrix.tofu_version }}
+          apply: "true"
