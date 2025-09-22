@@ -41,16 +41,14 @@ jobs:
       - uses: actions/checkout@v5
 
       # Waits for Security workflow to complete for the same commit
-      - name: Wait for Security Workflow
-        uses: kamilchodola/wait-for-workflow-action@1.1.0
+      - name: Wait on Security Workflow
+        uses: lucasssvaz/wait-on-workflow@v1
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          workflow_id: "security.yml"
-          max_wait_minutes: "3"
-          interval: "5"
-          timeout: "60"
-          org_name: ${{ github.repository_owner }}
-          repo_name: ${{ github.repository }}
+          workflow: security.yml
+          max-wait: 3
+          interval: 10
+          timeout: 5
+          sha: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Tofu fmt
         id: tofu-fmt
