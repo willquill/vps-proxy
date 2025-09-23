@@ -22,11 +22,12 @@ packages:
 package_update: true
 package_upgrade: true
 write_files:
-  - path: /etc/ssh/sshd_config.d/ssh-hardening.conf
+  - path: /etc/ssh/sshd_config.d/99-ssh-hardening.conf
     content: |
       PermitRootLogin no
       PasswordAuthentication no
       Port 2222
+      PubkeyAuthentication yes
       KbdInteractiveAuthentication no
       ChallengeResponseAuthentication no
       MaxAuthTries 2
