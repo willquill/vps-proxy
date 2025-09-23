@@ -37,21 +37,24 @@ resource "hcloud_firewall" "vps_proxy" {
   labels = local.labels
 }
 
-data "cloudinit_config" "vps_proxy" {
+# data "cloudinit_config" "vps_proxy" {
 
-  gzip          = true
-  base64_encode = true
+#   gzip          = true
+#   base64_encode = true
 
-  # Main cloud-config configuration file.
-  part {
-    filename     = "init.cfg"
-    content_type = "text/cloud-config"
-    content = templatefile("${path.module}/cloud-init.yaml.tpl", {
-      name               = var.repo_owner
-      ssh_authorized_key = var.ssh_authorized_key
-     })
-  }
-}
+#   # Main cloud-config configuration file.
+#   part {
+#     filename     = "init.cfg"
+#     content_type = "text/cloud-config"
+#     content = templatefile(
+#       "${path.module}/cloud-init.yaml.tpl",
+#       {
+#         name               = var.repo_owner
+#         ssh_authorized_key = var.ssh_authorized_key
+#       }
+#     )
+#   }
+# }
 
 resource "hcloud_server" "server" {
   name         = "vps-proxy"
@@ -60,7 +63,14 @@ resource "hcloud_server" "server" {
   datacenter   = "ash-dc1"
   firewall_ids = [hcloud_firewall.vps_proxy.id]
 
-  user_data = data.cloudinit_config.vps_proxy.rendered
+  #user_data = data.cloudinit_config.vps_proxy.rendered
+  user_data = templatefile(
+    "${path.module}/cloud-init.yaml.tpl",
+    {
+      name               = var.repo_owner
+      ssh_authorized_key = var.ssh_authorized_key
+    }
+  )
 
   labels = local.labels
 }
