@@ -141,7 +141,7 @@ jobs:
 
             *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.tf_actions_working_dir }}\`, Workflow: \`${{ github.workflow }}\`*
 
-            *Last updated: ${new Date().toLocaleString('en-US', { timeZone: 'America/Chicago' })}*`;
+            *Last updated: ${new Date().toLocaleString('en-US', { timeZone: 'America/Chicago' })} CST*`;
 
             // 3. If we have a comment, update it, otherwise create a new one
             if (botComment) {
