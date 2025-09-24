@@ -17,10 +17,6 @@ packages:
   - python3-apt
   - aptitude
   - openssh-server
-  - vim
-  - tree
-  - curl
-  - wget
 package_update: true
 package_upgrade: true
 write_files:
@@ -46,12 +42,7 @@ write_files:
 ufw:
   enabled: true
   allow:
-    - "22"
     - "2222"
-    - "80"
-    - "443"
-    - "636"
-    - "51820"
 runcmd:
   - printf "[sshd]\nenabled = true\nport = ssh, 2222\nbanaction = iptables-multiport" > /etc/fail2ban/jail.local
   - systemctl enable fail2ban
