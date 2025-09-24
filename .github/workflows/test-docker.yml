@@ -20,6 +20,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
+      - name: Remove port 22 mapping from docker-compose.yml
+        run: |
+          sed -i '/- 22:22/d' docker-compose.yml
       - name: Create dummy .env file
         run: |
           cat > .env << EOF
