@@ -36,6 +36,9 @@ jobs:
           AUTHENTIK_POSTGRESQL__USER=authentik
           AUTHENTIK_SECRET_KEY=dummy_key
           EOF
+      - name: Create Docker Network
+        run: |
+          docker network create proxy || true
       - name: Build Docker images
         run: |
           docker compose build
