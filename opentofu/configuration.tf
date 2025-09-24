@@ -3,7 +3,7 @@
 # env:
 #   TF_VAR_repo_owner: ${{ github.repository_owner }}
 #   TF_VAR_workflow_actor: ${{ github.actor }}
-#   TF_VAR_ssh_authorized_key: ${{ secrets.VPS_PROXY_KEY }}
+#   TF_VAR_ssh_authorized_key: ${{ secrets.VPS_PROXY_KEY_PUBLIC }}
 variable "repo_owner" {
   description = "GitHub repository owner"
   type        = string
