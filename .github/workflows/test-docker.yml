@@ -1,4 +1,4 @@
-name: Test Docker Compose
+name: Docker Compose Build Test
 
 on:
   # Allows manual triggering
@@ -38,11 +38,11 @@ jobs:
           EOF
       - name: Build Docker images
         run: |
-          docker-compose -f docker-compose.yml build
+          docker-compose build
       - name: Run Docker-compose
         run: |
-          docker-compose -f docker-compose.yml up -d
-          docker-compose -f docker-compose.yml ps
+          docker compose up -d
+          docker compose ps
           sleep 30
       - name: Stop and remove containers
-        run: docker-compose -f docker-compose.yml down
+        run: docker compose down
