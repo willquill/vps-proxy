@@ -7,6 +7,8 @@ users:
     shell: /bin/bash
     ssh_authorized_keys:
       - ${ssh_authorized_key}
+# Note: Keeps cloud-init from re-enabling passwords for SSH
+ssh_pwauth: false
 packages:
   - fail2ban
   - ufw
