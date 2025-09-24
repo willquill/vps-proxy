@@ -27,7 +27,3 @@
     - { port: '443', proto: 'tcp' }
     - { port: '636', proto: 'tcp' }
     - { port: '51820', proto: 'udp' }
-
-- name: Enable UFW
-  community.general.ufw:
-    state: enabled
