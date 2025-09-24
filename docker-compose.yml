@@ -52,10 +52,7 @@ services:
       - 22:22 # for GitLab and anything else I want to add
       - 80:80
       - 443:443
-      - 389:389 # LDAP
       - 636:636 # LDAPS
-      - 8883:8883 # entrypoint: mqtt tls port
-      - 8083:8083 # entrypoint: websocket port for mqtt (TLS)
     environment:
       - TZ=$TZ
       # https://go-acme.github.io/lego/dns/cloudflare/

@@ -1,8 +1,6 @@
-name: Tests
+name: Ansible Tests
 
 on:
-  push:
-  # Allows manual triggering
   workflow_dispatch:
     inputs:
       version:
@@ -10,6 +8,11 @@ on:
         required: true
         default: "9.3.0"
         type: string
+  pull_request:
+    branches: [main]
+    paths:
+      - "ansible/**"
+      - ".github/workflows/test.yml"
 
 jobs:
   ansible:
