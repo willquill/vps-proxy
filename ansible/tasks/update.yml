@@ -1,0 +1,4 @@
+- name: Update apt cache and upgrade system
+  ansible.builtin.apt:
+    update_cache: yes
+    upgrade: dist
