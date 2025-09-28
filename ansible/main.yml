@@ -1,4 +1,12 @@
 ---
+- name: Update System
+  hosts: all
+  tags: update
+  tasks:
+    - name: Update apt cache and upgrade system
+      ansible.builtin.include_role:
+        name: update
+
 - name: Deploy VPS Proxy
   hosts: all
   tags: deploy
