@@ -2,6 +2,7 @@
 - name: Update System
   hosts: all
   tags: update
+  become: true
   tasks:
     - name: Update apt cache and upgrade system
       ansible.builtin.include_role:
