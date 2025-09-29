@@ -98,7 +98,6 @@ jobs:
         run: |
           ansible-galaxy collection install -r ansible/galaxy-requirements.yml
 
-      # Get values from Terraform output
       - name: Download Terraform output
         uses: actions/download-artifact@v5
         with:
