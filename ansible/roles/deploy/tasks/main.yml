@@ -2,10 +2,6 @@
 ### Split tasks into logical modules
 ####################################
 ---
-# Import handlers
-- name: Import handlers
-  ansible.builtin.import_tasks: ../handlers/main.yml
-
 # System setup - package updates and common utilities
 - name: System setup - package updates and common utilities
   ansible.builtin.import_tasks: system.yml
