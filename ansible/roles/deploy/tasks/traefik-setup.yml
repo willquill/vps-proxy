@@ -66,3 +66,10 @@
     modification_time: preserve
     access_time: preserve
   changed_when: false
+
+- name: Create docker proxy network if it doesn't exist
+  ansible.builtin.command: docker network create proxy
+  register: create_network_result
+  failed_when:
+    - create_network_result.rc != 0
+    - "'already exists' not in create_network_result.stderr"

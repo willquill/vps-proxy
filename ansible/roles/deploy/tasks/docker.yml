@@ -23,6 +23,11 @@
     components: stable
     signed_by: /usr/share/keyrings/docker-archive-keyring.gpg
 
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
 - name: Install Docker Engine
   ansible.builtin.apt:
     name:
@@ -40,10 +45,3 @@
   ansible.builtin.service:
     name: docker
     state: started
-
-- name: Create docker network if it doesn't exist
-  ansible.builtin.command: docker network create proxy
-  register: create_network_result
-  failed_when:
-    - create_network_result.rc != 0
-    - "'already exists' not in create_network_result.stderr"
