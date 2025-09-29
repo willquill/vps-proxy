@@ -7,18 +7,21 @@
       - ca-certificates
       - curl
       - gnupg2
-      - apt-key
-      # - software-properties-common removed in debian 13 trixie
 
-- name: Add Docker GPG key
-  ansible.builtin.apt_key:
+- name: Download Docker GPG key
+  ansible.builtin.get_url:
     url: https://download.docker.com/linux/debian/gpg
-    state: present
+    dest: /usr/share/keyrings/docker-archive-keyring.gpg
+    mode: '0644'
 
 - name: Add Docker repository
-  ansible.builtin.apt_repository:
-    repo: deb [arch=amd64] https://download.docker.com/linux/debian {{ ansible_distribution_release }} stable
-    state: present
+  ansible.builtin.deb822_repository:
+    name: docker
+    types: deb
+    uris: https://download.docker.com/linux/debian
+    suites: "{{ ansible_distribution_release }}"
+    components: stable
+    signed_by: /usr/share/keyrings/docker-archive-keyring.gpg
 
 - name: Install Docker Engine
   ansible.builtin.apt:
