@@ -1,6 +1,12 @@
 name: Deploy
 
 on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Ansible version to install"
+        required: false
+        default: "9.3.0"
   workflow_run:
     workflows: ["Security"]
     branches: [main]
@@ -11,8 +17,8 @@ jobs:
   tofu-apply:
     name: Tofu Apply
     runs-on: ubuntu-latest
-    # Only run if the triggering workflow completed successfully AND was triggered by a push to main
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main' }}
+    # Run if: workflow_dispatch (no conditions) OR workflow_run with success conditions
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main') }}
     strategy:
       fail-fast: false
       matrix:
@@ -53,7 +59,8 @@ jobs:
     needs:
       - tofu-apply
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main' }}
+    # Run if: workflow_dispatch (no conditions) OR workflow_run with success conditions
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main') }}
     environment: hetzner-cloud
     # Note: We do not need to set each env because instead of envvars,
     #       we set -e options where necessary
