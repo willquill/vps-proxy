@@ -14,13 +14,9 @@
   become: true
   vars:
     wireguard_port: 51820
-    wireguard_interface: wg0
     wireguard_tunnel_subnet: 192.168.145.0/24
     wireguard_address: 192.168.145.1/24
     wireguard_peer1: 192.168.145.2/32
-    wireguard_private_key_path: "/etc/wireguard/privatekey"
-    wireguard_public_key_path: "/etc/wireguard/publickey"
-    wireguard_config_path: "/etc/wireguard/wg0.conf"
     user_id: 1000
     group_id: 1000
 
