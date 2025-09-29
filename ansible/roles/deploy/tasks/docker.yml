@@ -1,17 +1,41 @@
 ---
 # Docker setup tasks
-
-- name: Install Docker
+- name: Install required packages
   ansible.builtin.apt:
     name:
-      - docker.io
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg2
+      - software-properties-common
+
+- name: Add Docker GPG key
+  ansible.builtin.apt_key:
+    url: https://download.docker.com/linux/debian/gpg
     state: present
 
-- name: Ensure user is in docker group
+- name: Add Docker repository
+  ansible.builtin.apt_repository:
+    repo: deb [arch=amd64] https://download.docker.com/linux/debian {{ ansible_distribution_release }} stable
+    state: present
+
+- name: Install Docker Engine
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+
+- name: Add user to docker group
   ansible.builtin.user:
     name: "{{ user_name }}"
     groups: docker
     append: yes
+
+- name: Start Docker service
+  ansible.builtin.service:
+    name: docker
+    state: started
 
 - name: Create docker network if it doesn't exist
   ansible.builtin.command: docker network create proxy
