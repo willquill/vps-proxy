@@ -1,7 +1,7 @@
 ---
 # WireGuard setup tasks
 
-# Source: 
+# Source: https://upvpn.app/articles/post/wireguard-vpn-on-hetzner
 - name: Install and Setup WireGuard
   ansible.builtin.script: scripts/wireguard-setup.sh
   environment:
