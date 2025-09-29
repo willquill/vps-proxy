@@ -4,24 +4,24 @@
 ---
 # Import handlers
 - name: Import handlers
-  ansible.builtin.import_tasks: handlers/main.yml
+  ansible.builtin.import_tasks: ../handlers/main.yml
 
 # System setup - package updates and common utilities
 - name: System setup - package updates and common utilities
-  ansible.builtin.import_tasks: tasks/system.yml
+  ansible.builtin.import_tasks: system.yml
 
 # WireGuard VPN setup
 - name: WireGuard VPN setup
-  ansible.builtin.import_tasks: tasks/wireguard.yml
+  ansible.builtin.import_tasks: wireguard.yml
 
 # Docker setup
 - name: Docker setup
-  ansible.builtin.import_tasks: tasks/docker.yml
+  ansible.builtin.import_tasks: docker.yml
 
 # Traefik configuration
 - name: Traefik configuration
-  ansible.builtin.import_tasks: tasks/traefik-setup.yml
+  ansible.builtin.import_tasks: traefik-setup.yml
 
 # Application deployment
 - name: Application deployment
-  ansible.builtin.import_tasks: tasks/app.yml
+  ansible.builtin.import_tasks: app.yml
