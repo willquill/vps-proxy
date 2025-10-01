@@ -1,27 +1,23 @@
 ---
 # Docker setup tasks
-- name: Install required packages
-  ansible.builtin.apt:
-    name:
-      - apt-transport-https
-      - ca-certificates
-      - curl
-      - gnupg2
+# - name: Install required packages
+#   ansible.builtin.apt:
+#     name:
+#       - apt-transport-https
+#       - ca-certificates
+#       - curl
+#       - gnupg2
 
-- name: Download Docker GPG key
-  ansible.builtin.get_url:
-    url: https://download.docker.com/linux/debian/gpg
-    dest: /usr/share/keyrings/docker-archive-keyring.gpg
-    mode: '0644'
-
-- name: Add Docker repository
+- name: Add Docker APT repository
   ansible.builtin.deb822_repository:
     name: docker
-    types: deb
-    uris: https://download.docker.com/linux/debian
-    suites: "{{ ansible_distribution_release }}"
-    components: stable
-    signed_by: /usr/share/keyrings/docker-archive-keyring.gpg
+    state: present
+    types: [deb]
+    uris: "https://download.docker.com/linux/{{ ansible_distribution|lower }}"
+    suites: ["{{ ansible_distribution_release|lower }}"]
+    components: [stable]
+    signed_by: "https://download.docker.com/linux/debian/gpg"
+    enabled: yes
 
 - name: Update apt cache
   ansible.builtin.apt:
