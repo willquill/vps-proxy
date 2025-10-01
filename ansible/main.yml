@@ -11,6 +11,7 @@
 - name: Deploy VPS Proxy
   hosts: all
   tags: deploy
+  gather_facts: true
   become: true
   vars:
     wireguard_port: 51820

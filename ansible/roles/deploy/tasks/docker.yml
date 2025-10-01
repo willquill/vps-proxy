@@ -1,13 +1,5 @@
 ---
 # Docker setup tasks
-# - name: Install required packages
-#   ansible.builtin.apt:
-#     name:
-#       - apt-transport-https
-#       - ca-certificates
-#       - curl
-#       - gnupg2
-
 - name: Add Docker APT repository
   ansible.builtin.deb822_repository:
     name: docker

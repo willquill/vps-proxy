@@ -177,4 +177,6 @@ You can also check the connection status in OPNsense under **VPN > WireGuard > S
 
 ## Development
 
-1. Use [nektos/act](https://github.com/nektos/act) to test GitHub Actions locally - big time saver!
+Use [nektos/act](https://github.com/nektos/act) to test GitHub Actions locally - big time saver!
+
+Here's a [helpful gist with example usages of the deb822_repository Ansible module](https://gist.github.com/roib20/27fde10af195cee1c1f8ac5f68be7e9b)
