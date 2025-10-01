@@ -19,6 +19,7 @@
     signed_by: "https://download.docker.com/linux/debian/gpg"
     enabled: yes
   register: repo_result
+  check_mode: false
 
 - name: Debug repository result
   ansible.builtin.debug:
@@ -29,6 +30,7 @@
     update_cache: yes
     cache_valid_time: 3600
   register: cache_result
+  check_mode: false
 
 - name: Debug cache update result
   ansible.builtin.debug:
@@ -59,14 +61,17 @@
       - docker-ce
       - docker-ce-cli
       - containerd.io
+  when: not ansible_check_mode
 
 - name: Add user to docker group
   ansible.builtin.user:
     name: "{{ user_name }}"
     groups: docker
     append: yes
+  when: not ansible_check_mode  
 
 - name: Start Docker service
   ansible.builtin.service:
     name: docker
     state: started
+  when: not ansible_check_mode  
