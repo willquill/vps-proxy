@@ -1,5 +1,13 @@
 ---
 # Docker setup tasks
+
+- name: Debug distribution info
+  ansible.builtin.debug:
+    msg: 
+      - "Distribution: {{ ansible_distribution }}"
+      - "Release: {{ ansible_distribution_release }}"
+      - "Version: {{ ansible_distribution_version }}"
+
 - name: Add Docker APT repository
   ansible.builtin.deb822_repository:
     name: docker
@@ -10,11 +18,40 @@
     components: [stable]
     signed_by: "https://download.docker.com/linux/debian/gpg"
     enabled: yes
+  register: repo_result
+
+- name: Debug repository result
+  ansible.builtin.debug:
+    var: repo_result
 
 - name: Update apt cache
   ansible.builtin.apt:
     update_cache: yes
     cache_valid_time: 3600
+  register: cache_result
+
+- name: Debug cache update result
+  ansible.builtin.debug:
+    var: cache_result
+
+- name: Check if docker-ce package is available
+  ansible.builtin.command: apt-cache search docker-ce
+  register: docker_search
+  changed_when: false
+
+- name: Debug docker package search
+  ansible.builtin.debug:
+    var: docker_search.stdout_lines
+
+- name: Check repository sources
+  ansible.builtin.command: cat /etc/apt/sources.list.d/docker.sources
+  register: sources_content
+  changed_when: false
+  ignore_errors: true
+
+- name: Debug repository sources
+  ansible.builtin.debug:
+    var: sources_content.stdout_lines
 
 - name: Install Docker Engine
   ansible.builtin.apt:
