@@ -180,3 +180,13 @@ You can also check the connection status in OPNsense under **VPN > WireGuard > S
 Use [nektos/act](https://github.com/nektos/act) to test GitHub Actions locally - big time saver!
 
 Here's a [helpful gist with example usages of the deb822_repository Ansible module](https://gist.github.com/roib20/27fde10af195cee1c1f8ac5f68be7e9b)
+
+### Local testing
+
+When testing with Ansible, do the following:
+
+```sh
+ansible-galaxy install -r galaxy-requirements.yml
+```
+
+And then run the `ansible-playbook` command found in the workflow but replace the variables with your own (unless you use nektos/act).

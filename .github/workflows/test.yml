@@ -66,6 +66,17 @@ jobs:
           mkdir -p /tmp/ansible-tmp
           chmod 1777 /tmp/ansible-tmp
 
+      # - name: Force install collections for Molecule
+      #   run: |
+      #     echo "Installing collections specifically for Molecule..."
+      #     ansible-galaxy collection install -r ansible/roles/deploy/molecule/requirements.yml --force
+      #     echo "Collections available for Molecule:"
+      #     ansible-galaxy collection list
+      #     echo "Collection paths:"
+      #     find /home/runner -name "community" -type d 2>/dev/null | head -10
+      #     echo "ANSIBLE_COLLECTIONS_PATH will be set to:"
+      #     echo "/home/runner/.ansible/collections:/usr/share/ansible/collections"
+
       - name: Molecule
         uses: gofrolist/molecule-action@v2
         with:
@@ -77,6 +88,7 @@ jobs:
           ANSIBLE_FORCE_COLOR: "1"
           ANSIBLE_REMOTE_TMP: "/tmp/ansible-tmp"
           ANSIBLE_LOCAL_TEMP: "/tmp/ansible-tmp"
+          ANSIBLE_COLLECTIONS_PATH: "/home/runner/.ansible/collections:/usr/share/ansible/collections"
           PYTHONUNBUFFERED: "1"
 
   docker-compose:
