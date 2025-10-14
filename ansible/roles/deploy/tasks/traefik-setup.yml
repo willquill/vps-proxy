@@ -21,12 +21,12 @@
 - name: Generate bcrypt htpasswd line
   ansible.builtin.command: |
     htpasswd -nbB {{ traefik_username }} {{ traefik_password }}
-  register: htpasswd_line
+  register: deploy_htpasswd_line
   changed_when: false
 
 - name: Write htpasswd file
   ansible.builtin.copy:
-    content: "{{ htpasswd_line.stdout }}"
+    content: "{{ deploy_htpasswd_line.stdout }}"
     dest: "{{ repo_dest }}/config/traefik/usersfile.txt"
     owner: "{{ user_name }}"
     group: "{{ user_name }}"
@@ -69,7 +69,7 @@
 
 - name: Create docker proxy network if it doesn't exist
   ansible.builtin.command: docker network create proxy
-  register: create_network_result
+  register: deploy_create_network_result
   failed_when:
-    - create_network_result.rc != 0
-    - "'already exists' not in create_network_result.stderr"
+    - deploy_create_network_result.rc != 0
+    - "'already exists' not in deploy_create_network_result.stderr"
