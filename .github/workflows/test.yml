@@ -6,7 +6,7 @@ on:
       version:
         description: "Ansible version to use"
         required: true
-        default: "9.3.0"
+        default: "12.1.0"
         type: string
   pull_request:
     branches: [main]
@@ -19,7 +19,7 @@ jobs:
     name: Ansible Tests with Molecule
     runs-on: ubuntu-latest
     env:
-      ANSIBLE_VERSION: ${{ github.event.inputs.version || '9.3.0' }}
+      ANSIBLE_VERSION: ${{ github.event.inputs.version || '12.1.0' }}
       ANSIBLE_FORCE_COLOR: "1"
     strategy:
       fail-fast: false
@@ -34,7 +34,7 @@ jobs:
       - name: "Install Python"
         uses: actions/setup-python@v4
         with:
-          python-version: "3.12"
+          python-version: "3.13"
 
       - name: "Cache python packages"
         uses: actions/cache@v4
@@ -53,8 +53,12 @@ jobs:
       # ---------- Install Ansible Galaxy requirements ----------
       - name: Install Ansible Galaxy requirements
         run: |
+          echo "Installing collections from galaxy-requirements.yml..."
           ansible-galaxy collection install -r ansible/galaxy-requirements.yml
-          ansible-galaxy collection install -r ansible/roles/deploy/molecule/requirements.yml
+          echo "Listing installed collections..."
+          ansible-galaxy collection list
+          echo "Checking for community.general specifically..."
+          ansible-galaxy collection list community.general
 
       # Create necessary directories first
       - name: Create ansible tmp directory
