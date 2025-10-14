@@ -39,9 +39,12 @@
     public_hostname: "{{ public_hostname }}"
     timezone: "{{ timezone | default('UTC') }}"
 
+# Don't do this in check mode as it makes changes
 - name: Run docker compose
   ansible.builtin.command: "docker compose up -d"
   args:
     chdir: "{{ repo_dest }}"
   become: true
   become_user: "{{ user_name }}"
+  when: not ansible_check_mode
+  

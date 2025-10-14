@@ -6,7 +6,7 @@ http:
     authentik:
       entryPoints:
         - "https"
-      rule: "Host(`auth.{{env "PUBLIC_HOSTNAME"}}`)"
+      rule: "Host(`auth.{{ public_hostname }}`)"
       middlewares:
         - public
         - https-redirectscheme
@@ -15,7 +15,7 @@ http:
     gatus:
       entryPoints:
         - "https"
-      rule: "Host(`uptime.{{env "PUBLIC_HOSTNAME"}}`)"
+      rule: "Host(`uptime.{{ public_hostname }}`)"
       middlewares:
         - private
         - https-redirectscheme

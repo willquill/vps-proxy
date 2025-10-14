@@ -18,33 +18,19 @@
     - "{{ repo_dest }}/config/traefik/config"
     - "{{ repo_dest }}/var/log/traefik"
 
-# Will install even in check mode to allow htpasswd generation
-- name: Install python3-pip for passlib installation
-  ansible.builtin.apt:
-    name: python3-pip
-    state: present
-  check_mode: false
+- name: Generate bcrypt htpasswd line
+  ansible.builtin.command: |
+    htpasswd -nbB {{ traefik_username }} {{ traefik_password }}
+  register: htpasswd_line
+  changed_when: false
 
-# Will install even in check mode to allow htpasswd generation
-- name: Install passlib for htpasswd module
-  ansible.builtin.pip:
-    name: passlib
-    state: present
-  check_mode: false
-
-- name: Generate Traefik htpasswd file
-  community.general.htpasswd:
-    path: "{{ repo_dest }}/config/traefik/usersfile.txt"
-    name: "{{ traefik_username }}"
-    password: "{{ traefik_password }}"
-    crypt_scheme: bcrypt
-    state: present
+- name: Write htpasswd file
+  ansible.builtin.copy:
+    content: "{{ htpasswd_line.stdout }}"
+    dest: "{{ repo_dest }}/config/traefik/usersfile.txt"
     owner: "{{ user_name }}"
     group: "{{ user_name }}"
     mode: "0600"
-  when:
-    - traefik_username is defined
-    - traefik_password is defined
 
 - name: Generate Traefik main configuration
   ansible.builtin.template:

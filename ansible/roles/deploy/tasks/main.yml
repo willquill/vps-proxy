@@ -2,9 +2,9 @@
 ### Split tasks into logical modules
 ####################################
 ---
-# System setup - package updates and common utilities
-- name: System setup - package updates and common utilities
-  ansible.builtin.import_tasks: system.yml
+# Firewall setup
+- name: Firewall setup
+  ansible.builtin.import_tasks: firewall.yml
 
 # WireGuard VPN setup
 - name: WireGuard VPN setup
