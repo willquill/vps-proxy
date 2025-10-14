@@ -37,12 +37,12 @@ http:
     #     customFrameOptionsValue: SAMEORIGIN
     #     customRequestHeaders:
     #       X-Forwarded-Proto: https   
-    #       X-Forwarded-Host: "youtrack.{{env "PUBLIC_HOSTNAME"}}"       
+    #       X-Forwarded-Host: "youtrack.{{ public_hostname }}"       
 
     authelia:
       forwardAuth:
-        #address: 'https://authelia.{{env "PUBLIC_HOSTNAME"}}/api/authz/forward-auth'
-        address: 'http://authelia:9091/api/verify?rd=https://authelia.{{env "PUBLIC_HOSTNAME"}}'
+        #address: 'https://authelia.{{ public_hostname }}/api/authz/forward-auth'
+        address: 'http://authelia:9091/api/verify?rd=https://authelia.{{ public_hostname }}'
         trustForwardHeader: 'true'
         authResponseHeaders:
           - Remote-User

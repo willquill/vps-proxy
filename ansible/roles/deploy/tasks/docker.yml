@@ -13,47 +13,47 @@
     name: docker
     state: present
     types: [deb]
-    uris: "https://download.docker.com/linux/{{ ansible_distribution|lower }}"
-    suites: ["{{ ansible_distribution_release|lower }}"]
+    uris: "https://download.docker.com/linux/{{ ansible_distribution | lower }}"
+    suites: ["{{ ansible_distribution_release | lower }}"]
     components: [stable]
     signed_by: "https://download.docker.com/linux/debian/gpg"
     enabled: yes
-  register: repo_result
+  register: deploy_repo_result
   check_mode: false
 
 - name: Debug repository result
   ansible.builtin.debug:
-    var: repo_result
+    var: deploy_repo_result
 
 - name: Update apt cache
   ansible.builtin.apt:
     update_cache: yes
     cache_valid_time: 3600
-  register: cache_result
+  register: deploy_cache_result
   check_mode: false
 
 - name: Debug cache update result
   ansible.builtin.debug:
-    var: cache_result
+    var: deploy_cache_result
 
 - name: Check if docker-ce package is available
   ansible.builtin.command: apt-cache search docker-ce
-  register: docker_search
+  register: deploy_docker_search
   changed_when: false
 
 - name: Debug docker package search
   ansible.builtin.debug:
-    var: docker_search.stdout_lines
+    var: deploy_docker_search.stdout_lines
 
 - name: Check repository sources
   ansible.builtin.command: cat /etc/apt/sources.list.d/docker.sources
-  register: sources_content
+  register: deploy_sources_content
   changed_when: false
   ignore_errors: true
 
 - name: Debug repository sources
   ansible.builtin.debug:
-    var: sources_content.stdout_lines
+    var: deploy_sources_content.stdout_lines
 
 - name: Install Docker Engine
   ansible.builtin.apt:
@@ -68,10 +68,10 @@
     name: "{{ user_name }}"
     groups: docker
     append: yes
-  when: not ansible_check_mode  
+  when: not ansible_check_mode
 
 - name: Start Docker service
   ansible.builtin.service:
     name: docker
     state: started
-  when: not ansible_check_mode  
+  when: not ansible_check_mode

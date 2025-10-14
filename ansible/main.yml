@@ -1,4 +1,5 @@
 ---
+# Runs even in check mode
 - name: Update System
   hosts: all
   tags: update
@@ -7,6 +8,16 @@
     - name: Update apt cache and upgrade system
       ansible.builtin.include_role:
         name: update
+
+# Runs even in check mode
+- name: Install Packages
+  hosts: all
+  tags: packages
+  become: true
+  tasks:
+    - name: Update apt cache and upgrade system
+      ansible.builtin.include_role:
+        name: packages
 
 - name: Deploy VPS Proxy
   hosts: all

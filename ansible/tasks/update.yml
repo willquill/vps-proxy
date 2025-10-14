@@ -1,4 +1,6 @@
+---
 - name: Update apt cache and upgrade system
   ansible.builtin.apt:
     update_cache: yes
     upgrade: dist
+  check_mode: false # Always install - other tasks depend on these

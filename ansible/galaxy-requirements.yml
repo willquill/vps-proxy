@@ -9,16 +9,14 @@ collections:
   
   # Used for sysctl module in wireguard.yml
   - name: ansible.posix
-    version: ">=1.6.2"
+    version: ">=2.1.0"
 
-  # Additional community collections that might be useful
   - name: community.docker
-    version: ">=4.7.0"
+    version: ">=4.8.1"
   
-  # Useful for cloud providers like Hetzner
   - name: community.general
-    version: ">=10.7.3"
+    version: ">=11.4.0"
 
-  # Useful for network configurations, firewalls, etc
-  - name: ansible.netcommon
-    version: ">=7.2.0"
+  # # Useful for network configurations, firewalls, etc
+  # - name: ansible.netcommon
+  #   version: ">=7.2.0"

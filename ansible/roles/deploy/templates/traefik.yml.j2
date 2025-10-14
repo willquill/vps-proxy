@@ -50,9 +50,9 @@ tls:
       defaultGeneratedCert:
         resolver: cloudflare
         domain:
-          main: '{PUBLIC_HOSTNAME}'
+          main: '{{ public_hostname }}'
           sans:
-            - 'ldaps.{PUBLIC_HOSTNAME}'
+            - 'ldaps.{{ public_hostname }}'
 
 # accessLog:
 #   filePath: "/etc/traefik/access.log"

@@ -1,15 +1,5 @@
 ---
-# System setup tasks
-- name: Install desired packages
-  ansible.builtin.apt:
-    name:
-      - git
-      - vim
-      - tree
-      - curl
-      - wget
-    state: present
-
+# Firewall tasks
 - name: Configure UFW - allow required ports
   community.general.ufw:
     rule: allow
