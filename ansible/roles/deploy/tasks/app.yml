@@ -1,22 +1,18 @@
 ---
 # Repository and app setup tasks
 
-- name: Ensure repository directory exists with correct ownership
-  ansible.builtin.file:
+- name: Check if repo already exists
+  ansible.builtin.stat:
     path: "{{ repo_dest }}"
-    state: directory
-    owner: "{{ user_name }}"
-    group: "{{ user_name }}"
-    mode: "0755"
+  register: repo_dir
 
-- name: Clone repository
+- name: Clone the repository
   ansible.builtin.git:
     repo: "{{ repo_url }}"
     dest: "{{ repo_dest }}"
-    clone: yes
-    update: yes
-    force: no
     version: "{{ repo_version | default('main') }}"
+  when:
+    - not repo_dir.stat.exists
   become: true
   become_user: "{{ user_name }}"
 
@@ -47,4 +43,3 @@
   become: true
   become_user: "{{ user_name }}"
   when: not ansible_check_mode
-  
