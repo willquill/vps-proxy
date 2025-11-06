@@ -1,6 +1,6 @@
 ---
 # Firewall tasks
-- name: Configure UFW - allow required ports
+- name: Configure UFW to allow required ports
   community.general.ufw:
     rule: allow
     port: "{{ item.port }}"
