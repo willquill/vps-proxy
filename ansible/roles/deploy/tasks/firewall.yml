@@ -1,13 +1,12 @@
 ---
 # Firewall tasks
-- name: Configure UFW - allow required ports
+- name: Configure UFW to allow required ports
   community.general.ufw:
     rule: allow
     port: "{{ item.port }}"
     proto: "{{ item.proto }}"
   with_items:
     - { port: '22', proto: 'tcp' }
-    - { port: '2222', proto: 'tcp' }
     - { port: '80', proto: 'tcp' }
     - { port: '443', proto: 'tcp' }
     - { port: '636', proto: 'tcp' }
