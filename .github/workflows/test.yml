@@ -92,7 +92,7 @@ jobs:
           # https://github.com/ansible/molecule/pull/4380#issuecomment-3013500908
           ANSIBLE_ROLES_PATH: ${HOME}/.ansible/roles
           # https://github.com/gofrolist/molecule-action/issues/326#issuecomment-2759662513
-          #ANSIBLE_COLLECTIONS_PATH: "/home/runner/.ansible/collections:/usr/share/ansible/collections"
+          ANSIBLE_COLLECTIONS_PATH: "./collections:/home/runner/.ansible/collections:/usr/share/ansible/collections"
           PYTHONUNBUFFERED: "1"
 
   docker-compose:
