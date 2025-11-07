@@ -73,3 +73,26 @@
   failed_when:
     - deploy_create_network_result.rc != 0
     - "'already exists' not in deploy_create_network_result.stderr"
+
+# FIXME: Next steps:
+# - CONVERT rakara.net within template files to use public_hostname variable
+# - Verify the file is getting created
+# - Create keypair for vps-proxy to talk to LAN traefik over WireGuard
+# - Look at last deploy job to see any problems
+# - Note: Maybe instead of this, just let both Traefiks create wildcards
+#.  Because they use DNS challenge and Cloudflare, it just needs to create a TXT record
+#.  It doesn't need dddns.PUBLIC_HOSTNAME.net to point anywhere
+- name: Create sync-wildcard.sh
+  ansible.builtin.template:
+    src: sync-wildcard.sh.j2
+    dest: "{{ repo_dest }}/sync-wildcard.sh"
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0644"
+
+- name: schedule wildcard-cert-sync every 5 minutes
+  cron:
+    name: sync wildcard cert
+    minute: "*/5"
+    user: "{{ user_name }}"
+    job: "{{ repo_dest }}/sync-wildcard-cert.sh >/dev/null 2>&1"

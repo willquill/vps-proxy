@@ -34,6 +34,10 @@
     traefik_password: "{{ traefik_password }}"
     public_hostname: "{{ public_hostname }}"
     timezone: "{{ timezone | default('UTC') }}"
+    baikal_db_root_password: "{{ baikal_db_root_password }}"
+    baikal_db_database: "{{ baikal_db_database }}"
+    baikal_db_user: "{{ baikal_db_user }}"
+    baikal_db_password: "{{ baikal_db_password }}"
 
 # Don't do this in check mode as it makes changes
 - name: Run docker compose

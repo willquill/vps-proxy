@@ -18,6 +18,10 @@
 - name: Traefik configuration
   ansible.builtin.import_tasks: traefik-setup.yml
 
+# Baikal configuration
+- name: Baikal setup
+  ansible.builtin.import_tasks: baikal-setup.yml
+
 # Application deployment
 - name: Application deployment
-  ansible.builtin.import_tasks: app.yml
+  ansible.builtin.import_tasks: deploy.yml

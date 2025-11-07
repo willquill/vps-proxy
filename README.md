@@ -25,8 +25,11 @@ Like this: `https://<your-service>.<your-domain>.<your-tld>` > Traefik on the VP
 In my case, I'm actually forwarding all requests to another Traefik instance running at home, so I have two paths:
 
 ```
-Internet → VPS-Traefik → WireGuard → LAN-Traefik → Service
-LAN → LAN-Traefik → Service
+Public client → VPS-Traefik → WireGuard → LAN-Traefik → Service
+
+and
+
+Private client → LAN-Traefik → Service
 ```
 
 ## Use of Secrets
