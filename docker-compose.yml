@@ -85,6 +85,36 @@ services:
       traefik.http.routers.traefik-secure.tls.domains[0].main: "${PUBLIC_HOSTNAME}"
       traefik.http.routers.traefik-secure.tls.domains[0].sans: "*.${PUBLIC_HOSTNAME}"
       traefik.http.routers.traefik-secure.service: "api@internal"
+  baikal:
+    image: ckulka/baikal:0.10.1-nginx
+    restart: always
+    <<: [*networks-proxy]
+    volumes:
+      - ./config/baikal/config:/var/www/baikal/config
+      - ./config/baikal/data:/var/www/baikal/Specific
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
+      <<: *proxy-labels
+      traefik.http.routers.baikal.entrypoints: "http"
+      traefik.http.routers.baikal.rule: "Host(`dav.${PUBLIC_HOSTNAME}`)"
+      traefik.http.middlewares.baikal-https-redirect.redirectscheme.scheme: "https"
+      traefik.http.routers.baikal.middlewares: "baikal-https-redirect"
+      traefik.http.routers.baikal-secure.entrypoints: "https"
+      traefik.http.routers.baikal-secure.rule: "Host(`dav.${PUBLIC_HOSTNAME}`)"
+      traefik.http.routers.baikal-secure.tls: "true"
+      traefik.http.routers.baikal-secure.service: "baikal"
+      traefik.http.services.baikal.loadbalancer.server.port: "80"
+      traefik.http.routers.baikal-secure.middlewares: "public@file"
+  db:
+    image: mariadb:10
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${BAIKAL_DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${BAIKAL_DB_DATABASE}
+      MYSQL_USER: ${BAIKAL_DB_USER}
+      MYSQL_PASSWORD: ${BAIKAL_DB_PASSWORD}
+    volumes:
+      - ./config/db:/var/lib/mysql
   # overseerr:
   #   image: lscr.io/linuxserver/overseerr
   #   container_name: overseerr

@@ -1,0 +1,14 @@
+---
+# Baikal setup tasks
+- name: Ensure Baikal config directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0755"
+  with_items:
+    - "{{ repo_dest }}/config/baikal"
+    - "{{ repo_dest }}/config/baikal/config"
+    - "{{ repo_dest }}/config/baikal/data"
+    - "{{ repo_dest }}/config/db"

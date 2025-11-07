@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Sync wildcard certificate to home Traefik after acme.json changes
+# Run from user’s crontab every 5 min
+
+ACME=/home/willquill/vps-proxy/config/traefik/acme.json # Traefik acme file
+HASH=/tmp/acme.sha256                # last-known hash
+CERT=/tmp/wildcard.crt               # scratch file
+KEY=/tmp/wildcard.key                # scratch file
+DEST="will@10.1.15.10:/home/will/traefik/config/traefik/certs"
+LOCK=/tmp/sync-wildcard.lock
+
+# Exit if another copy is still running
+exec 200>"$LOCK"
+flock -n 200 || exit 0
+
+# First run: create hash file
+[ ! -f "$HASH" ] && sha256sum "$ACME" >"$HASH"
+
+# Has the file changed?
+if ! sha256sum -c "$HASH" >/dev/null 2>&1; then
+  # Extract cert & key (replace myresolver with your resolver name)
+  jq -r '.myresolver.certificates[] | select(.domain.main=="*.rakara.net") | .certificate' "$ACME" \
+    | base64 -d >"$CERT"
+  jq -r '.myresolver.certificates[] | select(.domain.main=="*.rakara.net") | .key' "$ACME" \
+    | base64 -d >"$KEY"
+
+  # Push to home server (SSH key must be in root’s authorized_keys)
+  rsync -avz --mkpath "$CERT" "$DEST/wildcard.crt"
+  rsync -avz "$KEY" "$DEST/wildcard.key"
+
+  # Trigger Traefik reload (assumes docker-compose label traefik)
+  ssh will@10.1.15.10 'docker compose -f ~/traefik/docker-compose.yml kill -s HUP traefik'
+
+  # Update stored hash
+  sha256sum "$ACME" >"$HASH"
+fi
