@@ -8,6 +8,7 @@
     - name: Update apt cache and upgrade system
       ansible.builtin.include_role:
         name: update
+      check_mode: false
 
 # Runs even in check mode
 - name: Install Packages
@@ -18,6 +19,7 @@
     - name: Update apt cache and upgrade system
       ansible.builtin.include_role:
         name: packages
+      check_mode: false
 
 - name: Deploy VPS Proxy
   hosts: all

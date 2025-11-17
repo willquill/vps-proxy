@@ -3,9 +3,5 @@
   ansible.builtin.apt:
     name:
       - git
-      - vim
       - tree
-      - curl
-      - wget
     state: present
-  check_mode: false # Always install
