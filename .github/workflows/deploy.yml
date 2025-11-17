@@ -4,9 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Ansible version to install"
+        description: "Ansible version to use"
         required: false
-        default: "9.3.0"
+        default: "12.1.0"
+        type: string
   workflow_run:
     workflows: ["Security"]
     branches: [main]
@@ -65,7 +66,7 @@ jobs:
     # Note: We do not need to set each env because instead of envvars,
     #       we set -e options where necessary
     env:
-      ANSIBLE_VERSION: ${{ github.event.inputs.version || '9.3.0' }}
+      ANSIBLE_VERSION: ${{ github.event.inputs.version || '12.1.0' }}
       ANSIBLE_HOST_KEY_CHECKING: False
       ANSIBLE_FORCE_COLOR: 1
 
