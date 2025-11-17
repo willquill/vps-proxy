@@ -128,7 +128,6 @@ jobs:
           EOF
 
       # ---------- Run Ansible Check----------
-      # FIXME: admin_ip_range not used in playbook. Why did I add this again?
       - name: Run ansible playbook with check option
         id: ansible-check
         run: |
@@ -152,10 +151,11 @@ jobs:
             -e "cf_dns_api_token=${{ secrets.CF_DNS_API_TOKEN }}" \
             -e "cf_zone_api_token=${{ secrets.CF_ZONE_API_TOKEN }}" \
             -e "timezone=${{ secrets.TZ }}" \
-            ansible/main.yml --tags update,deploy
+            ansible/main.yml --tags update,packages,deploy
 
       # ---------- Run Ansible ----------
       - name: Run ansible playbook
+        # FIXME: admin_ip_range not used in playbook. Why did I add this again?
         # Only run if every previous step succeeded
         if: ${{ success() }}
         run: |
@@ -178,4 +178,4 @@ jobs:
             -e "cf_dns_api_token=${{ secrets.CF_DNS_API_TOKEN }}" \
             -e "cf_zone_api_token=${{ secrets.CF_ZONE_API_TOKEN }}" \
             -e "timezone=${{ secrets.TZ }}" \
-            ansible/main.yml --tags update,deploy
+            ansible/main.yml --tags update,packages,deploy
