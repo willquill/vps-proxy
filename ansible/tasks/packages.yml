@@ -5,3 +5,4 @@
       - git
       - tree
     state: present
+  check_mode: false # Always install - other tasks depend on these
