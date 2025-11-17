@@ -1,3 +1,4 @@
 ---
 - name: Install desired packages
   ansible.builtin.include_tasks: ../../tasks/packages.yml
+  check_mode: false

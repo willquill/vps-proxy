@@ -1,3 +1,4 @@
 ---
 - name: Update system
   ansible.builtin.include_tasks: ../../tasks/update.yml
+  check_mode: false
