@@ -44,7 +44,7 @@ jobs:
           docker network create proxy || true
       - name: Build Docker images
         run: |
-          docker compose build
+          docker compose -f ansible/roles/deploy/files/docker-compose.yml build
       - name: Run Docker-compose
         run: |
           docker compose -f ansible/roles/deploy/files/docker-compose.yml up -d

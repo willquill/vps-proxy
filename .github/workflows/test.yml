@@ -66,6 +66,20 @@ jobs:
           mkdir -p /tmp/ansible-tmp
           chmod 1777 /tmp/ansible-tmp
 
+      # Copy molecule directory into every role directory
+      - name: Copy molecule directories to roles
+        run: |
+          for role in ansible/roles/*/; do
+            if [ -d "ansible/molecule" ]; then
+              cp -r ansible/molecule "$role"
+              echo "Copied molecule directory to $role"
+              # Update the name of the role in the converge.yml tasks file
+              sed -i "s/name: Include template role/name: Include $(basename $role) role/g" "$role/molecule/${{ matrix.scenario }}/converge.yml"
+            else
+              echo "No molecule directory found to copy."
+            fi
+          done
+
       # - name: Force install collections for Molecule
       #   run: |
       #     echo "Installing collections specifically for Molecule..."

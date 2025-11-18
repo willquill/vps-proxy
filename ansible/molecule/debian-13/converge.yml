@@ -35,11 +35,11 @@
       ansible.builtin.file:
         path: "{{ item }}"
         state: directory
-        mode: '0777'
+        mode: "0777"
       with_items:
         - /tmp/wireguard
         - /tmp/ansible-tmp
   tasks:
-    - name: "Include deploy role"
+    - name: "Include template role"
       ansible.builtin.include_role:
-        name: "deploy"
+        name: "template"
