@@ -77,7 +77,79 @@ jobs:
       #     echo "ANSIBLE_COLLECTIONS_PATH will be set to:"
       #     echo "/home/runner/.ansible/collections:/usr/share/ansible/collections"
 
-      - name: Molecule
+      - name: Molecule test update role
+        uses: gofrolist/molecule-action@v2
+        with:
+          molecule_options: --debug
+          molecule_command: test
+          molecule_args: --scenario-name ${{ matrix.scenario }}
+          molecule_working_dir: ansible/roles/update
+        env:
+          ANSIBLE_FORCE_COLOR: "1"
+          ANSIBLE_REMOTE_TMP: "/tmp/ansible-tmp"
+          ANSIBLE_LOCAL_TEMP: "/tmp/ansible-tmp"
+          # FIXME: Can remove variable once fix is found
+          # https://github.com/ansible/molecule/pull/4380#issuecomment-3013500908
+          ANSIBLE_ROLES_PATH: ${HOME}/.ansible/roles
+          # https://github.com/gofrolist/molecule-action/issues/326#issuecomment-2759662513
+          ANSIBLE_COLLECTIONS_PATH: "./collections:/home/runner/.ansible/collections:/usr/share/ansible/collections"
+          PYTHONUNBUFFERED: "1"
+
+      - name: Molecule test wireguard role
+        uses: gofrolist/molecule-action@v2
+        with:
+          molecule_options: --debug
+          molecule_command: test
+          molecule_args: --scenario-name ${{ matrix.scenario }}
+          molecule_working_dir: ansible/roles/wireguard
+        env:
+          ANSIBLE_FORCE_COLOR: "1"
+          ANSIBLE_REMOTE_TMP: "/tmp/ansible-tmp"
+          ANSIBLE_LOCAL_TEMP: "/tmp/ansible-tmp"
+          # FIXME: Can remove variable once fix is found
+          # https://github.com/ansible/molecule/pull/4380#issuecomment-3013500908
+          ANSIBLE_ROLES_PATH: ${HOME}/.ansible/roles
+          # https://github.com/gofrolist/molecule-action/issues/326#issuecomment-2759662513
+          ANSIBLE_COLLECTIONS_PATH: "./collections:/home/runner/.ansible/collections:/usr/share/ansible/collections"
+          PYTHONUNBUFFERED: "1"
+
+      - name: Molecule test docker role
+        uses: gofrolist/molecule-action@v2
+        with:
+          molecule_options: --debug
+          molecule_command: test
+          molecule_args: --scenario-name ${{ matrix.scenario }}
+          molecule_working_dir: ansible/roles/docker
+        env:
+          ANSIBLE_FORCE_COLOR: "1"
+          ANSIBLE_REMOTE_TMP: "/tmp/ansible-tmp"
+          ANSIBLE_LOCAL_TEMP: "/tmp/ansible-tmp"
+          # FIXME: Can remove variable once fix is found
+          # https://github.com/ansible/molecule/pull/4380#issuecomment-3013500908
+          ANSIBLE_ROLES_PATH: ${HOME}/.ansible/roles
+          # https://github.com/gofrolist/molecule-action/issues/326#issuecomment-2759662513
+          ANSIBLE_COLLECTIONS_PATH: "./collections:/home/runner/.ansible/collections:/usr/share/ansible/collections"
+          PYTHONUNBUFFERED: "1"
+
+      - name: Molecule test traefik role
+        uses: gofrolist/molecule-action@v2
+        with:
+          molecule_options: --debug
+          molecule_command: test
+          molecule_args: --scenario-name ${{ matrix.scenario }}
+          molecule_working_dir: ansible/roles/traefik
+        env:
+          ANSIBLE_FORCE_COLOR: "1"
+          ANSIBLE_REMOTE_TMP: "/tmp/ansible-tmp"
+          ANSIBLE_LOCAL_TEMP: "/tmp/ansible-tmp"
+          # FIXME: Can remove variable once fix is found
+          # https://github.com/ansible/molecule/pull/4380#issuecomment-3013500908
+          ANSIBLE_ROLES_PATH: ${HOME}/.ansible/roles
+          # https://github.com/gofrolist/molecule-action/issues/326#issuecomment-2759662513
+          ANSIBLE_COLLECTIONS_PATH: "./collections:/home/runner/.ansible/collections:/usr/share/ansible/collections"
+          PYTHONUNBUFFERED: "1"
+
+      - name: Molecule test deploy role
         uses: gofrolist/molecule-action@v2
         with:
           molecule_options: --debug
@@ -122,4 +194,4 @@ jobs:
           AUTHENTIK_SECRET_KEY=dummy_key
           EOF
       - name: Validate docker-compose.yml
-        run: docker compose config
+        run: docker compose config -f ansible/roles/deploy/files/docker-compose.yml
