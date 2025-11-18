@@ -110,6 +110,28 @@ jobs:
           SERVER_IPV4=$(jq -r '.server_ipv4.value' tf_output.json)
           echo "SERVER_IPV4=$SERVER_IPV4" >> $GITHUB_ENV
 
+      # ---------- Wait for cloud-init ----------
+      - name: Wait for cloud-init to complete
+        run: |
+          echo "Waiting for cloud-init to complete on ${{ env.SERVER_IPV4 }}..."
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_PROXY_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+
+          for i in {1..30}; do
+            echo "Attempt $i/30: Checking if SSH is available and cloud-init is done..."
+            if ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 -p 2222 -i ~/.ssh/id_ed25519 ${{ github.repository_owner }}@${{ env.SERVER_IPV4 }} "cloud-init status --wait" 2>/dev/null; then
+              echo "Cloud-init completed successfully!"
+              break
+            fi
+            if [ $i -eq 30 ]; then
+              echo "Timeout waiting for cloud-init to complete"
+              exit 1
+            fi
+            echo "Not ready yet, waiting 10 seconds..."
+            sleep 10
+          done
+
       # ---------- SSH key ----------
       # Use IPv4 from Terraform output
       - name: Setup SSH key
