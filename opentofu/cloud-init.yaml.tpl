@@ -22,6 +22,7 @@ packages:
 package_update: true
 package_upgrade: true
 package_reboot_if_required: true
+timezone: "America/Chicago"
 write_files:
   - path: /etc/ssh/sshd_config.d/99-ssh-hardening.conf
     content: |
