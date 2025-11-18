@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# NOTE: THIS SCRIPT IS NOW DEPRECATED.
+# WireGuard setup is now handled via Ansible tasks within a role.
+# This script is kept for reference only.
+
 # Exit on any error
 set -e
 

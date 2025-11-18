@@ -1,0 +1,7 @@
+- name: Ensure application directory exists with correct ownership
+  ansible.builtin.file:
+    path: "{{ repo_dest }}"
+    state: directory
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0755"

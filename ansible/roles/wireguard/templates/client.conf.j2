@@ -1,0 +1,9 @@
+[Interface]
+PrivateKey = {{ client_private_key_content.content | b64decode | trim }}
+Address = {{ wireguard_peer1 }}
+
+[Peer]
+PublicKey = {{ server_public_key_gen.stdout }}
+Endpoint = {{ server_ip.stdout }}:{{ wireguard_port }}
+AllowedIPs = 0.0.0.0/0, ::/0
+PersistentKeepalive = 25

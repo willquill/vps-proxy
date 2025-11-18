@@ -1,6 +1,5 @@
 ---
 # Docker setup tasks
-
 - name: Debug distribution info
   ansible.builtin.debug:
     msg: 
@@ -61,6 +60,7 @@
       - docker-ce
       - docker-ce-cli
       - containerd.io
+      - docker-compose-plugin
   when: not ansible_check_mode
 
 - name: Add user to docker group

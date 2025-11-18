@@ -1,6 +1,8 @@
 ---
-# Traefik setup tasks
+- name: Firewall initialization
+  ansible.builtin.import_tasks: ufw-traefik.yml
 
+# Traefik setup tasks
 - name: Install Apache utils (for htpasswd)
   ansible.builtin.apt:
     name: apache2-utils

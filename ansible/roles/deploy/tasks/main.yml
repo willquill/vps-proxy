@@ -1,23 +1,36 @@
-####################################
-### Split tasks into logical modules
-####################################
 ---
-# Firewall setup
-- name: Firewall setup
-  ansible.builtin.import_tasks: firewall.yml
+- name: Copy docker-compose.yml to application directory
+  ansible.builtin.copy:
+    src: docker-compose.yml
+    dest: "{{ repo_dest }}/docker-compose.yml"
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0644"
 
-# WireGuard VPN setup
-- name: WireGuard VPN setup
-  ansible.builtin.import_tasks: wireguard.yml
+- name: Create .env file from template
+  ansible.builtin.template:
+    src: env.j2
+    dest: "{{ repo_dest }}/.env"
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0600"
+  vars:
+    authentik_postgresql_name: "{{ authentik_postgresql_name }}"
+    authentik_postgresql_password: "{{ authentik_postgresql_password }}"
+    authentik_postgresql_user: "{{ authentik_postgresql_user }}"
+    authentik_secret_key: "{{ authentik_secret_key }}"
+    cf_dns_api_token: "{{ cf_dns_api_token }}"
+    cf_zone_api_token: "{{ cf_zone_api_token }}"
+    traefik_username: "{{ traefik_username }}"
+    traefik_password: "{{ traefik_password }}"
+    public_hostname: "{{ public_hostname }}"
+    timezone: "{{ timezone | default('UTC') }}"
 
-# Docker setup
-- name: Docker setup
-  ansible.builtin.import_tasks: docker.yml
-
-# Traefik configuration
-- name: Traefik configuration
-  ansible.builtin.import_tasks: traefik-setup.yml
-
-# Application deployment
-- name: Application deployment
-  ansible.builtin.import_tasks: app.yml
+# Execute docker compose
+- name: Execute 'docker compose up -d'
+  ansible.builtin.command: "docker compose up -d"
+  args:
+    chdir: "{{ repo_dest }}"
+  become: true
+  become_user: "{{ user_name }}"
+  when: not ansible_check_mode

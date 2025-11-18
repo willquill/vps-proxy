@@ -1,0 +1,184 @@
+---
+- name: Firewall initialization
+  ansible.builtin.import_tasks: ufw-wireguard.yml
+
+# WireGuard setup tasks
+- name: Install wireguard and qrencode packages
+  ansible.builtin.apt:
+    name:
+      - wireguard
+      - qrencode
+    state: present
+
+- name: Enable IPv4 forwarding
+  ansible.posix.sysctl:
+    name: net.ipv4.ip_forward
+    value: "1"
+    state: present
+    sysctl_set: true
+    reload: true
+
+- name: Enable IPv6 forwarding
+  ansible.posix.sysctl:
+    name: net.ipv6.conf.all.forwarding
+    value: "1"
+    state: present
+    sysctl_set: true
+    reload: true
+
+- name: Create WireGuard directory
+  ansible.builtin.file:
+    path: /etc/wireguard
+    state: directory
+    mode: "0755"
+
+- name: Check if server private key exists
+  ansible.builtin.stat:
+    path: /etc/wireguard/server_private.key
+  register: server_private_key_stat
+
+- name: Generate server private key
+  ansible.builtin.shell: wg genkey
+  register: server_private_key_gen
+  when: not server_private_key_stat.stat.exists
+  changed_when: true
+
+- name: Save server private key
+  ansible.builtin.copy:
+    content: "{{ server_private_key_gen.stdout }}"
+    dest: /etc/wireguard/server_private.key
+    mode: "0600"
+  when: not server_private_key_stat.stat.exists
+
+- name: Read server private key
+  ansible.builtin.slurp:
+    src: /etc/wireguard/server_private.key
+  register: server_private_key_content
+
+- name: Generate server public key
+  ansible.builtin.shell: echo "{{ server_private_key_content.content | b64decode | trim }}" | wg pubkey
+  register: server_public_key_gen
+  changed_when: false
+
+- name: Save server public key
+  ansible.builtin.copy:
+    content: "{{ server_public_key_gen.stdout }}"
+    dest: /etc/wireguard/server_public.key
+    mode: "0644"
+
+- name: Check if client private key exists
+  ansible.builtin.stat:
+    path: /etc/wireguard/client_private.key
+  register: client_private_key_stat
+
+- name: Generate client private key
+  ansible.builtin.shell: wg genkey
+  register: client_private_key_gen
+  when: not client_private_key_stat.stat.exists
+  changed_when: true
+
+- name: Save client private key
+  ansible.builtin.copy:
+    content: "{{ client_private_key_gen.stdout }}"
+    dest: /etc/wireguard/client_private.key
+    mode: "0600"
+  when: not client_private_key_stat.stat.exists
+
+- name: Read client private key
+  ansible.builtin.slurp:
+    src: /etc/wireguard/client_private.key
+  register: client_private_key_content
+
+- name: Generate client public key
+  ansible.builtin.shell: echo "{{ client_private_key_content.content | b64decode | trim }}" | wg pubkey
+  register: client_public_key_gen
+  changed_when: false
+
+- name: Save client public key
+  ansible.builtin.copy:
+    content: "{{ client_public_key_gen.stdout }}"
+    dest: /etc/wireguard/client_public.key
+    mode: "0644"
+
+- name: Get server IP address
+  ansible.builtin.shell: ip addr show dev eth0 | grep -oP '(?<=inet )([0-9.]+)' | head -1
+  register: server_ip
+  changed_when: false
+
+- name: Create WireGuard server configuration
+  ansible.builtin.template:
+    src: wg0.conf.j2
+    dest: /etc/wireguard/wg0.conf
+    mode: "0600"
+  notify: Restart WireGuard
+
+- name: Create WireGuard client configuration
+  ansible.builtin.template:
+    src: client.conf.j2
+    dest: /etc/wireguard/client.conf
+    mode: "0644"
+
+- name: Enable and start WireGuard
+  ansible.builtin.systemd:
+    name: wg-quick@wg0
+    enabled: true
+    state: started
+
+- name: Create directory for client configs
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/wireguard-client-configs"
+    state: directory
+    mode: "0700"
+
+- name: Copy client configuration to user directory
+  ansible.builtin.copy:
+    src: /etc/wireguard/client.conf
+    dest: "{{ ansible_env.HOME }}/wireguard-client-configs/client.conf"
+    remote_src: true
+    mode: "0644"
+
+- name: Generate QR code for client configuration
+  ansible.builtin.shell: qrencode -t ansiutf8 < /etc/wireguard/client.conf
+  register: qr_code_output
+  changed_when: false
+
+- name: Save QR code to file
+  ansible.builtin.copy:
+    content: "{{ qr_code_output.stdout }}"
+    dest: "{{ ansible_env.HOME }}/wireguard-client-configs/client-qr.txt"
+    mode: "0644"
+
+- name: Create installation summary
+  ansible.builtin.copy:
+    content: |
+      ========================================
+      WireGuard Installation Complete!
+      ========================================
+
+      Server Information:
+      - Public IP: {{ server_ip.stdout }}
+      - Port: {{ wireguard_port }}
+      - Interface: wg0
+
+      Client configuration has been saved to:
+      {{ ansible_env.HOME }}/wireguard-client-configs/client.conf
+
+      QR code for mobile clients has been saved to:
+      {{ ansible_env.HOME }}/wireguard-client-configs/client-qr.txt
+
+      To check WireGuard status:
+      sudo wg show
+
+      To view the QR code for mobile clients:
+      cat {{ ansible_env.HOME }}/wireguard-client-configs/client-qr.txt
+    dest: "{{ ansible_env.HOME }}/wireguard-client-configs/installation-summary.txt"
+    mode: "0644"
+
+- name: Display WireGuard status
+  ansible.builtin.command: wg show
+  register: wg_status
+  changed_when: false
+
+- name: Show WireGuard status
+  ansible.builtin.debug:
+    var: wg_status.stdout_lines
