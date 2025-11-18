@@ -194,4 +194,4 @@ jobs:
           AUTHENTIK_SECRET_KEY=dummy_key
           EOF
       - name: Validate docker-compose.yml
-        run: docker compose config -f ansible/roles/deploy/files/docker-compose.yml
+        run: docker compose -f ansible/roles/deploy/files/docker-compose.ymlconfig
