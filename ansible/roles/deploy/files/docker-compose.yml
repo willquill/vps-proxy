@@ -1,7 +1,5 @@
 x-user: &user
-  user: ${PUID:-1000}
-  group_add:
-    - ${PGID:-1000}
+  user: ${PUID:-1000}:${PGID:-1000}
 
 x-networks-proxy: &networks-proxy
   networks:
@@ -27,7 +25,7 @@ services:
     container_name: cloudflare-ddns
     network_mode: host
     restart: always
-    user: "$PUID:$PGID"
+    <<: [*security, *user]
     read_only: true
     # Make the container filesystem read-only (optional but recommended)
     cap_drop: [all]
@@ -40,14 +38,17 @@ services:
       - PROXIED=false
       - IP6_PROVIDER=none
   traefik:
-    image: traefik:v3.4
+    image: traefik:v3.5
     container_name: traefik
     restart: unless-stopped
+    <<: [*security, *user]
+    # Needed by any container that accesses docker.sock
+    group_add:
+      - ${PGID:-1000}
     networks:
       proxy:
         aliases:
           - "auth.${PUBLIC_HOSTNAME}"
-    <<: [*security]
     ports:
       - 22:22 # for GitLab and anything else I want to add
       - 80:80
@@ -85,73 +86,54 @@ services:
       traefik.http.routers.traefik-secure.tls.domains[0].main: "${PUBLIC_HOSTNAME}"
       traefik.http.routers.traefik-secure.tls.domains[0].sans: "*.${PUBLIC_HOSTNAME}"
       traefik.http.routers.traefik-secure.service: "api@internal"
-  # overseerr:
-  #   image: lscr.io/linuxserver/overseerr
-  #   container_name: overseerr
-  #   restart: unless-stopped
-  #   <<: [*networks-proxy, *environment]
-  #   labels:
-  #     com.centurylinklabs.watchtower.enable: "true"
-  #     <<: *proxy-labels
-  #     traefik.http.routers.overseerr.entrypoints: "http"
-  #     traefik.http.routers.overseerr.rule: "Host(`media.${PUBLIC_HOSTNAME}`)"
-  #     traefik.http.middlewares.overseerr-https-redirect.redirectscheme.scheme: "https"
-  #     traefik.http.routers.overseerr.middlewares: "overseerr-https-redirect"
-  #     traefik.http.routers.overseerr-secure.entrypoints: "https"
-  #     traefik.http.routers.overseerr-secure.rule: "Host(`media.${PUBLIC_HOSTNAME}`)"
-  #     traefik.http.routers.overseerr-secure.tls: "true"
-  #     traefik.http.routers.overseerr-secure.service: "overseerr"
-  #     traefik.http.services.overseerr.loadbalancer.server.port: "5055"
-  #     traefik.http.routers.overseerr-secure.middlewares: "public@file"
-  #   volumes:
-  #     - ./config/overseerr:/config
-  #   pull_policy: always
-  # tautulli:
-  #   image: lscr.io/linuxserver/tautulli:latest
-  #   container_name: tautulli
-  #   restart: unless-stopped
-  #   <<: [*networks-proxy, *environment]
-  #   volumes:
-  #     - /etc/localtime:/etc/localtime:ro
-  #     - ./config/tautulli:/config
-  #   labels:
-  #     com.centurylinklabs.watchtower.enable: "true"
-  #     <<: *proxy-labels
-  #     traefik.http.routers.tautulli.entrypoints: "http"
-  #     traefik.http.routers.tautulli.rule: "Host(`history.${PUBLIC_HOSTNAME}`)"
-  #     traefik.http.middlewares.tautulli-https-redirect.redirectscheme.scheme: "https"
-  #     traefik.http.routers.tautulli.middlewares: "tautulli-https-redirect"
-  #     traefik.http.routers.tautulli-secure.entrypoints: "https"
-  #     traefik.http.routers.tautulli-secure.rule: "Host(`history.${PUBLIC_HOSTNAME}`)"
-  #     traefik.http.routers.tautulli-secure.tls: "true"
-  #     traefik.http.routers.tautulli-secure.service: "tautulli"
-  #     traefik.http.services.tautulli.loadbalancer.server.port: "8181"
-  #   pull_policy: always
-  # wrapperr:
-  #   image: ghcr.io/aunefyren/wrapperr:latest
-  #   container_name: wrapperr
-  #   restart: unless-stopped
-  #   <<: [*networks-proxy, *environment]
-  #   volumes:
-  #     - ./config/wrapperr:/app/config
-  #   labels:
-  #     com.centurylinklabs.watchtower.enable: "true"
-  #     <<: *proxy-labels
-  #     traefik.http.routers.wrapperr.entrypoints: "http"
-  #     traefik.http.routers.wrapperr.rule: "Host(`wrap.${PUBLIC_HOSTNAME}`)"
-  #     traefik.http.middlewares.wrapperr-https-redirect.redirectscheme.scheme: "https"
-  #     traefik.http.routers.wrapperr.middlewares: "wrapperr-https-redirect"
-  #     traefik.http.routers.wrapperr-secure.entrypoints: "https"
-  #     traefik.http.routers.wrapperr-secure.rule: "Host(`wrap.${PUBLIC_HOSTNAME}`)"
-  #     traefik.http.routers.wrapperr-secure.tls: "true"
-  #     traefik.http.routers.wrapperr-secure.service: "wrapperr"
-  #     traefik.http.services.wrapperr.loadbalancer.server.port: "8282"
-  #     traefik.http.routers.wrapperr-secure.middlewares: "public@file"
-  #   pull_policy: always
+  # Storage backend for gatus
+  gatus_postgres:
+    image: postgres
+    container_name: gatus_postgres
+    volumes:
+      - ./config/gatus_postgres:/var/lib/postgresql
+    networks:
+      gatus: {}
+    environment:
+      - POSTGRES_DB=gatus
+      - POSTGRES_USER=username
+      - POSTGRES_PASSWORD=password
+    pull_policy: always
+  gatus:
+    image: twinproduction/gatus:v5.32.0
+    container_name: gatus
+    restart: unless-stopped
+    depends_on:
+      - gatus_postgres
+    networks:
+      proxy: {}
+      gatus: {}
+    environment:
+      - POSTGRES_DB=gatus
+      - POSTGRES_USER=username
+      - POSTGRES_PASSWORD=password
+    labels:
+      com.centurylinklabs.watchtower.enable: "false"
+      <<: *proxy-labels
+      traefik.http.routers.status.entrypoints: "http"
+      traefik.http.routers.status.rule: "Host(`status.${PRIVATE_HOSTNAME}`)"
+      traefik.http.middlewares.status-https-redirect.redirectscheme.scheme: "https"
+      traefik.http.routers.status.middlewares: "status-https-redirect"
+      traefik.http.routers.status-secure.entrypoints: "https"
+      traefik.http.routers.status-secure.rule: "Host(`status.${PRIVATE_HOSTNAME}`)"
+      traefik.http.routers.status-secure.tls: "true"
+      traefik.http.routers.status-secure.service: "status"
+      traefik.http.services.status.loadbalancer.server.port: "8080"
+      traefik.http.routers.status-secure.middlewares: "private@file"
+    volumes:
+      - ./config/gatus:/config
+    pull_policy: always
   # watchtower manages auto updates. this is optional.
   watchtower:
     image: containrrr/watchtower
     restart: unless-stopped
+    group_add:
+      - ${PGID:-1000}
     environment:
       # Requires label: - "com.centurylinklabs.watchtower.enable=true"
       - WATCHTOWER_LABEL_ENABLE
@@ -163,4 +145,5 @@ services:
 networks:
   proxy:
     external: true
-    name: "proxy"
+  gatus:
+    internal: true

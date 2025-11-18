@@ -12,15 +12,6 @@ http:
         - https-redirectscheme
       tls: {}
       service: authentik
-    gatus:
-      entryPoints:
-        - "https"
-      rule: "Host(`uptime.{{ public_hostname }}`)"
-      middlewares:
-        - private
-        - https-redirectscheme
-      tls: {}
-      service: gatus
 #####################
 ### HTTP Services ###
 #####################
@@ -29,9 +20,4 @@ http:
       loadBalancer:
         servers:
           - url: "http://10.1.15.13:9000"
-        passHostHeader: true
-    gatus:
-      loadBalancer:
-        servers:
-          - url: "http://10.1.20.32:8080"
         passHostHeader: true
