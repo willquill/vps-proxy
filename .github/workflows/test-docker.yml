@@ -1,4 +1,4 @@
-name: Docker Compose Build Test
+name: Docker Compose Tests
 
 on:
   # Allows manual triggering
@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - "docker-compose.yml"
+      - "ansible/roles/deploy/files/docker-compose.yml"
       - ".github/workflows/test-docker.yml"
 
 jobs:
@@ -20,9 +20,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
+
       - name: Remove port 22 mapping from docker-compose.yml
         run: |
           sed -i '/- 22:22/d' ansible/roles/deploy/files/docker-compose.yml
+
       - name: Create dummy .env file
         run: |
           cat > .env << EOF
@@ -39,16 +41,24 @@ jobs:
           AUTHENTIK_POSTGRESQL__USER=authentik
           AUTHENTIK_SECRET_KEY=dummy_key
           EOF
+
       - name: Create Docker Network
         run: |
           docker network create proxy || true
+          docker network create gatus || true
+
       - name: Build Docker images
         run: |
           docker compose -f ansible/roles/deploy/files/docker-compose.yml build
+
+      - name: Validate docker-compose.yml
+        run: docker compose -f ansible/roles/deploy/files/docker-compose.yml config
+
       - name: Run Docker-compose
         run: |
           docker compose -f ansible/roles/deploy/files/docker-compose.yml up -d
           docker compose ps
           sleep 30
+
       - name: Stop and remove containers
         run: docker compose -f ansible/roles/deploy/files/docker-compose.yml down

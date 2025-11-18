@@ -75,6 +75,7 @@ jobs:
               echo "Copied molecule directory to $role"
               # Update the name of the role in the converge.yml tasks file
               sed -i "s/name: Include template role/name: Include $(basename $role) role/g" "$role/molecule/${{ matrix.scenario }}/converge.yml"
+              sed -i "s/name: \"template\"/name: \"$(basename $role)\"/g" "$role/molecule/${{ matrix.scenario }}/converge.yml"
             else
               echo "No molecule directory found to copy."
             fi
@@ -180,32 +181,3 @@ jobs:
           # https://github.com/gofrolist/molecule-action/issues/326#issuecomment-2759662513
           ANSIBLE_COLLECTIONS_PATH: "./collections:/home/runner/.ansible/collections:/usr/share/ansible/collections"
           PYTHONUNBUFFERED: "1"
-
-  docker-compose:
-    name: Docker Compose Validation
-    runs-on: ubuntu-latest
-    services:
-      docker:
-        image: docker:28.3.3
-        options: --privileged
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-      - name: Create dummy .env file
-        run: |
-          cat > .env << EOF
-          PUBLIC_HOSTNAME=example.com
-          PUID=1000
-          PGID=1000
-          TZ=UTC
-          CF_DNS_API_TOKEN=dummy_token
-          CF_ZONE_API_TOKEN=dummy_token
-          TRAEFIK_BASIC_AUTH_USERNAME=dummy_user
-          TRAEFIK_BASIC_AUTH_PASSWORD=dummy_password
-          AUTHENTIK_POSTGRESQL__NAME=authentik
-          AUTHENTIK_POSTGRESQL__PASSWORD=dummy_password
-          AUTHENTIK_POSTGRESQL__USER=authentik
-          AUTHENTIK_SECRET_KEY=dummy_key
-          EOF
-      - name: Validate docker-compose.yml
-        run: docker compose -f ansible/roles/deploy/files/docker-compose.ymlconfig
