@@ -8,9 +8,9 @@
     name: apache2-utils
     state: present
 
-- name: Ensure Traefik config directory exists
+- name: Ensure Traefik config directory exists at vps-proxy/config/traefik/config/
   ansible.builtin.file:
-    path: "{{ repo_dest }}/config/{{ item }}"
+    path: "{{ repo_dest }}/config/{{ item }}/config"
     state: directory
     owner: "{{ user_name }}"
     group: "{{ user_name }}"
