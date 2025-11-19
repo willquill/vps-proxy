@@ -17,6 +17,22 @@ Automation tasks:
 
 ![Architecture Diagram](architecture_diagram.png)
 
+## Just tell me how I can use this without being an expert coder
+
+Okay, so you want to have your own Debian server running docker compose services? Easy enough.
+
+You need to already have:
+
+- An SSH key pair
+- A domain
+- A Hetzner Cloud account
+
+Clone or fork this repo and then do the following:
+
+1. Create an SSH key pair. Or use one you already have.
+
+2.
+
 ## Routing
 
 Your subdomains will point to your VPS, and Traefik will be listening on 443 so that it may forward your requests to either services hosted within the VPS or to services hosted on your home network, as there will be a Wireguard tunnel between the VPS and your home network
@@ -47,14 +63,6 @@ VPS_USER=your_ssh_username
 3. Creating .env file for Docker compose. See `ansible/templates/env.j2` for all variables. **_Note: Some of the variables are defined in the GitHub Actions `ansible-playbook` command and others are vars in `ansible/main.yml`_**
 
 ## Prerequisites
-
-Generate all of the secrets you need above. I won't walk you through all of it, but here are some pointers:
-
-1. SSH key
-
-```sh
-ssh-keygen -t ed25519 -C "your-email-address" -f ~/.ssh/vps_proxy_key
-```
 
 2. Create Cloudflare [API tokens here](https://developers.cloudflare.com/fundamentals/api/get-started/create-token/).
 

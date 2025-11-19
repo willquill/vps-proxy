@@ -8,7 +8,7 @@ endpoints:
     url: "https://traefik.${PUBLIC_DOMAIN}/"
     interval: 5m
     conditions:
-      - "[STATUS] == 200"
+      - "[STATUS] == 401"  # BasicAuth returns 401, which means Traefik is up
 
   # - name: monitoring
   #   group: internal

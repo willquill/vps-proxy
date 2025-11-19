@@ -32,8 +32,8 @@ providers:
 certificatesResolvers:
   cloudflare:
     acme:
-      # Staging (disable for production use)
-      caServer: https://acme-staging-v02.api.letsencrypt.org/directory # staging
+      # Production Let's Encrypt
+      # caServer: https://acme-staging-v02.api.letsencrypt.org/directory # staging
       email: {{ acme_email }}
       storage: acme.json
       dnsChallenge:

@@ -97,6 +97,8 @@ services:
     networks:
       gatus: {}
     user: ${PUID:-1000}:${PGID:-1000}
+    labels:
+      traefik.enable: false
     environment:
       - POSTGRES_DB=${GATUS_POSTGRES_DB}
       - POSTGRES_USER=${GATUS_POSTGRES_USER}
@@ -139,6 +141,8 @@ services:
     restart: unless-stopped
     group_add:
       - ${PGID:-1000}
+    labels:
+      traefik.enable: false
     environment:
       # Requires label: - "com.centurylinklabs.watchtower.enable=true"
       - WATCHTOWER_LABEL_ENABLE
