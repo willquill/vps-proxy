@@ -45,6 +45,12 @@ jobs:
           GATUS_POSTGRES_DB=gatus
           EOF
 
+      - name: Create required config directories and files
+        run: |
+          mkdir -p ./config/gatus_postgres
+          mkdir -p ./config/gatus
+          cp ./ansible/roles/deploy/files/gatus/config.yml ./config/gatus/config.yml
+
       - name: Create Docker Network
         run: |
           docker network create proxy || true
