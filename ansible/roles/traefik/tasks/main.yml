@@ -8,17 +8,15 @@
     name: apache2-utils
     state: present
 
-- name: Ensure Traefik config directories exist
+- name: Ensure Traefik config directory exists
   ansible.builtin.file:
-    path: "{{ item }}"
+    path: "{{ repo_dest }}/config/{{ item }}"
     state: directory
     owner: "{{ user_name }}"
     group: "{{ user_name }}"
     mode: "0755"
   with_items:
-    - "{{ repo_dest }}/config/traefik"
-    - "{{ repo_dest }}/config/traefik/config"
-    - "{{ repo_dest }}/var/log/traefik"
+    - "traefik"
 
 - name: Generate bcrypt htpasswd line
   ansible.builtin.command: |

@@ -41,7 +41,7 @@
       ansible.builtin.include_role:
         name: traefik
 
-- name: Initialize and deploy docker compose file
+- name: Initialize dependency files and deploy docker compose file
   hosts: all
   tags: deploy
   gather_facts: true

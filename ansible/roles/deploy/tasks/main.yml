@@ -26,6 +26,27 @@
     public_hostname: "{{ public_hostname }}"
     timezone: "{{ timezone | default('UTC') }}"
 
+- name: Create application configuration directories
+  ansible.builtin.file:
+    path: "{{ repo_dest }}/config/{{ item }}"
+    state: directory
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0755"
+  with_items:
+    - "gatus_postgres"
+    - "gatus"
+
+- name: Copy files to application configuration directories
+  ansible.builtin.copy:
+    src: "{{ item.src }}"
+    dest: "{{ repo_dest }}/config/{{ item.src }}"
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0644"
+  with_items:
+    - { dir_name: "gatus", src: "gatus/config.yml"
+
 # Execute docker compose
 - name: Execute 'docker compose up -d'
   ansible.builtin.command: "docker compose up -d"

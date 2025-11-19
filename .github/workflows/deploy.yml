@@ -164,7 +164,7 @@ jobs:
             -e "traefik_username=${{ secrets.TRAEFIK_BASIC_AUTH_USERNAME }}" \
             -e "traefik_password=${{ secrets.TRAEFIK_BASIC_AUTH_PASSWORD }}" \
             -e "acme_email=${{ secrets.ACME_EMAIL }}" \
-            -e "public_hostname=${{ secrets.PUBLIC_HOSTNAME }}" \
+            -e "public_hostname=${{ secrets.PUBLIC_DOMAIN }}" \
             -e "admin_ip_range=${{ secrets.ADMIN_IP_RANGE }}" \
             -e "authentik_postgresql_name=${{ secrets.AUTHENTIK_POSTGRESQL__NAME }}" \
             -e "authentik_postgresql_password=${{ secrets.AUTHENTIK_POSTGRESQL__PASSWORD }}" \
@@ -191,7 +191,7 @@ jobs:
       #       -e "traefik_username=${{ secrets.TRAEFIK_BASIC_AUTH_USERNAME }}" \
       #       -e "traefik_password=${{ secrets.TRAEFIK_BASIC_AUTH_PASSWORD }}" \
       #       -e "acme_email=${{ secrets.ACME_EMAIL }}" \
-      #       -e "public_hostname=${{ secrets.PUBLIC_HOSTNAME }}" \
+      #       -e "public_hostname=${{ secrets.PUBLIC_DOMAIN }}" \
       #       -e "admin_ip_range=${{ secrets.ADMIN_IP_RANGE }}" \
       #       -e "authentik_postgresql_name=${{ secrets.AUTHENTIK_POSTGRESQL__NAME }}" \
       #       -e "authentik_postgresql_password=${{ secrets.AUTHENTIK_POSTGRESQL__PASSWORD }}" \
