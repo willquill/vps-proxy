@@ -81,16 +81,16 @@ jobs:
             fi
           done
 
-      # - name: Force install collections for Molecule
-      #   run: |
-      #     echo "Installing collections specifically for Molecule..."
-      #     ansible-galaxy collection install -r ansible/roles/deploy/molecule/requirements.yml --force
-      #     echo "Collections available for Molecule:"
-      #     ansible-galaxy collection list
-      #     echo "Collection paths:"
-      #     find /home/runner -name "community" -type d 2>/dev/null | head -10
-      #     echo "ANSIBLE_COLLECTIONS_PATH will be set to:"
-      #     echo "/home/runner/.ansible/collections:/usr/share/ansible/collections"
+      - name: Force install collections for Molecule
+        run: |
+          echo "Installing collections specifically for Molecule..."
+          ansible-galaxy collection install -r ansible/roles/deploy/molecule/requirements.yml --force
+          echo "Collections available for Molecule:"
+          ansible-galaxy collection list
+          echo "Collection paths:"
+          find /home/runner -name "community" -type d 2>/dev/null | head -10
+          echo "ANSIBLE_COLLECTIONS_PATH will be set to:"
+          echo "/home/runner/.ansible/collections:/usr/share/ansible/collections"
 
       - name: Molecule test update role
         uses: gofrolist/molecule-action@v2
