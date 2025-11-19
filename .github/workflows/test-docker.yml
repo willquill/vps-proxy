@@ -21,9 +21,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
+      - name: Move docker-compose.yml to current directory
+        run: |
+          mv ansible/roles/deploy/files/docker-compose.yml .
+
       - name: Remove port 22 mapping from docker-compose.yml
         run: |
-          sed -i '/- 22:22/d' ansible/roles/deploy/files/docker-compose.yml
+          sed -i '/- 22:22/d' docker-compose.yml
 
       - name: Create dummy .env file
         run: |
@@ -47,9 +51,9 @@ jobs:
 
       - name: Create required config directories and files
         run: |
-          mkdir -p ./config/gatus_postgres
-          mkdir -p ./config/gatus
-          cp ./ansible/roles/deploy/files/gatus/config.yml ./config/gatus/config.yml
+          mkdir -p config/gatus_postgres
+          mkdir -p config/gatus
+          cp ansible/roles/deploy/files/gatus/config.yml config/gatus/config.yml
 
       - name: Create Docker Network
         run: |
@@ -58,16 +62,16 @@ jobs:
 
       - name: Build Docker images
         run: |
-          docker compose -f ansible/roles/deploy/files/docker-compose.yml build
+          docker compose build
 
       - name: Validate docker-compose.yml
-        run: docker compose -f ansible/roles/deploy/files/docker-compose.yml config
+        run: docker compose config
 
       - name: Run Docker-compose
         run: |
-          docker compose -f ansible/roles/deploy/files/docker-compose.yml up -d
+          docker compose up -d
           docker compose ps
           sleep 30
 
       - name: Stop and remove containers
-        run: docker compose -f ansible/roles/deploy/files/docker-compose.yml down
+        run: docker compose down
