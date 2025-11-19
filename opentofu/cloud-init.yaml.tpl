@@ -1,8 +1,7 @@
 #cloud-config
 users:
-  # Note: This user must match your VPS_USER secret
   - name: ${name}
-    groups: users, admin
+    groups: users, sudo
     sudo: ALL=(ALL) NOPASSWD:ALL
     shell: /bin/bash
     ssh_authorized_keys:

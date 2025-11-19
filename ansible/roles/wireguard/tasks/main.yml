@@ -180,11 +180,8 @@
     dest: "{{ repo_dest }}/wireguard-client-configs/installation-summary.txt"
     mode: "0644"
 
-- name: Display WireGuard status
+- name: Verify WireGuard is running
   ansible.builtin.command: wg show
   register: wireguard_status
   changed_when: false
-
-- name: Show WireGuard status
-  ansible.builtin.debug:
-    var: wireguard_status.stdout_lines
+  no_log: true

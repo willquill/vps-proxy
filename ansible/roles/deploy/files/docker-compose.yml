@@ -33,7 +33,7 @@ services:
     environment:
       - CLOUDFLARE_API_TOKEN=$CF_DNS_API_TOKEN
         # Your Cloudflare API token
-      - DOMAINS="ddns.${PUBLIC_DOMAIN}"
+      - DOMAINS=ddns.${PUBLIC_DOMAIN}
       # Tell Cloudflare to cache webpages and hide your IP (optional)
       - PROXIED=false
       - IP6_PROVIDER=none
@@ -49,7 +49,7 @@ services:
       proxy:
         # Required for Authentik
         aliases:
-          - "auth.${PUBLIC_DOMAIN}"
+          - auth.${PUBLIC_DOMAIN}
     ports:
       - 22:22 # for GitLab and anything else I want to add
       - 80:80
@@ -133,7 +133,8 @@ services:
     pull_policy: always
   # watchtower manages auto updates. this is optional.
   watchtower:
-    image: containrrr/watchtower
+    image: nickfedor/watchtower
+    container_name: watchtower
     restart: unless-stopped
     group_add:
       - ${PGID:-1000}

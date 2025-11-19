@@ -32,18 +32,17 @@ providers:
 certificatesResolvers:
   cloudflare:
     acme:
+      # Staging (disable for production use)
+      caServer: https://acme-staging-v02.api.letsencrypt.org/directory # staging
       email: {{ acme_email }}
       storage: acme.json
       dnsChallenge:
         provider: cloudflare
         #disablePropagationCheck: true # uncomment this if you have issues pulling certificates through cloudflare, By setting this flag to true disables the need to wait for the propagation of the TXT record to all authoritative name servers.
         # delayBeforeCheck: 5
-        # Staging (disable for production use)
-        caServer: https://acme-staging-v02.api.letsencrypt.org/directory # staging
         resolvers:
           - "1.1.1.1:53"
           - "1.0.0.1:53"
-
 tls:
   stores:
     default:
