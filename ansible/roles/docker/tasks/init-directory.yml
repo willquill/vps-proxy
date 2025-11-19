@@ -1,3 +1,4 @@
+---
 - name: Ensure application directory exists with correct ownership
   ansible.builtin.file:
     path: "{{ repo_dest }}"

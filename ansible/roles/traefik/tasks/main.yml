@@ -2,7 +2,6 @@
 - name: Firewall initialization
   ansible.builtin.import_tasks: ufw-traefik.yml
 
-# Traefik setup tasks
 - name: Install Apache utils (for htpasswd)
   ansible.builtin.apt:
     name: apache2-utils
@@ -21,12 +20,12 @@
 - name: Generate bcrypt htpasswd line
   ansible.builtin.command: |
     htpasswd -nbB {{ traefik_username }} {{ traefik_password }}
-  register: deploy_htpasswd_line
+  register: traefik_htpasswd_line
   changed_when: false
 
 - name: Write htpasswd file
   ansible.builtin.copy:
-    content: "{{ deploy_htpasswd_line.stdout }}"
+    content: "{{ traefik_htpasswd_line.stdout }}"
     dest: "{{ repo_dest }}/config/traefik/usersfile.txt"
     owner: "{{ user_name }}"
     group: "{{ user_name }}"
@@ -69,7 +68,7 @@
 
 - name: Create docker proxy network if it doesn't exist
   ansible.builtin.command: docker network create proxy
-  register: deploy_create_network_result
+  register: traefik_create_network_result
   failed_when:
-    - deploy_create_network_result.rc != 0
-    - "'already exists' not in deploy_create_network_result.stderr"
+    - traefik_create_network_result.rc != 0
+    - "'already exists' not in traefik_create_network_result.stderr"

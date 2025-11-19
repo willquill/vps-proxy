@@ -14,17 +14,6 @@
     owner: "{{ user_name }}"
     group: "{{ user_name }}"
     mode: "0600"
-  vars:
-    authentik_postgresql_name: "{{ authentik_postgresql_name }}"
-    authentik_postgresql_password: "{{ authentik_postgresql_password }}"
-    authentik_postgresql_user: "{{ authentik_postgresql_user }}"
-    authentik_secret_key: "{{ authentik_secret_key }}"
-    cf_dns_api_token: "{{ cf_dns_api_token }}"
-    cf_zone_api_token: "{{ cf_zone_api_token }}"
-    traefik_username: "{{ traefik_username }}"
-    traefik_password: "{{ traefik_password }}"
-    public_hostname: "{{ public_hostname }}"
-    timezone: "{{ timezone | default('UTC') }}"
 
 - name: Create application configuration directories
   ansible.builtin.file:
@@ -45,7 +34,7 @@
     group: "{{ user_name }}"
     mode: "0644"
   with_items:
-    - { dir_name: "gatus", src: "gatus/config.yml"
+    - { dir_name: "gatus", src: "gatus/config.yml" }
 
 # Execute docker compose
 - name: Execute 'docker compose up -d'
