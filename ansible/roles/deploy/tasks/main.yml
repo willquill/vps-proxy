@@ -36,9 +36,28 @@
   with_items:
     - { dir_name: "gatus", src: "gatus/config.yml" }
 
-# Execute docker compose
-- name: Execute 'docker compose up -d'
-  ansible.builtin.command: "docker compose up -d"
+- name: Check if update.sh script exists
+  ansible.builtin.stat:
+    path: "{{ repo_dest }}/update.sh"
+  register: deploy_update_sh_stat
+
+# Create executable update.sh in repo_dest
+- name: Create update.sh script
+  ansible.builtin.copy:
+    dest: "{{ repo_dest }}/update.sh"
+    content: |
+      #!/bin/bash
+      docker compose pull
+      docker compose up -d
+      docker image prune -f
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0755"
+  when: not deploy_update_sh_stat.stat.exists
+
+# Execute docker compose update script
+- name: Execute update.sh script
+  ansible.builtin.command: "./update.sh"
   args:
     chdir: "{{ repo_dest }}"
   become: true

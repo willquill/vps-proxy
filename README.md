@@ -53,7 +53,7 @@ Generate all of the secrets you need above. I won't walk you through all of it, 
 1. SSH key
 
 ```sh
-ssh-keygen -t ed25519 -C "vpsproxykey@mail.willq.net" -f ~/.ssh/vps_proxy_key
+ssh-keygen -t ed25519 -C "your-email-address" -f ~/.ssh/vps_proxy_key
 ```
 
 2. Create Cloudflare [API tokens here](https://developers.cloudflare.com/fundamentals/api/get-started/create-token/).

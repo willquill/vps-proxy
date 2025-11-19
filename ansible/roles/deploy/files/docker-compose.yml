@@ -38,10 +38,10 @@ services:
       - PROXIED=false
       - IP6_PROVIDER=none
   traefik:
-    image: traefik:v3.5
+    image: traefik:v3.6.1
     container_name: traefik
     restart: unless-stopped
-    <<: [*security, *user]
+    <<: [*security]
     # Needed by any container that accesses docker.sock
     group_add:
       - ${PGID:-1000}
@@ -96,6 +96,7 @@ services:
       - ./config/gatus_postgres:/var/lib/postgresql
     networks:
       gatus: {}
+    user: ${PUID:-1000}:${PGID:-1000}
     environment:
       - POSTGRES_DB=${GATUS_POSTGRES_DB}
       - POSTGRES_USER=${GATUS_POSTGRES_USER}
