@@ -107,7 +107,7 @@ jobs:
           # https://github.com/ansible/molecule/pull/4380#issuecomment-3013500908
           ANSIBLE_ROLES_PATH: ${HOME}/.ansible/roles
           # https://github.com/gofrolist/molecule-action/issues/326#issuecomment-2759662513
-          ANSIBLE_COLLECTIONS_PATH: "./collections:/home/runner/.ansible/collections:/usr/share/ansible/collections"
+          ANSIBLE_COLLECTIONS_PATH: "${{ github.workspace }}/collections:/home/runner/.ansible/collections:/usr/share/ansible/collections"
           PYTHONUNBUFFERED: "1"
 
       - name: Molecule test wireguard role
@@ -125,7 +125,7 @@ jobs:
           # https://github.com/ansible/molecule/pull/4380#issuecomment-3013500908
           ANSIBLE_ROLES_PATH: ${HOME}/.ansible/roles
           # https://github.com/gofrolist/molecule-action/issues/326#issuecomment-2759662513
-          ANSIBLE_COLLECTIONS_PATH: "./collections:/home/runner/.ansible/collections:/usr/share/ansible/collections"
+          ANSIBLE_COLLECTIONS_PATH: "${{ github.workspace }}/collections:/home/runner/.ansible/collections:/usr/share/ansible/collections"
           PYTHONUNBUFFERED: "1"
 
       - name: Molecule test docker role
@@ -143,7 +143,7 @@ jobs:
           # https://github.com/ansible/molecule/pull/4380#issuecomment-3013500908
           ANSIBLE_ROLES_PATH: ${HOME}/.ansible/roles
           # https://github.com/gofrolist/molecule-action/issues/326#issuecomment-2759662513
-          ANSIBLE_COLLECTIONS_PATH: "./collections:/home/runner/.ansible/collections:/usr/share/ansible/collections"
+          ANSIBLE_COLLECTIONS_PATH: "${{ github.workspace }}/collections:/home/runner/.ansible/collections:/usr/share/ansible/collections"
           PYTHONUNBUFFERED: "1"
 
       - name: Molecule test traefik role
@@ -161,7 +161,7 @@ jobs:
           # https://github.com/ansible/molecule/pull/4380#issuecomment-3013500908
           ANSIBLE_ROLES_PATH: ${HOME}/.ansible/roles
           # https://github.com/gofrolist/molecule-action/issues/326#issuecomment-2759662513
-          ANSIBLE_COLLECTIONS_PATH: "./collections:/home/runner/.ansible/collections:/usr/share/ansible/collections"
+          ANSIBLE_COLLECTIONS_PATH: "${{ github.workspace }}/collections:/home/runner/.ansible/collections:/usr/share/ansible/collections"
           PYTHONUNBUFFERED: "1"
 
       - name: Molecule test deploy role
@@ -179,5 +179,5 @@ jobs:
           # https://github.com/ansible/molecule/pull/4380#issuecomment-3013500908
           ANSIBLE_ROLES_PATH: ${HOME}/.ansible/roles
           # https://github.com/gofrolist/molecule-action/issues/326#issuecomment-2759662513
-          ANSIBLE_COLLECTIONS_PATH: "./collections:/home/runner/.ansible/collections:/usr/share/ansible/collections"
+          ANSIBLE_COLLECTIONS_PATH: "${{ github.workspace }}/collections:/home/runner/.ansible/collections:/usr/share/ansible/collections"
           PYTHONUNBUFFERED: "1"

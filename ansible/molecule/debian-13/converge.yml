@@ -40,6 +40,7 @@
         - /tmp/wireguard
         - /tmp/ansible-tmp
   tasks:
+    # 'sed' is used to for role name replacement in the GitHub Action
     - name: "Include template role"
       ansible.builtin.include_role:
         name: "template"
