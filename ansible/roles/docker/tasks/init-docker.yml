@@ -1,9 +1,8 @@
 ---
 # Docker setup tasks
-
 - name: Debug distribution info
   ansible.builtin.debug:
-    msg: 
+    msg:
       - "Distribution: {{ ansible_distribution }}"
       - "Release: {{ ansible_distribution_release }}"
       - "Version: {{ ansible_distribution_version }}"
@@ -16,44 +15,41 @@
     uris: "https://download.docker.com/linux/{{ ansible_distribution | lower }}"
     suites: ["{{ ansible_distribution_release | lower }}"]
     components: [stable]
-    signed_by: "https://download.docker.com/linux/debian/gpg"
+    signed_by: "https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg"
     enabled: yes
-  register: deploy_repo_result
-  check_mode: false
+  register: docker_repo_result
 
 - name: Debug repository result
   ansible.builtin.debug:
-    var: deploy_repo_result
+    var: docker_repo_result
 
 - name: Update apt cache
   ansible.builtin.apt:
     update_cache: yes
-    cache_valid_time: 3600
-  register: deploy_cache_result
-  check_mode: false
+  register: docker_cache_result
 
 - name: Debug cache update result
   ansible.builtin.debug:
-    var: deploy_cache_result
+    var: docker_cache_result
 
 - name: Check if docker-ce package is available
   ansible.builtin.command: apt-cache search docker-ce
-  register: deploy_docker_search
+  register: docker_package_search
   changed_when: false
 
 - name: Debug docker package search
   ansible.builtin.debug:
-    var: deploy_docker_search.stdout_lines
+    var: docker_package_search.stdout_lines
 
 - name: Check repository sources
   ansible.builtin.command: cat /etc/apt/sources.list.d/docker.sources
-  register: deploy_sources_content
+  register: docker_sources_content
   changed_when: false
   ignore_errors: true
 
 - name: Debug repository sources
   ansible.builtin.debug:
-    var: deploy_sources_content.stdout_lines
+    var: docker_sources_content.stdout_lines
 
 - name: Install Docker Engine
   ansible.builtin.apt:
@@ -61,17 +57,20 @@
       - docker-ce
       - docker-ce-cli
       - containerd.io
-  when: not ansible_check_mode
+      - docker-compose-plugin
 
 - name: Add user to docker group
   ansible.builtin.user:
     name: "{{ user_name }}"
     groups: docker
     append: yes
-  when: not ansible_check_mode
+  register: docker_group_add_result
 
 - name: Start Docker service
   ansible.builtin.service:
     name: docker
     state: started
-  when: not ansible_check_mode
+
+- name: Include reset connection tasks
+  ansible.builtin.include_tasks: reset_connection.yaml
+  when: docker_group_add_result.changed == true

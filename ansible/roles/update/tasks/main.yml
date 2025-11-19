@@ -1,3 +1,6 @@
 ---
 - name: Update system
   ansible.builtin.include_tasks: ../../tasks/update.yml
+
+- name: Install desired packages
+  ansible.builtin.include_tasks: ../../tasks/packages.yml

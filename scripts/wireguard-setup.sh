@@ -1,12 +1,16 @@
 #!/bin/bash
 
+# NOTE: THIS SCRIPT IS NOW DEPRECATED.
+# WireGuard setup is now handled via Ansible tasks within a role.
+# This script is kept for reference only.
+
 # Exit on any error
 set -e
 
 # Install required packages
 echo "Installing required packages..."
 sudo apt update
-sudo apt install wireguard ufw qrencode -y
+sudo apt install wireguard qrencode -y
 
 # Enable IP forwarding
 echo "Configuring IP forwarding..."

@@ -1,4 +1,4 @@
-name: Docker Compose Build Test
+name: Docker Compose Tests
 
 on:
   # Allows manual triggering
@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - "docker-compose.yml"
+      - "ansible/roles/deploy/files/docker-compose.yml"
       - ".github/workflows/test-docker.yml"
 
 jobs:
@@ -20,16 +20,22 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
+
+      - name: Move docker-compose.yml to current directory
+        run: |
+          mv ansible/roles/deploy/files/docker-compose.yml .
+
       - name: Remove port 22 mapping from docker-compose.yml
         run: |
           sed -i '/- 22:22/d' docker-compose.yml
+
       - name: Create dummy .env file
         run: |
           cat > .env << EOF
-          PUBLIC_HOSTNAME=example.com
+          PUBLIC_DOMAIN=example.com
           PUID=1000
           PGID=1000
-          TZ=UTC
+          TZ=America/Chicago
           CF_DNS_API_TOKEN=dummy_token
           CF_ZONE_API_TOKEN=dummy_token
           TRAEFIK_BASIC_AUTH_USERNAME=dummy_user
@@ -38,17 +44,34 @@ jobs:
           AUTHENTIK_POSTGRESQL__PASSWORD=dummy_password
           AUTHENTIK_POSTGRESQL__USER=authentik
           AUTHENTIK_SECRET_KEY=dummy_key
+          GATUS_POSTGRES_USER=username
+          GATUS_POSTGRES_PASSWORD=password
+          GATUS_POSTGRES_DB=gatus
           EOF
+
+      - name: Create required config directories and files
+        run: |
+          mkdir -p config/gatus_postgres
+          mkdir -p config/gatus
+          cp ansible/roles/deploy/files/gatus/config.yml config/gatus/config.yml
+
       - name: Create Docker Network
         run: |
           docker network create proxy || true
+          docker network create gatus || true
+
       - name: Build Docker images
         run: |
           docker compose build
+
+      - name: Validate docker-compose.yml
+        run: docker compose config
+
       - name: Run Docker-compose
         run: |
           docker compose up -d
           docker compose ps
           sleep 30
+
       - name: Stop and remove containers
         run: docker compose down

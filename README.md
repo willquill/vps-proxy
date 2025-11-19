@@ -2,19 +2,36 @@
 
 !!!! THIS IS A WIP !!!!
 
-This does the following:
+Goal:
+
+- Create a VPS that runs Traefik, Authentik, Gatus, and others as docker services to act as a reverse proxy and identity provider (Idp)
+- Also, run Wireguard so that a tunnel may be created elsewhere
+
+Automation tasks:
 
 - Creates a firewall and virtual private server (VPS) in Hetzner Cloud
 - Installs, configures, and starts Wireguard on the VPS
 - Installs Docker on the VPS and executes a docker compose file to spin up docker services
 
-Intention:
-
-- The VPS runs Traefik, Authentik, Gatus, and others as docker services to act as a reverse proxy and IDP for requests that are ultimately forwarded elsewhere
-
 ## Overview
 
 ![Architecture Diagram](architecture_diagram.png)
+
+## Just tell me how I can use this without being an expert coder
+
+Okay, so you want to have your own Debian server running docker compose services? Easy enough.
+
+You need to already have:
+
+- An SSH key pair
+- A domain
+- A Hetzner Cloud account
+
+Clone or fork this repo and then do the following:
+
+1. Create an SSH key pair. Or use one you already have.
+
+2.
 
 ## Routing
 
@@ -46,14 +63,6 @@ VPS_USER=your_ssh_username
 3. Creating .env file for Docker compose. See `ansible/templates/env.j2` for all variables. **_Note: Some of the variables are defined in the GitHub Actions `ansible-playbook` command and others are vars in `ansible/main.yml`_**
 
 ## Prerequisites
-
-Generate all of the secrets you need above. I won't walk you through all of it, but here are some pointers:
-
-1. SSH key
-
-```sh
-ssh-keygen -t ed25519 -C "vpsproxykey@mail.willq.net" -f ~/.ssh/vps_proxy_key
-```
 
 2. Create Cloudflare [API tokens here](https://developers.cloudflare.com/fundamentals/api/get-started/create-token/).
 

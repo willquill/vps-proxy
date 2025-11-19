@@ -4,9 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Ansible version to install"
+        description: "Ansible version to use"
         required: false
-        default: "9.3.0"
+        default: "12.1.0"
+        type: string
   workflow_run:
     workflows: ["Security"]
     branches: [main]
@@ -65,7 +66,7 @@ jobs:
     # Note: We do not need to set each env because instead of envvars,
     #       we set -e options where necessary
     env:
-      ANSIBLE_VERSION: ${{ github.event.inputs.version || '9.3.0' }}
+      ANSIBLE_VERSION: ${{ github.event.inputs.version || '12.1.0' }}
       ANSIBLE_HOST_KEY_CHECKING: False
       ANSIBLE_FORCE_COLOR: 1
 
@@ -109,6 +110,28 @@ jobs:
           SERVER_IPV4=$(jq -r '.server_ipv4.value' tf_output.json)
           echo "SERVER_IPV4=$SERVER_IPV4" >> $GITHUB_ENV
 
+      # ---------- Wait for cloud-init ----------
+      - name: Wait for cloud-init to complete
+        run: |
+          echo "Waiting for cloud-init to complete on ${{ env.SERVER_IPV4 }}..."
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_PROXY_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+
+          for i in {1..30}; do
+            echo "Attempt $i/30: Checking if SSH is available and cloud-init is done..."
+            if ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 -p 2222 -i ~/.ssh/id_ed25519 ${{ github.repository_owner }}@${{ env.SERVER_IPV4 }} "cloud-init status --wait" 2>/dev/null; then
+              echo "Cloud-init completed successfully!"
+              break
+            fi
+            if [ $i -eq 30 ]; then
+              echo "Timeout waiting for cloud-init to complete"
+              exit 1
+            fi
+            echo "Not ready yet, waiting 10 seconds..."
+            sleep 10
+          done
+
       # ---------- SSH key ----------
       # Use IPv4 from Terraform output
       - name: Setup SSH key
@@ -126,35 +149,9 @@ jobs:
             ${{ env.SERVER_IPV4 }} ansible_user=${{ github.repository_owner }} ansible_port=2222
           EOF
 
-      # ---------- Run Ansible Check----------
-      # FIXME: admin_ip_range not used in playbook. Why did I add this again?
-      - name: Run ansible playbook with check option
-        id: ansible-check
-        run: |
-          ansible-playbook \
-            -i inventory \
-            --check \
-            -e "ansible_ssh_private_key_file=~/.ssh/id_ed25519" \
-            -e "repo_url=https://github.com/${{ github.repository }}.git" \
-            -e "repo_dest=/home/${{ github.repository_owner }}/vps-proxy" \
-            -e "vps_host=${{ env.SERVER_IPV4 }}" \
-            -e "user_name=${{ github.repository_owner }}" \
-            -e "traefik_username=${{ secrets.TRAEFIK_BASIC_AUTH_USERNAME }}" \
-            -e "traefik_password=${{ secrets.TRAEFIK_BASIC_AUTH_PASSWORD }}" \
-            -e "acme_email=${{ secrets.ACME_EMAIL }}" \
-            -e "public_hostname=${{ secrets.PUBLIC_HOSTNAME }}" \
-            -e "admin_ip_range=${{ secrets.ADMIN_IP_RANGE }}" \
-            -e "authentik_postgresql_name=${{ secrets.AUTHENTIK_POSTGRESQL__NAME }}" \
-            -e "authentik_postgresql_password=${{ secrets.AUTHENTIK_POSTGRESQL__PASSWORD }}" \
-            -e "authentik_postgresql_user=${{ secrets.AUTHENTIK_POSTGRESQL__USER }}" \
-            -e "authentik_secret_key=${{ secrets.AUTHENTIK_SECRET_KEY }}" \
-            -e "cf_dns_api_token=${{ secrets.CF_DNS_API_TOKEN }}" \
-            -e "cf_zone_api_token=${{ secrets.CF_ZONE_API_TOKEN }}" \
-            -e "timezone=${{ secrets.TZ }}" \
-            ansible/main.yml --tags update,deploy
-
       # ---------- Run Ansible ----------
       - name: Run ansible playbook
+        # FIXME: admin_ip_range not used in playbook. Why did I add this again?
         # Only run if every previous step succeeded
         if: ${{ success() }}
         run: |
@@ -168,7 +165,7 @@ jobs:
             -e "traefik_username=${{ secrets.TRAEFIK_BASIC_AUTH_USERNAME }}" \
             -e "traefik_password=${{ secrets.TRAEFIK_BASIC_AUTH_PASSWORD }}" \
             -e "acme_email=${{ secrets.ACME_EMAIL }}" \
-            -e "public_hostname=${{ secrets.PUBLIC_HOSTNAME }}" \
+            -e "public_hostname=${{ secrets.PUBLIC_DOMAIN }}" \
             -e "admin_ip_range=${{ secrets.ADMIN_IP_RANGE }}" \
             -e "authentik_postgresql_name=${{ secrets.AUTHENTIK_POSTGRESQL__NAME }}" \
             -e "authentik_postgresql_password=${{ secrets.AUTHENTIK_POSTGRESQL__PASSWORD }}" \
@@ -177,4 +174,4 @@ jobs:
             -e "cf_dns_api_token=${{ secrets.CF_DNS_API_TOKEN }}" \
             -e "cf_zone_api_token=${{ secrets.CF_ZONE_API_TOKEN }}" \
             -e "timezone=${{ secrets.TZ }}" \
-            ansible/main.yml --tags update,deploy
+            ansible/main.yml --tags update,wireguard,docker,traefik,deploy

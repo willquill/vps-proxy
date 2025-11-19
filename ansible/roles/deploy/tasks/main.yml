@@ -1,23 +1,65 @@
-####################################
-### Split tasks into logical modules
-####################################
 ---
-# Firewall setup
-- name: Firewall setup
-  ansible.builtin.import_tasks: firewall.yml
+- name: Copy docker-compose.yml to application directory
+  ansible.builtin.copy:
+    src: docker-compose.yml
+    dest: "{{ repo_dest }}/docker-compose.yml"
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0644"
 
-# WireGuard VPN setup
-- name: WireGuard VPN setup
-  ansible.builtin.import_tasks: wireguard.yml
+- name: Create .env file from template
+  ansible.builtin.template:
+    src: env.j2
+    dest: "{{ repo_dest }}/.env"
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0600"
 
-# Docker setup
-- name: Docker setup
-  ansible.builtin.import_tasks: docker.yml
+- name: Create application configuration directories
+  ansible.builtin.file:
+    path: "{{ repo_dest }}/config/{{ item }}"
+    state: directory
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0755"
+  with_items:
+    - "gatus_postgres"
+    - "gatus"
 
-# Traefik configuration
-- name: Traefik configuration
-  ansible.builtin.import_tasks: traefik-setup.yml
+- name: Copy files to application configuration directories
+  ansible.builtin.copy:
+    src: "{{ item.src }}"
+    dest: "{{ repo_dest }}/config/{{ item.src }}"
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0644"
+  with_items:
+    - { dir_name: "gatus", src: "gatus/config.yml" }
 
-# Application deployment
-- name: Application deployment
-  ansible.builtin.import_tasks: app.yml
+- name: Check if update.sh script exists
+  ansible.builtin.stat:
+    path: "{{ repo_dest }}/update.sh"
+  register: deploy_update_sh_stat
+
+# Create executable update.sh in repo_dest
+- name: Create update.sh script
+  ansible.builtin.copy:
+    dest: "{{ repo_dest }}/update.sh"
+    content: |
+      #!/bin/bash
+      docker compose pull
+      docker compose up -d
+      docker image prune -f
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0755"
+  when: not deploy_update_sh_stat.stat.exists
+
+# Execute docker compose update script
+- name: Execute update.sh script
+  ansible.builtin.command: "./update.sh"
+  args:
+    chdir: "{{ repo_dest }}"
+  become: true
+  become_user: "{{ user_name }}"
+  when: not ansible_check_mode

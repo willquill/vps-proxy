@@ -1,0 +1,158 @@
+x-user: &user
+  user: ${PUID:-1000}:${PGID:-1000}
+
+x-networks-proxy: &networks-proxy
+  networks:
+    proxy: {}
+
+x-environment: &environment
+  environment:
+    - TZ=$TZ
+    - PUID=$PUID
+    - PGID=$PGID
+
+x-security: &security
+  security_opt:
+    - no-new-privileges:true
+
+x-proxy-labels: &proxy-labels
+  traefik.enable: true
+  traefik.docker.network: "proxy"
+
+services:
+  cloudflare-ddns:
+    image: favonia/cloudflare-ddns:latest
+    container_name: cloudflare-ddns
+    network_mode: host
+    restart: always
+    <<: [*security, *user]
+    read_only: true
+    # Make the container filesystem read-only (optional but recommended)
+    cap_drop: [all]
+    # Drop all Linux capabilities (optional but recommended)
+    environment:
+      - CLOUDFLARE_API_TOKEN=$CF_DNS_API_TOKEN
+        # Your Cloudflare API token
+      - DOMAINS=ddns.${PUBLIC_DOMAIN}
+      # Tell Cloudflare to cache webpages and hide your IP (optional)
+      - PROXIED=false
+      - IP6_PROVIDER=none
+  traefik:
+    image: traefik:v3.6.1
+    container_name: traefik
+    restart: unless-stopped
+    <<: [*security]
+    # Needed by any container that accesses docker.sock
+    group_add:
+      - ${PGID:-1000}
+    networks:
+      proxy:
+        # Required for Authentik
+        aliases:
+          - auth.${PUBLIC_DOMAIN}
+    ports:
+      - 22:22 # for GitLab and anything else I want to add
+      - 80:80
+      - 443:443
+      - 636:636 # LDAPS
+    environment:
+      - TZ
+      # https://go-acme.github.io/lego/dns/cloudflare/
+      # Zone / Zone / Read on the specific zone for which I use Traefik
+      - CF_ZONE_API_TOKEN
+      # Zone / DNS / Edit on the specific zone for which I use Traefik
+      - CF_DNS_API_TOKEN
+      - PUBLIC_DOMAIN # required for tautulli in dynamic files
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./config/traefik/config:/etc/traefik/config:ro
+      - ./config/traefik/traefik.yml:/traefik.yml:ro
+      - ./config/traefik/acme.json:/acme.json:rw
+      - ./config/traefik/usersfile.txt:/usersfile.txt
+    labels:
+      traefik.enable: true
+      traefik.http.routers.traefik.entrypoints: "http"
+      traefik.http.routers.traefik.rule: "Host(`traefik.${PUBLIC_DOMAIN}`)"
+      traefik.http.middlewares.traefik-auth.basicauth.usersfile: "/usersfile.txt"
+      traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme: "https"
+      traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto: "https"
+      traefik.http.routers.traefik.middlewares: "traefik-https-redirect,public@file"
+      traefik.http.routers.traefik-secure.entrypoints: "https"
+      traefik.http.routers.traefik-secure.rule: "Host(`traefik.${PUBLIC_DOMAIN}`)"
+      traefik.http.middlewares.rate-limit.ratelimit.average: "5"
+      traefik.http.middlewares.rate-limit.ratelimit.burst: "10"
+      traefik.http.routers.traefik-secure.middlewares: "traefik-auth,rate-limit,public@file"
+      traefik.http.routers.traefik-secure.tls: "true"
+      traefik.http.routers.traefik-secure.tls.certresolver: "cloudflare"
+      traefik.http.routers.traefik-secure.tls.domains[0].main: "${PUBLIC_DOMAIN}"
+      traefik.http.routers.traefik-secure.tls.domains[0].sans: "*.${PUBLIC_DOMAIN}"
+      traefik.http.routers.traefik-secure.service: "api@internal"
+  # Storage backend for gatus
+  gatus_postgres:
+    image: postgres
+    container_name: gatus_postgres
+    volumes:
+      - ./config/gatus_postgres:/var/lib/postgresql
+    networks:
+      gatus: {}
+    user: ${PUID:-1000}:${PGID:-1000}
+    labels:
+      traefik.enable: false
+    environment:
+      - POSTGRES_DB=${GATUS_POSTGRES_DB}
+      - POSTGRES_USER=${GATUS_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${GATUS_POSTGRES_PASSWORD}
+    pull_policy: always
+  gatus:
+    image: twinproduction/gatus:v5.32.0
+    container_name: gatus
+    restart: unless-stopped
+    depends_on:
+      - gatus_postgres
+    networks:
+      proxy: {}
+      gatus: {}
+    environment:
+      - POSTGRES_DB=${GATUS_POSTGRES_DB}
+      - POSTGRES_USER=${GATUS_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${GATUS_POSTGRES_PASSWORD}
+      - PUBLIC_DOMAIN
+    labels:
+      com.centurylinklabs.watchtower.enable: "false"
+      <<: *proxy-labels
+      traefik.http.routers.status.entrypoints: "http"
+      traefik.http.routers.status.rule: "Host(`status.${PUBLIC_DOMAIN}`)"
+      traefik.http.middlewares.status-https-redirect.redirectscheme.scheme: "https"
+      traefik.http.routers.status.middlewares: "status-https-redirect"
+      traefik.http.routers.status-secure.entrypoints: "https"
+      traefik.http.routers.status-secure.rule: "Host(`status.${PUBLIC_DOMAIN}`)"
+      traefik.http.routers.status-secure.tls: "true"
+      traefik.http.routers.status-secure.service: "status"
+      traefik.http.services.status.loadbalancer.server.port: "8080"
+      traefik.http.routers.status-secure.middlewares: "public@file"
+    volumes:
+      - ./config/gatus:/config
+    pull_policy: always
+  # watchtower manages auto updates. this is optional.
+  watchtower:
+    image: nickfedor/watchtower
+    container_name: watchtower
+    restart: unless-stopped
+    group_add:
+      - ${PGID:-1000}
+    labels:
+      traefik.enable: false
+    environment:
+      # Requires label: - "com.centurylinklabs.watchtower.enable=true"
+      - WATCHTOWER_LABEL_ENABLE
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    # check for updates once an hour (interval is in seconds)
+    command: --interval 3600 --cleanup
+
+networks:
+  proxy:
+    external: true
+  gatus:
+    internal: true

@@ -35,11 +35,12 @@
       ansible.builtin.file:
         path: "{{ item }}"
         state: directory
-        mode: '0777'
+        mode: "0777"
       with_items:
         - /tmp/wireguard
         - /tmp/ansible-tmp
   tasks:
-    - name: "Include deploy role"
+    # 'sed' is used to for role name replacement in the GitHub Action
+    - name: "Include template role"
       ansible.builtin.include_role:
-        name: "deploy"
+        name: "template"

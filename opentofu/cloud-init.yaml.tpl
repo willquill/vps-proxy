@@ -1,14 +1,15 @@
 #cloud-config
 users:
-  # Note: This user must match your VPS_USER secret
   - name: ${name}
-    groups: users, admin
+    groups: users, sudo
     sudo: ALL=(ALL) NOPASSWD:ALL
     shell: /bin/bash
     ssh_authorized_keys:
       - ${ssh_authorized_key}
-# Note: Keeps cloud-init from re-enabling passwords for SSH
+# Keeps cloud-init from re-enabling passwords for SSH
 ssh_pwauth: false
+# Disable root SSH login
+disable_root: true
 packages:
   - fail2ban
   - ufw
@@ -19,6 +20,8 @@ packages:
   - openssh-server
 package_update: true
 package_upgrade: true
+package_reboot_if_required: true
+timezone: "America/Chicago"
 write_files:
   - path: /etc/ssh/sshd_config.d/99-ssh-hardening.conf
     content: |
@@ -39,11 +42,9 @@ write_files:
       [Socket]
       ListenStream=
       ListenStream=2222
-ufw:
-  enabled: true
-  allow:
-    - "2222"
 runcmd:
+  - ufw allow 2222/tcp
+  - ufw enable  
   - printf "[sshd]\nenabled = true\nport = ssh, 2222\nbanaction = iptables-multiport" > /etc/fail2ban/jail.local
   - systemctl enable fail2ban
   - systemctl enable ssh

@@ -1,0 +1,9 @@
+####################################
+### Split tasks into logical modules
+####################################
+---
+- name: Docker installation and configuration
+  ansible.builtin.import_tasks: init-docker.yml
+
+- name: Directory creation and ownership
+  ansible.builtin.import_tasks: init-directory.yml

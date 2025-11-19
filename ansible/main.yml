@@ -1,38 +1,55 @@
 ---
 # Runs even in check mode
-- name: Update System
+- name: Updates and package installation
   hosts: all
   tags: update
   become: true
   tasks:
-    - name: Update apt cache and upgrade system
+    - name: Update apt cache, upgrade system, and install apps
       ansible.builtin.include_role:
         name: update
 
-# Runs even in check mode
-- name: Install Packages
+- name: Install and configure Wireguard
   hosts: all
-  tags: packages
-  become: true
-  tasks:
-    - name: Update apt cache and upgrade system
-      ansible.builtin.include_role:
-        name: packages
-
-- name: Deploy VPS Proxy
-  hosts: all
-  tags: deploy
-  gather_facts: true
+  tags: wireguard
   become: true
   vars:
     wireguard_port: 51820
     wireguard_tunnel_subnet: 192.168.145.0/24
     wireguard_address: 192.168.145.1/24
     wireguard_peer1: 192.168.145.2/32
+  tasks:
+    - name: Install and configure Wireguard
+      ansible.builtin.include_role:
+        name: wireguard
+
+- name: Initialize docker and app directory
+  hosts: all
+  tags: docker
+  become: true
+  tasks:
+    - name: Install docker and create directory
+      ansible.builtin.include_role:
+        name: docker
+
+- name: Generate Traefik files
+  hosts: all
+  tags: traefik
+  become: true
+  tasks:
+    - name: Generate Traefik files from templates
+      ansible.builtin.include_role:
+        name: traefik
+
+- name: Initialize dependency files and deploy docker compose file
+  hosts: all
+  tags: deploy
+  gather_facts: true
+  become: true
+  vars:
     user_id: 1000
     group_id: 1000
-
   tasks:
-    - name: Include deploy role
+    - name: Create docker-compose.yml and .env and deploy
       ansible.builtin.include_role:
         name: deploy
