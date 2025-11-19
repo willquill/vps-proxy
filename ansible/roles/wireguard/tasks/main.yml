@@ -132,14 +132,14 @@
 
 - name: Create directory for client configs
   ansible.builtin.file:
-    path: "{{ ansible_env.HOME }}/wireguard-client-configs"
+    path: "{{ repo_dest }}/wireguard-client-configs"
     state: directory
     mode: "0700"
 
 - name: Copy client configuration to user directory
   ansible.builtin.copy:
     src: /etc/wireguard/client.conf
-    dest: "{{ ansible_env.HOME }}/wireguard-client-configs/client.conf"
+    dest: "{{ repo_dest }}/wireguard-client-configs/client.conf"
     remote_src: true
     mode: "0644"
 
@@ -151,7 +151,7 @@
 - name: Save QR code to file
   ansible.builtin.copy:
     content: "{{ wireguard_qr_code_output.stdout }}"
-    dest: "{{ ansible_env.HOME }}/wireguard-client-configs/client-qr.txt"
+    dest: "{{ repo_dest }}/wireguard-client-configs/client-qr.txt"
     mode: "0644"
 
 - name: Create installation summary
@@ -159,25 +159,25 @@
     content: |
       ========================================
       WireGuard Installation Complete!
+      ========================================
+
       Server Information:
       - Public IP: {{ wireguard_server_ip.stdout }}
-      - Port: {{ wireguard_port }}
-      - Public IP: {{ server_ip.stdout }}
       - Port: {{ wireguard_port }}
       - Interface: wg0
 
       Client configuration has been saved to:
-      {{ ansible_env.HOME }}/wireguard-client-configs/client.conf
+      {{ repo_dest }}/wireguard-client-configs/client.conf
 
       QR code for mobile clients has been saved to:
-      {{ ansible_env.HOME }}/wireguard-client-configs/client-qr.txt
+      {{ repo_dest }}/wireguard-client-configs/client-qr.txt
 
       To check WireGuard status:
       sudo wg show
 
       To view the QR code for mobile clients:
-      cat {{ ansible_env.HOME }}/wireguard-client-configs/client-qr.txt
-    dest: "{{ ansible_env.HOME }}/wireguard-client-configs/installation-summary.txt"
+      cat {{ repo_dest }}/wireguard-client-configs/client-qr.txt
+    dest: "{{ repo_dest }}/wireguard-client-configs/installation-summary.txt"
     mode: "0644"
 
 - name: Display WireGuard status
