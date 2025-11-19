@@ -180,6 +180,15 @@
     dest: "{{ repo_dest }}/wireguard-client-configs/installation-summary.txt"
     mode: "0644"
 
+- name: Change ownership of WireGuard client configs
+  ansible.builtin.file:
+    path: "{{ repo_dest }}/wireguard-client-configs"
+    state: directory
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0755"
+    recurse: yes
+
 - name: Verify WireGuard is running
   ansible.builtin.command: wg show
   register: wireguard_status
