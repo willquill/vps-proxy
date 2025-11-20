@@ -37,34 +37,6 @@ http:
         customRequestHeaders:
           X-Forwarded-Proto: https
 
-    # Shouldn't need X-Forwarded-* b/c Traefik forwards by default
-    # Comment: https://community.traefik.io/t/x-forwarded-for-missing/15013/2
-    # The code: https://github.com/traefik/traefik/blob/master/pkg/middlewares/forwardedheaders/forwarded_header.go
-    # youtrack-headers:
-    #   headers:
-    #     browserXssFilter: true
-    #     contentTypeNosniff: true
-    #     frameDeny: true
-    #     forceSTSHeader: true
-    #     stsIncludeSubdomains: true
-    #     stsPreload: true
-    #     stsSeconds: 15552000
-    #     customFrameOptionsValue: SAMEORIGIN
-    #     customRequestHeaders:
-    #       X-Forwarded-Proto: https   
-    #       X-Forwarded-Host: "youtrack.{{ public_hostname }}"       
-
-    {# authelia:
-      forwardAuth:
-        #address: 'https://authelia.{{ public_hostname }}/api/authz/forward-auth'
-        address: 'http://authelia:9091/api/verify?rd=https://authelia.{{ public_hostname }}'
-        trustForwardHeader: 'true'
-        authResponseHeaders:
-          - Remote-User
-          - Remote-Groups
-          - Remote-Name
-          - Remote-Email #}
-
     oidc-auth:
       plugin:
         traefik-oidc-auth:
@@ -101,3 +73,31 @@ http:
         middlewares:
         - http-RFC1918-only
         - default-headers
+
+    # Shouldn't need X-Forwarded-* b/c Traefik forwards by default
+    # Comment: https://community.traefik.io/t/x-forwarded-for-missing/15013/2
+    # The code: https://github.com/traefik/traefik/blob/master/pkg/middlewares/forwardedheaders/forwarded_header.go
+    # youtrack-headers:
+    #   headers:
+    #     browserXssFilter: true
+    #     contentTypeNosniff: true
+    #     frameDeny: true
+    #     forceSTSHeader: true
+    #     stsIncludeSubdomains: true
+    #     stsPreload: true
+    #     stsSeconds: 15552000
+    #     customFrameOptionsValue: SAMEORIGIN
+    #     customRequestHeaders:
+    #       X-Forwarded-Proto: https   
+    #       X-Forwarded-Host: "youtrack.{{ public_hostname }}"       
+
+    {# authelia:
+      forwardAuth:
+        #address: 'https://authelia.{{ public_hostname }}/api/authz/forward-auth'
+        address: 'http://authelia:9091/api/verify?rd=https://authelia.{{ public_hostname }}'
+        trustForwardHeader: 'true'
+        authResponseHeaders:
+          - Remote-User
+          - Remote-Groups
+          - Remote-Name
+          - Remote-Email #}

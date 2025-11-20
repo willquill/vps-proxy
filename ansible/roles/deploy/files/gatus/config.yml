@@ -17,6 +17,13 @@ endpoints:
     conditions:
       - "[STATUS] == 200"
 
+  - name: Plex
+    group: homelab
+    url: "https://10.1.20.25:32400/web"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+
   # - name: monitoring
   #   group: internal
   #   url: "https://example.org/"
