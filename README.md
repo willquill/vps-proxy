@@ -124,42 +124,54 @@ If you use GitHub Actions to deploy, use the ones from this repo. Otherwise, dep
 
 ### WireGuard Setup with OPNsense
 
-The Ansible playbook automatically configures WireGuard on the VPS server. To set up the VPS-OPNsense tunnel, follow these steps:
+It's critical to understand this differentiation with how Wireguard may be used:
 
-### After Ansible Deployment
+1. You might run a Wireguard server at home, and you connect to it from your phone or laptop just to access network resources at home.
 
-1. SSH into your VPS and retrieve the WireGuard public key:
+This is known as a road warrior/mobile client setup, and in the Peer settings on your phone/laptop, you'd do: `AllowedIps = 192.168.1.0/24` or whatever your home subnet is. This makes your phone route traffic _destined to any IP in that range_ go through the Wireguard interface. All other traffic goes through whatever other network interface you have on your device.
 
-```
-cat /etc/wireguard/publickey
-```
+2. You might run a Wireguard server at home, and you connect to it from your phone or laptop so that _all internet traffic to/from your phone_ goes through your home's internet connection.
 
-2. Note your VPS's public IP address.
+This is another variation of the road warrior/mobile client setup, and you would do: `AllowedIps = 0.0.0.0/0, ::/0` to route all traffic through the Wireguard interface.
 
-### OPNsense Configuration
+3. **For the purpose of this project**, where you want this VPS proxy you've deployed to be able to communicate with your home network but not send all traffic through the tunnel (like general internet traffic), you are essentially doing the road warrior/mobile client setup.
+
+So the Wireguard configuration file on the VPS will have a `Peer` configuration where `AllowedIps = 192.168.145.2/32, 10.1.0.0/16` (my values) because 192.168.154.2 is the Wireguard interface on my home router, and 10.1.0.0/16 is the subnet containing my home subnets (I break that range down into smaller subnets at home).
+
+And the Wireguard configuration file utilized by OPNSense at home would have a Peer configuration where `AllowedIPs = 192.168.154.1/32` - the IP address assigned to the Wireguard interface on the VPS proxy.
+
+The Ansible playbook automatically configures WireGuard on the VPS server. It places a Wireguard configuration into `/etc/wireguard/wg0.conf` that is set to pass all traffic destined to 192.168.154.2/32 or 10.1.0.0/16 through the tunnel.
+
+It also generates `/etc/wireguard/client.conf` which is pre-configured for OPNSense but, unless it can somehow be imported, must have its content copied and pasted into OPNSense as outlined in the next section:
+
+#### Wireguard Configuration
 
 1. On your OPNsense router, navigate to **VPN > WireGuard > Instances**
 2. Click **+ Add** to create a new WireGuard peer configuration:
 
 - **Name**: vps-proxy
-- **Public Key**: Leave blank (will be generated)
-- **Private Key**: Click "Generate" button
+- **Public Key**: Use the `PublicKey` from the `Peer` in `/etc/wireguard/wg0.conf` on the VPS
+- **Private Key**: Use the `PrivateKey` from the `Interface` in `/etc/wireguard/client.conf` on the VPS
 - **Listen Port**: I use 51821 because 51820 is already in use in my case
 - **Tunnel Address**: 192.168.145.2/24 (must be in same subnet as VPS but different IP)
 - **Disable Routes**: Unchecked
 - **Peers**: Leave empty for now
 
-3. Navigate to **VPN > WireGuard > Endpoints**
-4. Click **+ Add** to create a new endpoint:
+3. Navigate to **VPN > WireGuard > Peers**
+4. Click **+ Add** to create a new peer:
 
 - **Name**: vps-proxy
-- **Public Key**: Paste the public key from your VPS
+- **Public Key**: Use the `PublicKey` from the `Peer` in `/etc/wireguard/client.conf` on the VPS
 - **Shared Secret**: Leave blank
 - **Allowed IPs**: 192.168.145.1/32
-- **Endpoint Address**: Your VPS's public IP address
+- **Endpoint Address**: Your VPS's public IP address (or DDNS FQDN)
 - **Endpoint Port**: 51820
 - **Instances**: vps-proxy
 - **Keepalive**: 25 (recommended)
+
+5. Navigate to Firewall > Rules > WireGuard (Group)
+
+- **Disable** the allow all rule, save, and apply, if you do not want your VPS to access EVERYTHING in your home network. You will create more specific rules for that.
 
 5. Navigate to **VPN > WireGuard > General**
 6. Check **Enable WireGuard** and save
@@ -179,38 +191,25 @@ cat /etc/wireguard/publickey
 
 - Interfaces > Assignments > Assign a new interface
 - **Device**: wg1
-- **Description**: VPSProxyWG
-- Interfaces > VPSProxyWG > Enable Interface
+- **Description**: WG_VPS
+- Interfaces > WG_VPS > Enable Interface
 
 8. Allow the VPS proxy to hit internal IPs
 
-- Firewall > Rules > VPSProxyWG
+- Firewall > Rules > WG_VPS
 - Create a new rule
 - **Source**: \*
 - **Destination**: Whatever you want
 - **Port**: Whatever you want
 
-### VPS Configuration Update
-
-To add your OPNsense router as a peer on the VPS, SSH into your VPS and run:
-
-```bash
-# Get your OPNsense router's public key from the OPNsense UI
-OPNSENSE_PUBKEY="your_opnsense_public_key_here"
-YOUR_HOME_PUBLIC_IP="home IP or DDNS FQDN"
-
-# Add the peer to your WireGuard configuration
-sudo wg set wg0 peer $OPNSENSE_PUBKEY allowed-ips 192.168.145.2/32,10.1.0.0/16 endpoint $YOUR_HOME_PUBLIC_IP:51821 persistent-keepalive 25
-
-sudo wg-quick save wg0
-```
+As an initial test, I allow ICMP in the WG_VPS rules to a few destinations at home for testing.
 
 ### Testing the Connection
 
 To test if the WireGuard tunnel is working:
 
 1. From VPS: `ping 192.168.145.2`
-2. From OPNsense: `ping 192.168.145.1`
+2. From OPNsense or any host on home network: `ping 192.168.145.1`
 
 You can also check the connection status in OPNsense under **VPN > WireGuard > Status**
 

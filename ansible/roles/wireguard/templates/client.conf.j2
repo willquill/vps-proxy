@@ -5,5 +5,5 @@ Address = {{ wireguard_peer1 }}
 [Peer]
 PublicKey = {{ wireguard_server_public_key_gen.stdout }}
 Endpoint = {{ wireguard_server_ip.stdout }}:{{ wireguard_port }}
-AllowedIPs = 0.0.0.0/0, ::/0
+AllowedIPs = {{ wireguard_address_host }}
 PersistentKeepalive = 25
