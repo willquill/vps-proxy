@@ -1,11 +1,15 @@
 locals {
-  # Ensure no keys or labels have spaces
+  # Replace spaces and forward slashes in var.github_ref_name
+  github_ref_name = replace(replace(var.github_ref_name, " ", "-"), "/", "-")
+
+  # Ensure no keys or labels have spaces or forward slashes
   labels = {
     for k, v in {
       "Provisioner"      = "GitHub Actions"
       "Last-Provisioned" = var.created_timestamp
       "Owner"            = var.repo_owner
       "Workflow-Actor"   = var.workflow_actor
+      "Git-Ref"          = local.github_ref_name
     } : replace(k, " ", "-") => replace(v, " ", "-")
   }
 }
@@ -37,24 +41,31 @@ resource "hcloud_firewall" "vps_proxy" {
   labels = local.labels
 }
 
-# data "cloudinit_config" "vps_proxy" {
+data "hcloud_location" "main" {
+  name = "ash"
+}
 
-#   gzip          = true
-#   base64_encode = true
+data "hcloud_server_type" "main" {
+  name = "cpx11"
+}
 
-#   # Main cloud-config configuration file.
-#   part {
-#     filename     = "init.cfg"
-#     content_type = "text/cloud-config"
-#     content = templatefile(
-#       "${path.module}/cloud-init.yaml.tpl",
-#       {
-#         name               = var.repo_owner
-#         ssh_authorized_key = var.ssh_authorized_key
-#       }
-#     )
-#   }
-# }
+locals {
+  server_type_location = one([
+    for o in data.hcloud_server_type.main.locations : o
+    if o.name == data.hcloud_location.main.name
+  ])
+}
+
+check "server_type_location" {
+  assert {
+    condition     = local.server_type_location != null
+    error_message = "Server Type ${data.hcloud_server_type.main.name} does not exists in Location ${data.hcloud_location.main.name}"
+  }
+  assert {
+    condition     = !local.server_type_location.is_deprecated
+    error_message = "Server Type ${data.hcloud_server_type.main.name} is deprecated in Location ${data.hcloud_location.main.name}"
+  }
+}
 
 resource "hcloud_server" "server" {
   name         = "vps-proxy"
@@ -73,10 +84,6 @@ resource "hcloud_server" "server" {
   )
 
   labels = local.labels
-}
-
-output "server_id" {
-  value = hcloud_server.server.id
 }
 
 output "server_ipv4" {

@@ -200,7 +200,7 @@ OPNSENSE_PUBKEY="your_opnsense_public_key_here"
 YOUR_HOME_PUBLIC_IP="home IP or DDNS FQDN"
 
 # Add the peer to your WireGuard configuration
-sudo wg set wg0 peer $OPNSENSE_PUBKEY allowed-ips 192.168.145.2/32,10.1.0.0/16 endpoint $YOUR_HOME_PUBLIC_IP$:51821 persistent-keepalive 25
+sudo wg set wg0 peer $OPNSENSE_PUBKEY allowed-ips 192.168.145.2/32,10.1.0.0/16 endpoint $YOUR_HOME_PUBLIC_IP:51821 persistent-keepalive 25
 
 sudo wg-quick save wg0
 ```

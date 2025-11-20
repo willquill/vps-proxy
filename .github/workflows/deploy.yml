@@ -40,6 +40,7 @@ jobs:
       HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
       tf_actions_working_dir: ${{ matrix.working_dir }}
       tofu_version: ${{ matrix.tofu_version }}
+      github_ref_name: ${{ github.head_ref || github.ref_name }}
 
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.tofu_version }}-${{ matrix.working_dir }}
@@ -52,6 +53,7 @@ jobs:
         id: apply
         uses: ./.github/actions/opentofu
         with:
+          github_ref_name: ${{ env.github_ref_name }}
           tofu_version: ${{ matrix.tofu_version }}
           apply: "true"
 
