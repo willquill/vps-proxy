@@ -33,20 +33,15 @@ jobs:
         run: |
           cat > .env << EOF
           PUBLIC_DOMAIN=example.com
-          PUID=1000
-          PGID=1000
           TZ=America/Chicago
           CF_DNS_API_TOKEN=dummy_token
           CF_ZONE_API_TOKEN=dummy_token
           TRAEFIK_BASIC_AUTH_USERNAME=dummy_user
           TRAEFIK_BASIC_AUTH_PASSWORD=dummy_password
-          AUTHENTIK_POSTGRESQL__NAME=authentik
-          AUTHENTIK_POSTGRESQL__PASSWORD=dummy_password
-          AUTHENTIK_POSTGRESQL__USER=authentik
-          AUTHENTIK_SECRET_KEY=dummy_key
           GATUS_POSTGRES_USER=username
           GATUS_POSTGRES_PASSWORD=password
           GATUS_POSTGRES_DB=gatus
+          MAXMIND_LICENSE_KEY=dummy_key
           EOF
 
       - name: Create required config directories and files

@@ -13,11 +13,6 @@
   hosts: all
   tags: wireguard
   become: true
-  vars:
-    wireguard_port: 51820
-    wireguard_tunnel_subnet: 192.168.145.0/24
-    wireguard_address: 192.168.145.1/24
-    wireguard_peer1: 192.168.145.2/32
   tasks:
     - name: Install and configure Wireguard
       ansible.builtin.include_role:
@@ -46,9 +41,6 @@
   tags: deploy
   gather_facts: true
   become: true
-  vars:
-    user_id: 1000
-    group_id: 1000
   tasks:
     - name: Create docker-compose.yml and .env and deploy
       ansible.builtin.include_role:

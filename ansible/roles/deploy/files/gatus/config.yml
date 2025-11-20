@@ -3,12 +3,26 @@ storage:
   path: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@gatus_postgres:5432/${POSTGRES_DB}?sslmode=disable"
 
 endpoints:
-  - name: traefik
+  - name: Traefik
     group: vps
     url: "https://traefik.${PUBLIC_DOMAIN}/"
     interval: 5m
     conditions:
       - "[STATUS] == 401"  # BasicAuth returns 401, which means Traefik is up
+
+  - name: Pocket ID
+    group: vps
+    url: "https://auth.${PUBLIC_DOMAIN}/"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+
+  - name: Plex
+    group: homelab
+    url: "https://10.1.20.25:32400/web"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
 
   # - name: monitoring
   #   group: internal

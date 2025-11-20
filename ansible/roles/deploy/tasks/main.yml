@@ -25,6 +25,7 @@
   with_items:
     - "gatus_postgres"
     - "gatus"
+    - "pocket_id"
 
 - name: Copy files to application configuration directories
   ansible.builtin.copy:

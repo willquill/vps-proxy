@@ -11,21 +11,27 @@ x-environment: &environment
     - PUID=$PUID
     - PGID=$PGID
 
+x-proxy-labels: &proxy-labels
+  traefik.enable: true
+  traefik.docker.network: "proxy"
+
 x-security: &security
   security_opt:
     - no-new-privileges:true
 
-x-proxy-labels: &proxy-labels
-  traefik.enable: true
-  traefik.docker.network: "proxy"
+x-common: &common
+  security_opt:
+    - no-new-privileges:true
+  user: ${PUID:-1000}:${PGID:-1000}
+  restart: unless-stopped
+  pull_policy: always
 
 services:
   cloudflare-ddns:
     image: favonia/cloudflare-ddns:latest
     container_name: cloudflare-ddns
     network_mode: host
-    restart: always
-    <<: [*security, *user]
+    <<: [*common]
     read_only: true
     # Make the container filesystem read-only (optional but recommended)
     cap_drop: [all]
@@ -41,20 +47,20 @@ services:
     image: traefik:v3.6.1
     container_name: traefik
     restart: unless-stopped
-    <<: [*security]
+    pull_policy: always
+    security_opt:
+      - no-new-privileges:true
     # Needed by any container that accesses docker.sock
     group_add:
       - ${PGID:-1000}
     networks:
-      proxy:
-        # Required for Authentik
-        aliases:
-          - auth.${PUBLIC_DOMAIN}
+      proxy: {}
+        # # Required for Authentik
+        # aliases:
+        #   - auth.${PUBLIC_DOMAIN}
     ports:
-      - 22:22 # for GitLab and anything else I want to add
       - 80:80
       - 443:443
-      - 636:636 # LDAPS
     environment:
       - TZ
       # https://go-acme.github.io/lego/dns/cloudflare/
@@ -62,7 +68,11 @@ services:
       - CF_ZONE_API_TOKEN
       # Zone / DNS / Edit on the specific zone for which I use Traefik
       - CF_DNS_API_TOKEN
-      - PUBLIC_DOMAIN # required for tautulli in dynamic files
+      - PUBLIC_DOMAIN
+      # Used by traefik-oidc-auth middleware
+      - TRAEFIK_OIDC_AUTH_SECRET
+      - TRAEFIK_OIDC_CLIENT_ID
+      - TRAEFIK_OIDC_CLIENT_SECRET
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -72,17 +82,18 @@ services:
       - ./config/traefik/usersfile.txt:/usersfile.txt
     labels:
       traefik.enable: true
-      traefik.http.routers.traefik.entrypoints: "http"
-      traefik.http.routers.traefik.rule: "Host(`traefik.${PUBLIC_DOMAIN}`)"
+      # Middlewares
       traefik.http.middlewares.traefik-auth.basicauth.usersfile: "/usersfile.txt"
       traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme: "https"
       traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto: "https"
+      # HTTP entrypoint
+      traefik.http.routers.traefik.entrypoints: "http"
+      traefik.http.routers.traefik.rule: "Host(`traefik.${PUBLIC_DOMAIN}`)"
       traefik.http.routers.traefik.middlewares: "traefik-https-redirect,public@file"
+      # HTTPS entrypoint
       traefik.http.routers.traefik-secure.entrypoints: "https"
       traefik.http.routers.traefik-secure.rule: "Host(`traefik.${PUBLIC_DOMAIN}`)"
-      traefik.http.middlewares.rate-limit.ratelimit.average: "5"
-      traefik.http.middlewares.rate-limit.ratelimit.burst: "10"
-      traefik.http.routers.traefik-secure.middlewares: "traefik-auth,rate-limit,public@file"
+      traefik.http.routers.traefik-secure.middlewares: "traefik-auth,public@file"
       traefik.http.routers.traefik-secure.tls: "true"
       traefik.http.routers.traefik-secure.tls.certresolver: "cloudflare"
       traefik.http.routers.traefik-secure.tls.domains[0].main: "${PUBLIC_DOMAIN}"
@@ -96,20 +107,20 @@ services:
       - ./config/gatus_postgres:/var/lib/postgresql
     networks:
       gatus: {}
-    user: ${PUID:-1000}:${PGID:-1000}
+    <<: [*common]
     labels:
       traefik.enable: false
     environment:
       - POSTGRES_DB=${GATUS_POSTGRES_DB}
       - POSTGRES_USER=${GATUS_POSTGRES_USER}
       - POSTGRES_PASSWORD=${GATUS_POSTGRES_PASSWORD}
-    pull_policy: always
   gatus:
     image: twinproduction/gatus:v5.32.0
     container_name: gatus
     restart: unless-stopped
     depends_on:
       - gatus_postgres
+    <<: [*common]
     networks:
       proxy: {}
       gatus: {}
@@ -118,8 +129,9 @@ services:
       - POSTGRES_USER=${GATUS_POSTGRES_USER}
       - POSTGRES_PASSWORD=${GATUS_POSTGRES_PASSWORD}
       - PUBLIC_DOMAIN
+    volumes:
+      - ./config/gatus:/config
     labels:
-      com.centurylinklabs.watchtower.enable: "false"
       <<: *proxy-labels
       traefik.http.routers.status.entrypoints: "http"
       traefik.http.routers.status.rule: "Host(`status.${PUBLIC_DOMAIN}`)"
@@ -131,9 +143,37 @@ services:
       traefik.http.routers.status-secure.service: "status"
       traefik.http.services.status.loadbalancer.server.port: "8080"
       traefik.http.routers.status-secure.middlewares: "public@file"
-    volumes:
-      - ./config/gatus:/config
     pull_policy: always
+  pocket_id:
+    image: ghcr.io/pocket-id/pocket-id:v1
+    container_name: pocket_id
+    restart: unless-stopped
+    <<: [*common]
+    networks:
+      proxy: {}
+    volumes:
+      - "./config/pocket_id:/app/data"
+    environment:
+      - MAXMIND_LICENSE_KEY
+    # Optional healthcheck
+    healthcheck:
+      test: ["CMD", "/app/pocket-id", "healthcheck"]
+      interval: 1m30s
+      timeout: 5s
+      retries: 2
+      start_period: 10s
+    labels:
+      <<: *proxy-labels
+      traefik.http.routers.pocket-id.entrypoints: "http"
+      traefik.http.routers.pocket-id.rule: "Host(`auth.${PUBLIC_DOMAIN}`)"
+      traefik.http.middlewares.pocket-id-https-redirect.redirectscheme.scheme: "https"
+      traefik.http.routers.pocket-id.middlewares: "pocket-id-https-redirect"
+      traefik.http.routers.pocket-id-secure.entrypoints: "https"
+      traefik.http.routers.pocket-id-secure.rule: "Host(`auth.${PUBLIC_DOMAIN}`)"
+      traefik.http.routers.pocket-id-secure.tls: "true"
+      traefik.http.routers.pocket-id-secure.service: "pocket-id"
+      traefik.http.services.pocket-id.loadbalancer.server.port: "1411"
+      traefik.http.routers.pocket-id-secure.middlewares: "public@file"
   # watchtower manages auto updates. this is optional.
   watchtower:
     image: nickfedor/watchtower

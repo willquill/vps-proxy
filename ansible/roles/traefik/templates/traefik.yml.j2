@@ -2,8 +2,6 @@ api:
   dashboard: true
   debug: true
 entryPoints:
-  ssh:
-    address: ":22"
   http:
     address: ":80"
     http:
@@ -14,8 +12,6 @@ entryPoints:
   https:
     address: ":443"
     http3: true
-  ldaps:
-    address: ":636"
 
 serversTransport:
   insecureSkipVerify: true
@@ -32,7 +28,6 @@ providers:
 certificatesResolvers:
   cloudflare:
     acme:
-      # Production Let's Encrypt
       # caServer: https://acme-staging-v02.api.letsencrypt.org/directory # staging
       email: {{ acme_email }}
       storage: acme.json
@@ -43,15 +38,12 @@ certificatesResolvers:
         resolvers:
           - "1.1.1.1:53"
           - "1.0.0.1:53"
-tls:
-  stores:
-    default:
-      defaultGeneratedCert:
-        resolver: cloudflare
-        domain:
-          main: '{{ public_hostname }}'
-          sans:
-            - 'ldaps.{{ public_hostname }}'
+
+experimental:
+  plugins:
+    traefik-oidc-auth:
+      moduleName: "github.com/sevensolutions/traefik-oidc-auth"
+      version: "v0.17.0"
 
 # accessLog:
 #   filePath: "/etc/traefik/access.log"
@@ -63,3 +55,4 @@ tls:
 #       - "522"
 #     retryAttempts: true
 #     minDuration: "10ms"
+
