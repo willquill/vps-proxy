@@ -1,12 +1,15 @@
 locals {
-  # Ensure no keys or labels have spaces
+  # Replace spaces and forward slashes in var.github_ref_name
+  github_ref_name = replace(replace(var.github_ref_name, " ", "-"), "/", "-")
+
+  # Ensure no keys or labels have spaces or forward slashes
   labels = {
     for k, v in {
       "Provisioner"      = "GitHub Actions"
       "Last-Provisioned" = var.created_timestamp
       "Owner"            = var.repo_owner
       "Workflow-Actor"   = var.workflow_actor
-      "Git-Ref-Name"     = var.github_ref_name
+      "Git-Ref"          = local.github_ref_name
     } : replace(k, " ", "-") => replace(v, " ", "-")
   }
 }
