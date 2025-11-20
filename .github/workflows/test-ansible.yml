@@ -8,11 +8,12 @@ on:
         required: true
         default: "12.1.0"
         type: string
-  pull_request:
-    branches: [main]
-    paths:
-      - "ansible/**"
-      - ".github/workflows/test.yml"
+  # FIXME: Disabling until this is fixed https://github.com/gofrolist/molecule-action/issues/326
+  # pull_request:
+  #   branches: [main]
+  #   paths:
+  #     - "ansible/**"
+  #     - ".github/workflows/test.yml"
 
 jobs:
   ansible:
