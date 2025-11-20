@@ -73,4 +73,4 @@
 
 - name: Include reset connection tasks
   ansible.builtin.include_tasks: reset_connection.yaml
-  when: docker_group_add_result.changed == true
+  when: docker_group_add_result.changed

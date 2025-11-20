@@ -2,6 +2,10 @@ name: OpenTofu
 
 description: Executes OpenTofu Actions
 inputs:
+  github_ref_name:
+    description: 'GitHub ref name (branch or tag)'
+    required: false
+    default: 'error-no-ref-provided'
   tofu_version:
     description: 'Version of OpenTofu to use'
     required: true
@@ -99,6 +103,13 @@ runs:
       run: |
         CREATED=$(date +"%Y-%m-%dT%H.%M.%S%z")
         echo "TF_VAR_created_timestamp=$CREATED" >> $GITHUB_ENV
+
+    - name: Set git ref name name
+      if: ${{ inputs.plan == 'true' || inputs.apply == 'true' }}
+      shell: bash
+      run: |
+        GITHUB_REF_NAME="${{ inputs.github_ref_name }}"
+        echo "TF_VAR_github_ref_name=$GITHUB_REF_NAME" >> $GITHUB_ENV
 
     - name: Plan
       if: ${{ inputs.plan == 'true' }}

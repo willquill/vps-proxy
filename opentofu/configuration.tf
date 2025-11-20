@@ -4,6 +4,8 @@
 #   TF_VAR_repo_owner: ${{ github.repository_owner }}
 #   TF_VAR_workflow_actor: ${{ github.actor }}
 #   TF_VAR_ssh_authorized_key: ${{ secrets.VPS_PROXY_KEY_PUBLIC }}
+#   TF_VAR_created_timestamp: see action
+#   TF_VAR_github_ref_name: ${{ github.ref_name }}
 variable "repo_owner" {
   description = "GitHub repository owner"
   type        = string
@@ -18,6 +20,12 @@ variable "workflow_actor" {
 
 variable "created_timestamp" {
   description = "Timestamp just before the plan was executed"
+  type        = string
+  default     = ""
+}
+
+variable "github_ref_name" {
+  description = "GitHub ref name (branch or tag)"
   type        = string
   default     = ""
 }

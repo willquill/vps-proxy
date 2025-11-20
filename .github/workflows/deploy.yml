@@ -52,6 +52,7 @@ jobs:
         id: apply
         uses: ./.github/actions/opentofu
         with:
+          github_ref_name: ${{ github.ref_name }}
           tofu_version: ${{ matrix.tofu_version }}
           apply: "true"
 
