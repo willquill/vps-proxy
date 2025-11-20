@@ -15,4 +15,5 @@ skip_list:
   - no-handler  # Tasks that run when changed should likely be handlers
   - yaml[line-length]
   - yaml[comments]
+  - yaml[braces]
 use_default_rules: true
