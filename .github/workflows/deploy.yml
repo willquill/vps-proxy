@@ -151,7 +151,6 @@ jobs:
 
       # ---------- Run Ansible ----------
       - name: Run ansible playbook
-        # FIXME: admin_ip_range not used in playbook. Why did I add this again?
         # Only run if every previous step succeeded
         if: ${{ success() }}
         run: |
@@ -162,15 +161,18 @@ jobs:
             -e "repo_dest=/home/${{ github.repository_owner }}/vps-proxy" \
             -e "vps_host=${{ env.SERVER_IPV4 }}" \
             -e "user_name=${{ github.repository_owner }}" \
+            -e "wireguard_port=51820" \
+            -e "wireguard_tunnel_subnet=192.168.145.0/24" \
+            -e "wireguard_address=192.168.145.1/24" \
+            -e "wireguard_peer1=192.168.145.2/32, 10.1.0.0/16" \
             -e "traefik_username=${{ secrets.TRAEFIK_BASIC_AUTH_USERNAME }}" \
             -e "traefik_password=${{ secrets.TRAEFIK_BASIC_AUTH_PASSWORD }}" \
+            -e "traefik_oidc_auth_secret=${{ secrets.TRAEFIK_OIDC_AUTH_SECRET }}" \
+            -e "traefik_oidc_client_id=${{ secrets.TRAEFIK_OIDC_CLIENT_ID }}" \
+            -e "traefik_oidc_client_secret=${{ secrets.TRAEFIK_OIDC_CLIENT_SECRET }}" \
+            -e "maxmind_license_key=${{ secrets.MAXMIND_LICENSE_KEY }}" \
             -e "acme_email=${{ secrets.ACME_EMAIL }}" \
             -e "public_hostname=${{ secrets.PUBLIC_DOMAIN }}" \
-            -e "admin_ip_range=${{ secrets.ADMIN_IP_RANGE }}" \
-            -e "authentik_postgresql_name=${{ secrets.AUTHENTIK_POSTGRESQL__NAME }}" \
-            -e "authentik_postgresql_password=${{ secrets.AUTHENTIK_POSTGRESQL__PASSWORD }}" \
-            -e "authentik_postgresql_user=${{ secrets.AUTHENTIK_POSTGRESQL__USER }}" \
-            -e "authentik_secret_key=${{ secrets.AUTHENTIK_SECRET_KEY }}" \
             -e "cf_dns_api_token=${{ secrets.CF_DNS_API_TOKEN }}" \
             -e "cf_zone_api_token=${{ secrets.CF_ZONE_API_TOKEN }}" \
             -e "timezone=${{ secrets.TZ }}" \

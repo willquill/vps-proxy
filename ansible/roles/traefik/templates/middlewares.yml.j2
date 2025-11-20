@@ -4,6 +4,21 @@
 http:
   middlewares:
 
+    rate-limit-strict:
+      average: 10      # 10 requests
+      period: 1m       # per minute
+      burst: 20        # allow burst of 20
+
+    rate-limit-moderate:
+      average: 100
+      period: 1m
+      burst: 200
+
+    rate-limit-lenient:
+      average: 500
+      period: 1m
+      burst: 1000    
+    
     https-redirectscheme:
       redirectScheme:
         scheme: https
@@ -39,7 +54,7 @@ http:
     #       X-Forwarded-Proto: https   
     #       X-Forwarded-Host: "youtrack.{{ public_hostname }}"       
 
-    authelia:
+    {# authelia:
       forwardAuth:
         #address: 'https://authelia.{{ public_hostname }}/api/authz/forward-auth'
         address: 'http://authelia:9091/api/verify?rd=https://authelia.{{ public_hostname }}'
@@ -48,7 +63,31 @@ http:
           - Remote-User
           - Remote-Groups
           - Remote-Name
-          - Remote-Email
+          - Remote-Email #}
+
+    oidc-auth:
+      plugin:
+        traefik-oidc-auth:
+          Secret: {{ traefik_oidc_auth_secret }} # Please change this secret for your setup
+          Provider:
+            Url: "https://auth.{{ public_hostname }}/"
+            ClientId: {{ traefik_oidc_client_id }}
+            ClientSecret: {{ traefik_oidc_client_secret }}
+            UsePkce: true
+          Scopes: ["openid", "profile", "email"]
+
+    public:
+      chain:
+        middlewares:
+        - default-headers
+        - rate-limit-moderate
+
+    public-oidc-auth:
+      chain:
+        middlewares:
+        - default-headers
+        - rate-limit-moderate
+        - oidc-auth
 
     http-RFC1918-only:
       ipAllowList:
@@ -56,11 +95,6 @@ http:
           - "10.0.0.0/8"
           - "192.168.0.0/16"
           - "172.16.0.0/12"
-
-    public:
-      chain:
-        middlewares:
-        - default-headers
     
     private:
       chain:
