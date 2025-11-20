@@ -144,15 +144,33 @@ services:
       traefik.http.services.status.loadbalancer.server.port: "8080"
       traefik.http.routers.status-secure.middlewares: "public@file"
     pull_policy: always
-  pocket_id:
+  # Storage backend for gatus
+  pocketid_postgres:
+    image: postgres
+    container_name: pocketid_postgres
+    volumes:
+      - ./config/pocketid_postgres:/var/lib/postgresql
+    networks:
+      pocketid: {}
+    <<: [*common]
+    labels:
+      traefik.enable: false
+    environment:
+      - POSTGRES_DB=${POCKETID_POSTGRES_DB}
+      - POSTGRES_USER=${POCKETID_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POCKETID_POSTGRES_PASSWORD}
+  pocketid:
     image: ghcr.io/pocket-id/pocket-id:v1
-    container_name: pocket_id
+    container_name: pocketid
     restart: unless-stopped
+    depends_on:
+      - pocketid_postgres
     <<: [*common]
     networks:
       proxy: {}
+      pocketid: {}
     volumes:
-      - "./config/pocket_id:/app/data"
+      - "./config/pocketid:/app/data"
     environment:
       - MAXMIND_LICENSE_KEY
     # Optional healthcheck
@@ -195,4 +213,6 @@ networks:
   proxy:
     external: true
   gatus:
+    internal: true
+  pocketid:
     internal: true

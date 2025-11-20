@@ -11,4 +11,5 @@ PostDown = ip6tables -t nat -D POSTROUTING -o eth0 -j MASQUERADE
 
 [Peer]
 PublicKey = {{ wireguard_client_public_key_gen.stdout }}
-AllowedIPs = {{ wireguard_peer1 }}
+AllowedIPs = {{ wireguard_peer1 }}, {{ wireguard_peer1_subnet }}
+Endpoint = {{ wireguard_peer_endpoint }}:{{ wireguard_peer_port }}
