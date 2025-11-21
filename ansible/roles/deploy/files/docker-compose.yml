@@ -108,8 +108,6 @@ services:
     networks:
       gatus: {}
     <<: [*common]
-    labels:
-      traefik.enable: false
     environment:
       - POSTGRES_DB=${GATUS_POSTGRES_DB}
       - POSTGRES_USER=${GATUS_POSTGRES_USER}
@@ -153,8 +151,6 @@ services:
     networks:
       pocketid: {}
     <<: [*common]
-    labels:
-      traefik.enable: false
     environment:
       - POSTGRES_DB=${POCKETID_POSTGRES_DB}
       - POSTGRES_USER=${POCKETID_POSTGRES_USER}
@@ -172,7 +168,21 @@ services:
     volumes:
       - "./config/pocketid:/app/data"
     environment:
+      - APP_NAME="${PUBLIC_DOMAIN} access portal"
+      - APP_URL=https://auth.${PUBLIC_DOMAIN}
+      - TRUST_PROXY=true
       - MAXMIND_LICENSE_KEY
+      - DB_PROVIDER=postgres
+      - DB_CONNECTION_STRING=postgres://${POCKETID_POSTGRES_USER}:${POCKETID_POSTGRES_PASSWORD}@pocketid_postgres:5432/${POCKETID_POSTGRES_DB}
+      - KEYS_STORAGE=database
+      - ENCRYPTION_KEY=${POCKETID_ENCRYPTION_KEY}
+      - SMTP_HOST
+      - SMTP_PORT=587
+      - SMTP_FROM=${SMTP_USER}
+      - SMTP_USER
+      - SMTP_PASSWORD
+      - SMTP_TLS=starttls
+      - EMAIL_ONE_TIME_ACCESS_AS_ADMIN_ENABLED=true
     # Optional healthcheck
     healthcheck:
       test: ["CMD", "/app/pocket-id", "healthcheck"]
@@ -199,8 +209,6 @@ services:
     restart: unless-stopped
     group_add:
       - ${PGID:-1000}
-    labels:
-      traefik.enable: false
     environment:
       # Requires label: - "com.centurylinklabs.watchtower.enable=true"
       - WATCHTOWER_LABEL_ENABLE

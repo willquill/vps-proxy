@@ -19,8 +19,7 @@ serversTransport:
 providers:
   docker:
     endpoint: "unix:///var/run/docker.sock"
-    # Had as false forever, but when I switched to using the file provider directory files, had to set to true
-    exposedByDefault: true # Default is true
+    exposedByDefault: false
   file:
     directory: /etc/traefik/config
     watch: true

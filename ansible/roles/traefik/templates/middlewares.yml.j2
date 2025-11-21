@@ -5,19 +5,22 @@ http:
   middlewares:
 
     rate-limit-strict:
-      average: 10      # 10 requests
-      period: 1m       # per minute
-      burst: 20        # allow burst of 20
+      rateLimit:
+        average: 10      # 10 requests
+        period: 1m       # per minute
+        burst: 20        # allow burst of 20
 
     rate-limit-moderate:
-      average: 100
-      period: 1m
-      burst: 200
+      rateLimit:
+        average: 100
+        period: 1m
+        burst: 200
 
     rate-limit-lenient:
-      average: 500
-      period: 1m
-      burst: 1000    
+      rateLimit:
+        average: 500
+        period: 1m
+        burst: 1000
     
     https-redirectscheme:
       redirectScheme:
