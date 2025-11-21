@@ -184,6 +184,7 @@ jobs:
             -e "smtp_host=${{ secrets.SMTP_HOST }}" \
             -e "smtp_user=${{ secrets.SMTP_USER }}" \
             -e "smtp_password=${{ secrets.SMTP_PASSWORD }}" \
+            -e "smtp_to=${{ secrets.SMTP_TO }}" \
             -e "acme_email=${{ secrets.ACME_EMAIL }}" \
             -e "public_hostname=${{ secrets.PUBLIC_DOMAIN }}" \
             -e "cf_dns_api_token=${{ secrets.CF_DNS_API_TOKEN }}" \

@@ -176,13 +176,17 @@ services:
       - DB_CONNECTION_STRING=postgres://${POCKETID_POSTGRES_USER}:${POCKETID_POSTGRES_PASSWORD}@pocketid_postgres:5432/${POCKETID_POSTGRES_DB}
       - KEYS_STORAGE=database
       - ENCRYPTION_KEY=${POCKETID_ENCRYPTION_KEY}
+      # Alerting via SMTP
       - SMTP_HOST
       - SMTP_PORT=587
       - SMTP_FROM=${SMTP_USER}
+      - SMTP_TO
       - SMTP_USER
       - SMTP_PASSWORD
       - SMTP_TLS=starttls
       - EMAIL_ONE_TIME_ACCESS_AS_ADMIN_ENABLED=true
+      # Wireguard peer IP for healthcheck
+      - WIREGUARD_PEER1
     # Optional healthcheck
     healthcheck:
       test: ["CMD", "/app/pocket-id", "healthcheck"]
