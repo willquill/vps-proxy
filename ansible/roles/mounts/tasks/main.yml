@@ -6,14 +6,21 @@
     state: present
     update_cache: true
 
+- name: Parse NFS mounts JSON
+  ansible.builtin.set_fact:
+    mounts_parsed: "{{ nfs_mounts | from_json if nfs_mounts | default('') != '' else [] }}"
+  when: nfs_mounts is defined
+
 - name: Check NFS server accessibility
   ansible.builtin.wait_for:
     host: "{{ item.src.split(':')[0] }}"
     port: 2049
     timeout: 5
     state: started
-  with_items: "{{ nfs_mounts }}"
-  when: nfs_mounts is defined
+  with_items: "{{ mounts_parsed | default([]) }}"
+  when:
+    - mounts_parsed is defined
+    - mounts_parsed | length > 0
   register: mounts_nfs_server_check
   ignore_errors: true
 
@@ -24,7 +31,8 @@
     mode: "0755"
   with_items: "{{ mounts_nfs_server_check.results }}"
   when:
-    - nfs_mounts is defined
+    - mounts_nfs_server_check is defined
+    - mounts_nfs_server_check.results is defined
     - item.state is defined
     - item.failed is false
 
@@ -37,7 +45,8 @@
     state: mounted
   with_items: "{{ mounts_nfs_server_check.results }}"
   when:
-    - nfs_mounts is defined
+    - mounts_nfs_server_check is defined
+    - mounts_nfs_server_check.results is defined
     - item.state is defined
     - item.failed is false
   register: mounts_nfs_mount_result
@@ -57,4 +66,6 @@
 - name: Set fact for backup mount availability
   ansible.builtin.set_fact:
     backup_mount_available: "{{ mounts_nfs_mount_result.results | selectattr('item.item.path', 'equalto', '/mnt/backup') | selectattr('failed', 'equalto', false) | list | length > 0 }}"
-  when: mounts_nfs_mount_result is defined
+  when:
+    - mounts_nfs_mount_result is defined
+    - mounts_nfs_mount_result.results is defined
