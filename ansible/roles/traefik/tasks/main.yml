@@ -31,6 +31,11 @@
     group: "{{ user_name }}"
     mode: "0644"
 
+- name: Install Apache utils (for htpasswd)
+  ansible.builtin.apt:
+    name: apache2-utils
+    state: present
+
 - name: Generate bcrypt htpasswd line
   ansible.builtin.command: |
     htpasswd -nbB {{ traefik_username }} {{ traefik_password }}

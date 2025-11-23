@@ -73,7 +73,7 @@ alerting:
   email:
     from: "${SMTP_FROM}"
     username: "${SMTP_USER}"
-    password: "${SMTP_PASSWORD}"  # Use env var for security
+    password: "${SMTP_PASSWORD}"
     host: "${SMTP_HOST}"
     port: 587
     to: "${SMTP_TO}"

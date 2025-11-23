@@ -8,11 +8,6 @@
   become: true
   notify: Restart sshd
 
-- name: Install Apache utils (for htpasswd)
-  ansible.builtin.apt:
-    name: apache2-utils
-    state: present
-
 - name: Ensure application directory exists with correct ownership
   ansible.builtin.file:
     path: "{{ repo_dest }}"
