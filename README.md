@@ -35,7 +35,7 @@ Clone or fork this repo and then do the following:
 
 2. Populate the secrets in your GitHub repo.
 
-3. Add or remove docker services to your preference (within `ansible/roles/deploy/files/docker-compose.yml`). Don't forget to add the configuration directories to the `with_items` list in the Ansible task within `ansible/roles/deploy/tasks/main.yml`.
+3. Add or remove docker services to your preference (within `ansible/roles/deploy/files/docker-compose.yml`). Configure Gatus monitoring in `ansible/roles/deploy/files/gatus/config.yml` and Traefik settings in `ansible/roles/traefik/files/`.
 
 4. Tweak the environment variables as necessary.
 
@@ -47,26 +47,25 @@ Clone or fork this repo and then do the following:
 
 GitHub Actions needs several environment secrets for CI/CD. Some need to be encrypted - others not really, but I'm encrypted them all anyway.
 
-| Secret Name                   | Purpose                              | How to Generate                                                                                     |
-| ----------------------------- | ------------------------------------ | --------------------------------------------------------------------------------------------------- |
-| `VPS_HOST`                    | VPS hostname or IP                   | Provided by Hetzner Cloud after VPS creation                                                        |
-| `VPS_PROXY_KEY`               | SSH private key for VPS access       | `ssh-keygen -t ed25519`                                                                             |
-| `VPS_USER`                    | SSH username for VPS                 | Your chosen username (e.g., GitHub username)                                                        |
-| `HCLOUD_TOKEN`                | Hetzner Cloud API token              | Generated in Hetzner Cloud Console → Security → API Tokens                                          |
-| `TRAEFIK_BASIC_AUTH_USERNAME` | Traefik dashboard username           | Your chosen username                                                                                |
-| `TRAEFIK_BASIC_AUTH_PASSWORD` | Traefik dashboard password (hashed)  | `echo $(htpasswd -nb user password) \| sed -e s/\\$/\\$\\$/g`                                       |
-| `TRAEFIK_OIDC_AUTH_SECRET`    | OIDC authentication secret           | `openssl rand -base64 36`                                                                           |
-| `TRAEFIK_OIDC_CLIENT_ID`      | OIDC client identifier               | Provided by your identity provider                                                                  |
-| `TRAEFIK_OIDC_CLIENT_SECRET`  | OIDC client secret                   | Provided by your identity provider                                                                  |
-| `MAXMIND_LICENSE_KEY`         | MaxMind GeoIP license key            | [MaxMind signup](https://www.maxmind.com/en/geolite2/signup)                                        |
-| `ACME_EMAIL`                  | Email for Let's Encrypt certificates | Your email address                                                                                  |
-| `PUBLIC_DOMAIN`               | Your public domain name              | Your registered domain (e.g., example.com)                                                          |
-| `CF_DNS_API_TOKEN`            | Cloudflare DNS API token             | [Cloudflare API tokens](https://dash.cloudflare.com/profile/api-tokens) with DNS:Edit permissions   |
-| `CF_ZONE_API_TOKEN`           | Cloudflare Zone API token            | [Cloudflare API tokens](https://dash.cloudflare.com/profile/api-tokens) with Zone:Read permissions  |
-| `TZ`                          | Timezone for containers              | IANA timezone (e.g., America/New_York)                                                              |
-| `PAT`                         | GitHub Personal Access Token         | GitHub Settings → Developer settings → Personal access tokens → Fine-grained (Contents: Read+Write) |
-| `NFS_MOUNTS`                  | NFS shares to mount (JSON array)     | `[{"src":"server.example.com:/path/to/share","path":"/mnt/backup"}]`                                |
-| `RESTORE_DATABASES`           | Whether to restore from backup       | `true` or `false`                                                                                   |
+| Secret Name                   | Purpose                              | How to Generate                                                                                    |
+| ----------------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| `VPS_HOST`                    | VPS hostname or IP                   | Provided by Hetzner Cloud after VPS creation                                                       |
+| `VPS_PROXY_KEY`               | SSH private key for VPS access       | `ssh-keygen -t ed25519`                                                                            |
+| `VPS_USER`                    | SSH username for VPS                 | Your chosen username (e.g., GitHub username)                                                       |
+| `HCLOUD_TOKEN`                | Hetzner Cloud API token              | Generated in Hetzner Cloud Console → Security → API Tokens                                         |
+| `TRAEFIK_BASIC_AUTH_USERNAME` | Traefik dashboard username           | Your chosen username                                                                               |
+| `TRAEFIK_BASIC_AUTH_PASSWORD` | Traefik dashboard password (hashed)  | `echo $(htpasswd -nb user password) \| sed -e s/\\$/\\$\\$/g`                                      |
+| `TRAEFIK_OIDC_AUTH_SECRET`    | OIDC authentication secret           | `openssl rand -base64 36`                                                                          |
+| `TRAEFIK_OIDC_CLIENT_ID`      | OIDC client identifier               | Provided by your identity provider                                                                 |
+| `TRAEFIK_OIDC_CLIENT_SECRET`  | OIDC client secret                   | Provided by your identity provider                                                                 |
+| `MAXMIND_LICENSE_KEY`         | MaxMind GeoIP license key            | [MaxMind signup](https://www.maxmind.com/en/geolite2/signup)                                       |
+| `ACME_EMAIL`                  | Email for Let's Encrypt certificates | Your email address                                                                                 |
+| `PUBLIC_DOMAIN`               | Your public domain name              | Your registered domain (e.g., example.com)                                                         |
+| `CF_DNS_API_TOKEN`            | Cloudflare DNS API token             | [Cloudflare API tokens](https://dash.cloudflare.com/profile/api-tokens) with DNS:Edit permissions  |
+| `CF_ZONE_API_TOKEN`           | Cloudflare Zone API token            | [Cloudflare API tokens](https://dash.cloudflare.com/profile/api-tokens) with Zone:Read permissions |
+| `TZ`                          | Timezone for containers              | IANA timezone (e.g., America/New_York)                                                             |
+| `NFS_MOUNTS`                  | NFS shares to mount (JSON array)     | `[{"src":"server.example.com:/path/to/share","path":"/mnt/backup"}]`                               |
+| `RESTORE_DATABASES`           | Whether to restore from backup       | `true` or `false`                                                                                  |
 
 ### Ansible Secrets
 
@@ -247,6 +246,15 @@ ansible-galaxy install -r galaxy-requirements.yml
 ```
 
 And then run the `ansible-playbook` command found in the workflow but replace the variables with your own (unless you use nektos/act).
+
+### Remote testing
+
+For testing configuration changes directly on the VPS:
+
+1. **Make changes** on the VPS to configuration files.
+2. **Pull changes locally**: `./scripts/sync-from-vps.sh` (update `VPS_IP` in script first)
+3. **Review changes**: `git diff ansible/roles/`
+4. **Commit** if satisfied, or **push changes back**: `./scripts/sync-to-vps.sh`
 
 ## Delete runs from GitHub Actions
 

@@ -1,3 +1,66 @@
 ---
-- name: Firewall initialization
-  ansible.builtin.import_tasks: ufw-traefik.yml
+- name: Ensure Traefik config directory exists
+  ansible.builtin.file:
+    path: "{{ repo_dest }}/config/traefik/config"
+    state: directory
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0755"
+
+- name: Copy Traefik main configuration
+  ansible.builtin.copy:
+    src: traefik.yml
+    dest: "{{ repo_dest }}/config/traefik/traefik.yml"
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0644"
+
+- name: Copy Traefik middlewares configuration
+  ansible.builtin.copy:
+    src: config/middlewares.yml
+    dest: "{{ repo_dest }}/config/traefik/config/middlewares.yml"
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0644"
+
+- name: Copy Traefik services configuration
+  ansible.builtin.copy:
+    src: config/services.yml
+    dest: "{{ repo_dest }}/config/traefik/config/services.yml"
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0644"
+
+- name: Generate bcrypt htpasswd line
+  ansible.builtin.command: |
+    htpasswd -nbB {{ traefik_username }} {{ traefik_password }}
+  register: traefik_htpasswd_line
+  changed_when: false
+  no_log: true
+
+- name: Write htpasswd file
+  ansible.builtin.copy:
+    content: "{{ traefik_htpasswd_line.stdout }}"
+    dest: "{{ repo_dest }}/config/traefik/usersfile.txt"
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0600"
+  no_log: true
+
+- name: Create empty acme.json file if it doesn't exist
+  ansible.builtin.file:
+    path: "{{ repo_dest }}/config/traefik/acme.json"
+    state: touch
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0600"
+    modification_time: preserve
+    access_time: preserve
+  changed_when: false
+
+- name: Create docker proxy network if it doesn't exist
+  ansible.builtin.command: docker network create proxy
+  register: traefik_create_network_result
+  failed_when:
+    - traefik_create_network_result.rc != 0
+    - "'already exists' not in traefik_create_network_result.stderr"

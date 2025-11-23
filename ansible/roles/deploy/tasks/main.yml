@@ -21,50 +21,13 @@
     group: "{{ user_name }}"
     mode: "0755"
 
-- name: Check if repo already exists
-  ansible.builtin.stat:
-    path: "{{ repo_dest }}/.git"
-  register: deploy_repo_stat
-  when: not (vps_proxy_restored | default(false))
-
-- name: Clone repository with sparse checkout
-  ansible.builtin.shell: |
-    git clone --filter=blob:none --sparse https://{{ github_token }}@github.com/{{ repo_url.split('github.com/')[1] }} {{ repo_dest }}
-    cd {{ repo_dest }}
-    git sparse-checkout set docker-compose.yml config
-    git remote set-url origin https://{{ github_token }}@github.com/{{ repo_url.split('github.com/')[1] }}
-  args:
-    creates: "{{ repo_dest }}/.git"
-  become: true
-  become_user: "{{ user_name }}"
-  no_log: true
-  when:
-    - not (vps_proxy_restored | default(false))
-    - not deploy_repo_stat.stat.exists
-
-- name: Update remote URL with PAT if repo exists
-  ansible.builtin.command:
-    cmd: git remote set-url origin https://{{ github_token }}@github.com/{{ repo_url.split('github.com/')[1] }}
-    chdir: "{{ repo_dest }}"
-  become: true
-  become_user: "{{ user_name }}"
-  no_log: true
-  when:
-    - not (vps_proxy_restored | default(false))
-    - deploy_repo_stat.stat.exists
-
-- name: Pull latest changes if repo exists
-  ansible.builtin.git:
-    repo: "https://{{ github_token }}@github.com/{{ repo_url.split('github.com/')[1] }}"
-    dest: "{{ repo_dest }}"
-    update: true
-    version: main
-  become: true
-  become_user: "{{ user_name }}"
-  no_log: true
-  when:
-    - not (vps_proxy_restored | default(false))
-    - deploy_repo_stat.stat.exists
+- name: Copy docker-compose.yml to VPS
+  ansible.builtin.copy:
+    src: docker-compose.yml
+    dest: "{{ repo_dest }}/docker-compose.yml"
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0644"
 
 - name: Create .env file from template
   ansible.builtin.template:
@@ -84,10 +47,19 @@
     group: "{{ user_name }}"
     mode: "0755"
   with_items:
+    - "gatus"
     - "gatus_postgres"
     - "pocketid_postgres"
     - "pocketid"
   when: not (vps_proxy_restored | default(false))
+
+- name: Copy Gatus configuration
+  ansible.builtin.copy:
+    src: gatus/config.yml
+    dest: "{{ repo_dest }}/config/gatus/config.yml"
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0644"
 
 - name: Check if Gatus backup exists
   ansible.builtin.stat:
@@ -138,44 +110,6 @@
     - pocketid_backup_stat.stat.exists | default(false)
   register: pocketid_restore
   failed_when: false
-
-- name: Generate htpasswd for Traefik BasicAuth
-  ansible.builtin.command: |
-    htpasswd -nbB {{ traefik_username }} {{ traefik_password }}
-  register: deploy_htpasswd_line
-  changed_when: false
-  no_log: true
-  when: not (vps_proxy_restored | default(false))
-
-- name: Write htpasswd file for Traefik
-  ansible.builtin.copy:
-    content: "{{ deploy_htpasswd_line.stdout }}"
-    dest: "{{ repo_dest }}/config/traefik/usersfile.txt"
-    owner: "{{ user_name }}"
-    group: "{{ user_name }}"
-    mode: "0600"
-  no_log: true
-  when: not (vps_proxy_restored | default(false))
-
-- name: Create empty acme.json file if it doesn't exist
-  ansible.builtin.file:
-    path: "{{ repo_dest }}/config/traefik/acme.json"
-    state: touch
-    owner: "{{ user_name }}"
-    group: "{{ user_name }}"
-    mode: "0600"
-    modification_time: preserve
-    access_time: preserve
-  changed_when: false
-  when: not (vps_proxy_restored | default(false))
-
-- name: Create docker proxy network if it doesn't exist
-  ansible.builtin.command: docker network create proxy
-  register: deploy_create_network_result
-  failed_when:
-    - deploy_create_network_result.rc != 0
-    - "'already exists' not in deploy_create_network_result.stderr"
-  when: not (vps_proxy_restored | default(false))
 
 - name: Check if update.sh script exists
   ansible.builtin.stat:

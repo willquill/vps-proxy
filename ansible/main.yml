@@ -36,6 +36,15 @@
       ansible.builtin.include_role:
         name: docker
 
+- name: Configure Traefik
+  hosts: all
+  tags: traefik
+  become: true
+  tasks:
+    - name: Deploy Traefik configuration files
+      ansible.builtin.include_role:
+        name: traefik
+
 - name: Mount NFS shares
   hosts: all
   tags: mounts
