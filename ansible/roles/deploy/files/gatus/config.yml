@@ -5,12 +5,13 @@ storage:
 endpoints:
   - name: Wireguard Tunnel
     group: media
-    url: "icmp://${WIREGUARD_PEER1}"
+    url: "icmp://192.168.145.2"
     interval: 1m
     conditions:
       - "[CONNECTED] == true"
     alerts:
       - type: email
+        #enabled: false
         description: "healthcheck failed"
         send-on-resolved: true
 
@@ -32,13 +33,14 @@ endpoints:
 
   - name: Plex (Internal)
     group: media
-    url: "http://10.1.20.25:32400/web/index.html"
+    url: "https://10.1.20.25:32400/web/index.html"
     interval: 2m
     conditions:
       - "[STATUS] == 200"
       - "[RESPONSE_TIME] < 1000"
     alerts:
       - type: email
+        #enabled: false
         description: "Plex down"
         send-on-resolved: true
   # - name: monitoring
