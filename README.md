@@ -47,23 +47,26 @@ Clone or fork this repo and then do the following:
 
 GitHub Actions needs several environment secrets for CI/CD. Some need to be encrypted - others not really, but I'm encrypted them all anyway.
 
-| Secret Name                   | Purpose                              | How to Generate                                                                                    |
-| ----------------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------- |
-| `VPS_HOST`                    | VPS hostname or IP                   | Provided by Hetzner Cloud after VPS creation                                                       |
-| `VPS_PROXY_KEY`               | SSH private key for VPS access       | `ssh-keygen -t ed25519`                                                                            |
-| `VPS_USER`                    | SSH username for VPS                 | Your chosen username (e.g., GitHub username)                                                       |
-| `HCLOUD_TOKEN`                | Hetzner Cloud API token              | Generated in Hetzner Cloud Console → Security → API Tokens                                         |
-| `TRAEFIK_BASIC_AUTH_USERNAME` | Traefik dashboard username           | Your chosen username                                                                               |
-| `TRAEFIK_BASIC_AUTH_PASSWORD` | Traefik dashboard password (hashed)  | `echo $(htpasswd -nb user password) \| sed -e s/\\$/\\$\\$/g`                                      |
-| `TRAEFIK_OIDC_AUTH_SECRET`    | OIDC authentication secret           | `openssl rand -base64 36`                                                                          |
-| `TRAEFIK_OIDC_CLIENT_ID`      | OIDC client identifier               | Provided by your identity provider                                                                 |
-| `TRAEFIK_OIDC_CLIENT_SECRET`  | OIDC client secret                   | Provided by your identity provider                                                                 |
-| `MAXMIND_LICENSE_KEY`         | MaxMind GeoIP license key            | [MaxMind signup](https://www.maxmind.com/en/geolite2/signup)                                       |
-| `ACME_EMAIL`                  | Email for Let's Encrypt certificates | Your email address                                                                                 |
-| `PUBLIC_DOMAIN`               | Your public domain name              | Your registered domain (e.g., example.com)                                                         |
-| `CF_DNS_API_TOKEN`            | Cloudflare DNS API token             | [Cloudflare API tokens](https://dash.cloudflare.com/profile/api-tokens) with DNS:Edit permissions  |
-| `CF_ZONE_API_TOKEN`           | Cloudflare Zone API token            | [Cloudflare API tokens](https://dash.cloudflare.com/profile/api-tokens) with Zone:Read permissions |
-| `TZ`                          | Timezone for containers              | IANA timezone (e.g., America/New_York)                                                             |
+| Secret Name                   | Purpose                              | How to Generate                                                                                     |
+| ----------------------------- | ------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| `VPS_HOST`                    | VPS hostname or IP                   | Provided by Hetzner Cloud after VPS creation                                                        |
+| `VPS_PROXY_KEY`               | SSH private key for VPS access       | `ssh-keygen -t ed25519`                                                                             |
+| `VPS_USER`                    | SSH username for VPS                 | Your chosen username (e.g., GitHub username)                                                        |
+| `HCLOUD_TOKEN`                | Hetzner Cloud API token              | Generated in Hetzner Cloud Console → Security → API Tokens                                          |
+| `TRAEFIK_BASIC_AUTH_USERNAME` | Traefik dashboard username           | Your chosen username                                                                                |
+| `TRAEFIK_BASIC_AUTH_PASSWORD` | Traefik dashboard password (hashed)  | `echo $(htpasswd -nb user password) \| sed -e s/\\$/\\$\\$/g`                                       |
+| `TRAEFIK_OIDC_AUTH_SECRET`    | OIDC authentication secret           | `openssl rand -base64 36`                                                                           |
+| `TRAEFIK_OIDC_CLIENT_ID`      | OIDC client identifier               | Provided by your identity provider                                                                  |
+| `TRAEFIK_OIDC_CLIENT_SECRET`  | OIDC client secret                   | Provided by your identity provider                                                                  |
+| `MAXMIND_LICENSE_KEY`         | MaxMind GeoIP license key            | [MaxMind signup](https://www.maxmind.com/en/geolite2/signup)                                        |
+| `ACME_EMAIL`                  | Email for Let's Encrypt certificates | Your email address                                                                                  |
+| `PUBLIC_DOMAIN`               | Your public domain name              | Your registered domain (e.g., example.com)                                                          |
+| `CF_DNS_API_TOKEN`            | Cloudflare DNS API token             | [Cloudflare API tokens](https://dash.cloudflare.com/profile/api-tokens) with DNS:Edit permissions   |
+| `CF_ZONE_API_TOKEN`           | Cloudflare Zone API token            | [Cloudflare API tokens](https://dash.cloudflare.com/profile/api-tokens) with Zone:Read permissions  |
+| `TZ`                          | Timezone for containers              | IANA timezone (e.g., America/New_York)                                                              |
+| `PAT`                         | GitHub Personal Access Token         | GitHub Settings → Developer settings → Personal access tokens → Fine-grained (Contents: Read+Write) |
+| `NFS_MOUNTS`                  | NFS shares to mount (JSON array)     | `[{"src":"server.example.com:/path/to/share","path":"/mnt/backup"}]`                                |
+| `RESTORE_DATABASES`           | Whether to restore from backup       | `true` or `false`                                                                                   |
 
 ### Ansible Secrets
 
@@ -72,6 +75,14 @@ Ensure that every secret in your "Run ansible playbook" task within `.github/wor
 ### Docker Compose Secrets
 
 See `ansible/roles/deploy/templates/env.j2` for all variables. **_Note: Some of the variables are defined in the GitHub Actions `ansible-playbook` command and others are vars in `ansible/main.yml`_**
+
+### NFS Mounts
+
+This secret should be a list of k/v pairs as seen below.
+
+```sh
+[{"src":"server.example.com:/path/to/share","path":"/mnt/backup"}]
+```
 
 ## Details
 
@@ -219,6 +230,14 @@ Use [nektos/act](https://github.com/nektos/act) to test GitHub Actions locally -
 
 Here's a [helpful gist with example usages of the deb822_repository Ansible module](https://gist.github.com/roib20/27fde10af195cee1c1f8ac5f68be7e9b)
 
+### Troubleshooting
+
+See the values of the Gatus container envvars:
+
+```sh
+docker inspect gatus | jq '.[0].Config.Env'
+```
+
 ### Local testing
 
 When testing with Ansible, do the following:
@@ -228,3 +247,13 @@ ansible-galaxy install -r galaxy-requirements.yml
 ```
 
 And then run the `ansible-playbook` command found in the workflow but replace the variables with your own (unless you use nektos/act).
+
+## Delete runs from GitHub Actions
+
+```sh
+gh run list --repo willquill/vps-proxy --limit 500 --json databaseId -q '.[].databaseId' | while read id; do gh run delete "$id" --repo willquill/vps-proxy; done
+```
+
+## LICENSE
+
+Distributed under the MIT License. See LICENSE for more information.

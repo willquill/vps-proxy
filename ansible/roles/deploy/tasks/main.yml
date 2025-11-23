@@ -1,11 +1,70 @@
 ---
-- name: Copy docker-compose.yml to application directory
-  ansible.builtin.copy:
-    src: docker-compose.yml
-    dest: "{{ repo_dest }}/docker-compose.yml"
+- name: Enable SSH TCP forwarding for VS Code Remote SSH
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config.d/99-ssh-hardening.conf
+    regexp: "^AllowTcpForwarding"
+    line: "AllowTcpForwarding yes"
+    state: present
+  become: true
+  notify: Restart sshd
+
+- name: Install Apache utils (for htpasswd)
+  ansible.builtin.apt:
+    name: apache2-utils
+    state: present
+
+- name: Ensure application directory exists with correct ownership
+  ansible.builtin.file:
+    path: "{{ repo_dest }}"
+    state: directory
     owner: "{{ user_name }}"
     group: "{{ user_name }}"
-    mode: "0644"
+    mode: "0755"
+
+- name: Check if repo already exists
+  ansible.builtin.stat:
+    path: "{{ repo_dest }}/.git"
+  register: deploy_repo_stat
+  when: not (vps_proxy_restored | default(false))
+
+- name: Clone repository with sparse checkout
+  ansible.builtin.shell: |
+    git clone --filter=blob:none --sparse https://{{ github_token }}@github.com/{{ repo_url.split('github.com/')[1] }} {{ repo_dest }}
+    cd {{ repo_dest }}
+    git sparse-checkout set docker-compose.yml config
+    git remote set-url origin https://{{ github_token }}@github.com/{{ repo_url.split('github.com/')[1] }}
+  args:
+    creates: "{{ repo_dest }}/.git"
+  become: true
+  become_user: "{{ user_name }}"
+  no_log: true
+  when:
+    - not (vps_proxy_restored | default(false))
+    - not deploy_repo_stat.stat.exists
+
+- name: Update remote URL with PAT if repo exists
+  ansible.builtin.command:
+    cmd: git remote set-url origin https://{{ github_token }}@github.com/{{ repo_url.split('github.com/')[1] }}
+    chdir: "{{ repo_dest }}"
+  become: true
+  become_user: "{{ user_name }}"
+  no_log: true
+  when:
+    - not (vps_proxy_restored | default(false))
+    - deploy_repo_stat.stat.exists
+
+- name: Pull latest changes if repo exists
+  ansible.builtin.git:
+    repo: "https://{{ github_token }}@github.com/{{ repo_url.split('github.com/')[1] }}"
+    dest: "{{ repo_dest }}"
+    update: true
+    version: main
+  become: true
+  become_user: "{{ user_name }}"
+  no_log: true
+  when:
+    - not (vps_proxy_restored | default(false))
+    - deploy_repo_stat.stat.exists
 
 - name: Create .env file from template
   ansible.builtin.template:
@@ -14,6 +73,8 @@
     owner: "{{ user_name }}"
     group: "{{ user_name }}"
     mode: "0600"
+  no_log: true
+  when: not (vps_proxy_restored | default(false))
 
 - name: Create application configuration directories
   ansible.builtin.file:
@@ -24,19 +85,97 @@
     mode: "0755"
   with_items:
     - "gatus_postgres"
-    - "gatus"
     - "pocketid_postgres"
     - "pocketid"
+  when: not (vps_proxy_restored | default(false))
 
-- name: Copy files to application configuration directories
+- name: Check if Gatus backup exists
+  ansible.builtin.stat:
+    path: /mnt/backup/gatus_postgres
+  register: gatus_backup_stat
+  when:
+    - nfs_server is defined
+    - restore_databases | default(false) | bool
+    - not (vps_proxy_restored | default(false))
+
+- name: Check if Pocket ID backup exists
+  ansible.builtin.stat:
+    path: /mnt/backup/pocketid_postgres
+  register: pocketid_backup_stat
+  when:
+    - nfs_server is defined
+    - restore_databases | default(false) | bool
+    - not (vps_proxy_restored | default(false))
+
+- name: Restore Gatus database from backup
   ansible.builtin.copy:
-    src: "{{ item.src }}"
-    dest: "{{ repo_dest }}/config/{{ item.src }}"
+    src: /mnt/backup/gatus_postgres/
+    dest: "{{ repo_dest }}/config/gatus_postgres/"
     owner: "{{ user_name }}"
     group: "{{ user_name }}"
-    mode: "0644"
-  with_items:
-    - { dir_name: "gatus", src: "gatus/config.yml" }
+    mode: preserve
+    remote_src: true
+  when:
+    - nfs_server is defined
+    - restore_databases | default(false) | bool
+    - not (vps_proxy_restored | default(false))
+    - gatus_backup_stat.stat.exists | default(false)
+  register: gatus_restore
+  failed_when: false
+
+- name: Restore Pocket ID database from backup
+  ansible.builtin.copy:
+    src: /mnt/backup/pocketid_postgres/
+    dest: "{{ repo_dest }}/config/pocketid_postgres/"
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: preserve
+    remote_src: true
+  when:
+    - nfs_server is defined
+    - restore_databases | default(false) | bool
+    - not (vps_proxy_restored | default(false))
+    - pocketid_backup_stat.stat.exists | default(false)
+  register: pocketid_restore
+  failed_when: false
+
+- name: Generate htpasswd for Traefik BasicAuth
+  ansible.builtin.command: |
+    htpasswd -nbB {{ traefik_username }} {{ traefik_password }}
+  register: deploy_htpasswd_line
+  changed_when: false
+  no_log: true
+  when: not (vps_proxy_restored | default(false))
+
+- name: Write htpasswd file for Traefik
+  ansible.builtin.copy:
+    content: "{{ deploy_htpasswd_line.stdout }}"
+    dest: "{{ repo_dest }}/config/traefik/usersfile.txt"
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0600"
+  no_log: true
+  when: not (vps_proxy_restored | default(false))
+
+- name: Create empty acme.json file if it doesn't exist
+  ansible.builtin.file:
+    path: "{{ repo_dest }}/config/traefik/acme.json"
+    state: touch
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0600"
+    modification_time: preserve
+    access_time: preserve
+  changed_when: false
+  when: not (vps_proxy_restored | default(false))
+
+- name: Create docker proxy network if it doesn't exist
+  ansible.builtin.command: docker network create proxy
+  register: deploy_create_network_result
+  failed_when:
+    - deploy_create_network_result.rc != 0
+    - "'already exists' not in deploy_create_network_result.stderr"
+  when: not (vps_proxy_restored | default(false))
 
 - name: Check if update.sh script exists
   ansible.builtin.stat:

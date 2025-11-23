@@ -2,3 +2,11 @@ terraform.tfstate*
 **/.terraform.tfstate
 .vars
 inventory
+
+# Runtime generated files
+.env
+config/traefik/usersfile.txt
+config/traefik/acme.json
+config/gatus_postgres/
+config/pocketid_postgres/
+config/pocketid/

@@ -68,7 +68,6 @@ services:
       - CF_ZONE_API_TOKEN
       # Zone / DNS / Edit on the specific zone for which I use Traefik
       - CF_DNS_API_TOKEN
-      - ACME_EMAIL
       - PUBLIC_DOMAIN
       # Used by traefik-oidc-auth middleware
       - TRAEFIK_OIDC_AUTH_SECRET
@@ -128,12 +127,6 @@ services:
       - POSTGRES_USER=${GATUS_POSTGRES_USER}
       - POSTGRES_PASSWORD=${GATUS_POSTGRES_PASSWORD}
       - PUBLIC_DOMAIN
-      # Alerting via SMTP
-      - SMTP_HOST
-      - SMTP_FROM=${SMTP_USER}
-      - SMTP_TO
-      - SMTP_USER
-      - SMTP_PASSWORD
     volumes:
       - ./config/gatus:/config
     labels:
@@ -192,6 +185,8 @@ services:
       - SMTP_PASSWORD
       - SMTP_TLS=starttls
       - EMAIL_ONE_TIME_ACCESS_AS_ADMIN_ENABLED=true
+      # Wireguard peer IP for healthcheck
+      - WIREGUARD_PEER1
     # Optional healthcheck
     healthcheck:
       test: ["CMD", "/app/pocket-id", "healthcheck"]
