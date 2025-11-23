@@ -9,6 +9,15 @@
       ansible.builtin.include_role:
         name: update
 
+- name: Configure firewall
+  hosts: all
+  tags: ufw
+  become: true
+  tasks:
+    - name: Configure UFW firewall rules
+      ansible.builtin.include_role:
+        name: ufw
+
 - name: Install and configure Wireguard
   hosts: all
   tags: wireguard
@@ -27,14 +36,32 @@
       ansible.builtin.include_role:
         name: docker
 
-- name: Generate Traefik files
+- name: Configure Traefik
   hosts: all
   tags: traefik
   become: true
   tasks:
-    - name: Generate Traefik files from templates
+    - name: Deploy Traefik configuration files
       ansible.builtin.include_role:
         name: traefik
+
+- name: Mount NFS shares
+  hosts: all
+  tags: mounts
+  become: true
+  tasks:
+    - name: Mount NFS shares
+      ansible.builtin.include_role:
+        name: mounts
+
+- name: Restore from backup if available
+  hosts: all
+  tags: restore
+  become: true
+  tasks:
+    - name: Restore vps-proxy directory from backup
+      ansible.builtin.include_role:
+        name: restore
 
 - name: Initialize dependency files and deploy docker compose file
   hosts: all

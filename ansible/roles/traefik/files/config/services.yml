@@ -1,0 +1,20 @@
+# Example services configuration
+# Uncomment and modify as needed
+
+# http:
+#   routers: 
+#     example:
+#       entryPoints:
+#         - "https"
+#       rule: "Host(`example.yourdomain.com`)"
+#       middlewares:
+#         - public
+#       tls: {}
+#       service: example
+# 
+#   services:
+#     example:
+#       loadBalancer:
+#         servers:
+#           - url: "http://10.1.0.100:8080"
+#         passHostHeader: true

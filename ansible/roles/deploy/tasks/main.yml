@@ -1,5 +1,22 @@
 ---
-- name: Copy docker-compose.yml to application directory
+- name: Enable SSH TCP forwarding for VS Code Remote SSH
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config.d/99-ssh-hardening.conf
+    regexp: "^AllowTcpForwarding"
+    line: "AllowTcpForwarding yes"
+    state: present
+  become: true
+  notify: Restart sshd
+
+- name: Ensure application directory exists with correct ownership
+  ansible.builtin.file:
+    path: "{{ repo_dest }}"
+    state: directory
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0755"
+
+- name: Copy docker-compose.yml to VPS
   ansible.builtin.copy:
     src: docker-compose.yml
     dest: "{{ repo_dest }}/docker-compose.yml"
@@ -14,6 +31,8 @@
     owner: "{{ user_name }}"
     group: "{{ user_name }}"
     mode: "0600"
+  no_log: true
+  when: not (vps_proxy_restored | default(false))
 
 - name: Create application configuration directories
   ansible.builtin.file:
@@ -23,20 +42,69 @@
     group: "{{ user_name }}"
     mode: "0755"
   with_items:
-    - "gatus_postgres"
     - "gatus"
+    - "gatus_postgres"
     - "pocketid_postgres"
     - "pocketid"
+  when: not (vps_proxy_restored | default(false))
 
-- name: Copy files to application configuration directories
+- name: Copy Gatus configuration
   ansible.builtin.copy:
-    src: "{{ item.src }}"
-    dest: "{{ repo_dest }}/config/{{ item.src }}"
+    src: gatus/config.yml
+    dest: "{{ repo_dest }}/config/gatus/config.yml"
     owner: "{{ user_name }}"
     group: "{{ user_name }}"
     mode: "0644"
-  with_items:
-    - { dir_name: "gatus", src: "gatus/config.yml" }
+
+- name: Check if Gatus backup exists
+  ansible.builtin.stat:
+    path: /mnt/backup/gatus_postgres
+  register: gatus_backup_stat
+  when:
+    - nfs_server is defined
+    - restore_databases | default(false) | bool
+    - not (vps_proxy_restored | default(false))
+
+- name: Check if Pocket ID backup exists
+  ansible.builtin.stat:
+    path: /mnt/backup/pocketid_postgres
+  register: pocketid_backup_stat
+  when:
+    - nfs_server is defined
+    - restore_databases | default(false) | bool
+    - not (vps_proxy_restored | default(false))
+
+- name: Restore Gatus database from backup
+  ansible.builtin.copy:
+    src: /mnt/backup/gatus_postgres/
+    dest: "{{ repo_dest }}/config/gatus_postgres/"
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: preserve
+    remote_src: true
+  when:
+    - nfs_server is defined
+    - restore_databases | default(false) | bool
+    - not (vps_proxy_restored | default(false))
+    - gatus_backup_stat.stat.exists | default(false)
+  register: gatus_restore
+  failed_when: false
+
+- name: Restore Pocket ID database from backup
+  ansible.builtin.copy:
+    src: /mnt/backup/pocketid_postgres/
+    dest: "{{ repo_dest }}/config/pocketid_postgres/"
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: preserve
+    remote_src: true
+  when:
+    - nfs_server is defined
+    - restore_databases | default(false) | bool
+    - not (vps_proxy_restored | default(false))
+    - pocketid_backup_stat.stat.exists | default(false)
+  register: pocketid_restore
+  failed_when: false
 
 - name: Check if update.sh script exists
   ansible.builtin.stat:

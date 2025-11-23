@@ -1,0 +1,32 @@
+---
+- name: Check if full backup exists
+  ansible.builtin.stat:
+    path: /mnt/backup/vps-proxy-full
+  register: restore_full_backup_stat
+  when:
+    - backup_mount_available | default(false)
+    - restore_databases | default(false) | bool
+
+- name: Restore entire vps-proxy directory from backup
+  ansible.builtin.copy:
+    src: /mnt/backup/vps-proxy-full/
+    dest: "{{ repo_dest }}/"
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: preserve
+    remote_src: true
+  when:
+    - backup_mount_available | default(false)
+    - restore_databases | default(false) | bool
+    - restore_full_backup_stat.stat.exists | default(false)
+  register: restore_full_restore
+
+- name: Set fact if restore was successful
+  ansible.builtin.set_fact:
+    vps_proxy_restored: true
+  when: restore_full_restore.changed | default(false)
+
+- name: Set fact if restore was not performed
+  ansible.builtin.set_fact:
+    vps_proxy_restored: false
+  when: not (restore_full_restore.changed | default(false))

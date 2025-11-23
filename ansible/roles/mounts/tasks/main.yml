@@ -1,0 +1,60 @@
+---
+- name: Install NFS client packages
+  ansible.builtin.apt:
+    name:
+      - nfs-common
+    state: present
+    update_cache: true
+
+- name: Check NFS server accessibility
+  ansible.builtin.wait_for:
+    host: "{{ item.src.split(':')[0] }}"
+    port: 2049
+    timeout: 5
+    state: started
+  with_items: "{{ nfs_mounts }}"
+  when: nfs_mounts is defined
+  register: mounts_nfs_server_check
+  ignore_errors: true
+
+- name: Create NFS mount points
+  ansible.builtin.file:
+    path: "{{ item.item.path }}"
+    state: directory
+    mode: "0755"
+  with_items: "{{ mounts_nfs_server_check.results }}"
+  when:
+    - nfs_mounts is defined
+    - item.state is defined
+    - item.failed is false
+
+- name: Mount NFS shares
+  ansible.posix.mount:
+    src: "{{ item.item.src }}"
+    path: "{{ item.item.path }}"
+    fstype: nfs
+    opts: "{{ item.item.opts | default(nfs_default_opts | join(',')) }}"
+    state: mounted
+  with_items: "{{ mounts_nfs_server_check.results }}"
+  when:
+    - nfs_mounts is defined
+    - item.state is defined
+    - item.failed is false
+  register: mounts_nfs_mount_result
+  vars:
+    nfs_default_opts:
+      - nfsvers=4.2 # Use NFSv4.2 (most secure, best performance)
+      - rw # Read-write access
+      - nofail # Don't prevent boot if mount fails
+      - noatime # Don't update access times (performance)
+      - intr # Allow interrupting hung operations
+      - tcp # Use TCP for reliability over WAN
+      - actimeo=1800 # Cache attributes for 30 minutes
+      - soft # Return errors vs hanging on network issues
+      - timeo=30 # 3 second timeout for network latency
+      - retrans=3 # Retry failed requests 3 times
+
+- name: Set fact for backup mount availability
+  ansible.builtin.set_fact:
+    backup_mount_available: "{{ mounts_nfs_mount_result.results | selectattr('item.item.path', 'equalto', '/mnt/backup') | selectattr('failed', 'equalto', false) | list | length > 0 }}"
+  when: mounts_nfs_mount_result is defined

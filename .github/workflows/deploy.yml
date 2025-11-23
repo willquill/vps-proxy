@@ -159,7 +159,6 @@ jobs:
           ansible-playbook \
             -i inventory \
             -e "ansible_ssh_private_key_file=~/.ssh/id_ed25519" \
-            -e "repo_url=https://github.com/${{ github.repository }}.git" \
             -e "repo_dest=/home/${{ github.repository_owner }}/vps-proxy" \
             -e "vps_host=${{ env.SERVER_IPV4 }}" \
             -e "user_name=${{ github.repository_owner }}" \
@@ -180,9 +179,16 @@ jobs:
             -e "pocketid_postgres_user=${{ secrets.POCKETID_POSTGRES_USER }}" \
             -e "pocketid_postgres_password=${{ secrets.POCKETID_POSTGRES_PASSWORD }}" \
             -e "pocketid_postgres_db=${{ secrets.POCKETID_POSTGRES_DB }}" \
+            -e "pocketid_encryption_key=${{ secrets.POCKETID_ENCRYPTION_KEY }}" \
+            -e "smtp_host=${{ secrets.SMTP_HOST }}" \
+            -e "smtp_user=${{ secrets.SMTP_USER }}" \
+            -e "smtp_password=${{ secrets.SMTP_PASSWORD }}" \
+            -e "smtp_to=${{ secrets.SMTP_TO }}" \
             -e "acme_email=${{ secrets.ACME_EMAIL }}" \
             -e "public_hostname=${{ secrets.PUBLIC_DOMAIN }}" \
             -e "cf_dns_api_token=${{ secrets.CF_DNS_API_TOKEN }}" \
             -e "cf_zone_api_token=${{ secrets.CF_ZONE_API_TOKEN }}" \
             -e "timezone=${{ secrets.TZ }}" \
-            ansible/main.yml --tags update,wireguard,docker,traefik,deploy
+            -e "nfs_mounts=${{ secrets.NFS_MOUNTS }}" \
+            -e "restore_databases=${{ secrets.RESTORE_DATABASES }}" \
+            ansible/main.yml --tags update,ufw,wireguard,docker,mounts,restore,deploy

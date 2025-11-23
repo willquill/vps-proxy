@@ -1,8 +1,4 @@
 ---
-- name: Firewall initialization
-  ansible.builtin.import_tasks: ufw-wireguard.yml
-
-# WireGuard setup tasks
 - name: Install wireguard and qrencode packages
   ansible.builtin.apt:
     name:
@@ -42,6 +38,7 @@
   register: wireguard_server_private_key_gen
   when: not wireguard_server_private_key_stat.stat.exists
   changed_when: true
+  no_log: true
 
 - name: Save server private key
   ansible.builtin.copy:
@@ -49,11 +46,13 @@
     dest: /etc/wireguard/server_private.key
     mode: "0600"
   when: not wireguard_server_private_key_stat.stat.exists
+  no_log: true
 
 - name: Read server private key
   ansible.builtin.slurp:
     src: /etc/wireguard/server_private.key
   register: wireguard_server_private_key_content
+  no_log: true
 
 - name: Generate server public key
   ansible.builtin.shell: |
@@ -61,6 +60,7 @@
     echo "{{ wireguard_server_private_key_content.content | b64decode | trim }}" | wg pubkey
   register: wireguard_server_public_key_gen
   changed_when: false
+  no_log: true
 
 - name: Save server public key
   ansible.builtin.copy:
@@ -78,6 +78,7 @@
   register: wireguard_client_private_key_gen
   when: not wireguard_client_private_key_stat.stat.exists
   changed_when: true
+  no_log: true
 
 - name: Save client private key
   ansible.builtin.copy:
@@ -85,11 +86,13 @@
     dest: /etc/wireguard/client_private.key
     mode: "0600"
   when: not wireguard_client_private_key_stat.stat.exists
+  no_log: true
 
 - name: Read client private key
   ansible.builtin.slurp:
     src: /etc/wireguard/client_private.key
   register: wireguard_client_private_key_content
+  no_log: true
 
 - name: Generate client public key
   ansible.builtin.shell: |
@@ -97,6 +100,7 @@
     echo "{{ wireguard_client_private_key_content.content | b64decode | trim }}" | wg pubkey
   register: wireguard_client_public_key_gen
   changed_when: false
+  no_log: true
 
 - name: Save client public key
   ansible.builtin.copy:
@@ -117,12 +121,14 @@
     dest: /etc/wireguard/wg0.conf
     mode: "0600"
   notify: Restart WireGuard
+  no_log: true
 
 - name: Create WireGuard client configuration
   ansible.builtin.template:
     src: client.conf.j2
     dest: /etc/wireguard/client.conf
     mode: "0644"
+  no_log: true
 
 - name: Enable and start WireGuard
   ansible.builtin.systemd:

@@ -35,7 +35,7 @@ Clone or fork this repo and then do the following:
 
 2. Populate the secrets in your GitHub repo.
 
-3. Add or remove docker services to your preference (within `ansible/roles/deploy/files/docker-compose.yml`). Don't forget to add the configuration directories to the `with_items` list in the Ansible task within `ansible/roles/deploy/tasks/main.yml`.
+3. Add or remove docker services to your preference (within `ansible/roles/deploy/files/docker-compose.yml`). Configure Gatus monitoring in `ansible/roles/deploy/files/gatus/config.yml` and Traefik settings in `ansible/roles/traefik/files/`.
 
 4. Tweak the environment variables as necessary.
 
@@ -64,6 +64,8 @@ GitHub Actions needs several environment secrets for CI/CD. Some need to be encr
 | `CF_DNS_API_TOKEN`            | Cloudflare DNS API token             | [Cloudflare API tokens](https://dash.cloudflare.com/profile/api-tokens) with DNS:Edit permissions  |
 | `CF_ZONE_API_TOKEN`           | Cloudflare Zone API token            | [Cloudflare API tokens](https://dash.cloudflare.com/profile/api-tokens) with Zone:Read permissions |
 | `TZ`                          | Timezone for containers              | IANA timezone (e.g., America/New_York)                                                             |
+| `NFS_MOUNTS`                  | NFS shares to mount (JSON array)     | `[{"src":"server.example.com:/path/to/share","path":"/mnt/backup"}]`                               |
+| `RESTORE_DATABASES`           | Whether to restore from backup       | `true` or `false`                                                                                  |
 
 ### Ansible Secrets
 
@@ -72,6 +74,14 @@ Ensure that every secret in your "Run ansible playbook" task within `.github/wor
 ### Docker Compose Secrets
 
 See `ansible/roles/deploy/templates/env.j2` for all variables. **_Note: Some of the variables are defined in the GitHub Actions `ansible-playbook` command and others are vars in `ansible/main.yml`_**
+
+### NFS Mounts
+
+This secret should be a list of k/v pairs as seen below.
+
+```sh
+[{"src":"server.example.com:/path/to/share","path":"/mnt/backup"}]
+```
 
 ## Details
 
@@ -219,6 +229,14 @@ Use [nektos/act](https://github.com/nektos/act) to test GitHub Actions locally -
 
 Here's a [helpful gist with example usages of the deb822_repository Ansible module](https://gist.github.com/roib20/27fde10af195cee1c1f8ac5f68be7e9b)
 
+### Troubleshooting
+
+See the values of the Gatus container envvars:
+
+```sh
+docker inspect gatus | jq '.[0].Config.Env'
+```
+
 ### Local testing
 
 When testing with Ansible, do the following:
@@ -228,3 +246,22 @@ ansible-galaxy install -r galaxy-requirements.yml
 ```
 
 And then run the `ansible-playbook` command found in the workflow but replace the variables with your own (unless you use nektos/act).
+
+### Remote testing
+
+For testing configuration changes directly on the VPS:
+
+1. **Make changes** on the VPS to configuration files.
+2. **Pull changes locally**: `./scripts/sync-from-vps.sh` (update `VPS_IP` in script first)
+3. **Review changes**: `git diff ansible/roles/`
+4. **Commit** if satisfied, or **push changes back**: `./scripts/sync-to-vps.sh`
+
+## Delete runs from GitHub Actions
+
+```sh
+gh run list --repo willquill/vps-proxy --limit 500 --json databaseId -q '.[].databaseId' | while read id; do gh run delete "$id" --repo willquill/vps-proxy; done
+```
+
+## LICENSE
+
+Distributed under the MIT License. See LICENSE for more information.

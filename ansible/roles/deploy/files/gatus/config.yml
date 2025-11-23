@@ -3,27 +3,46 @@ storage:
   path: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@gatus_postgres:5432/${POSTGRES_DB}?sslmode=disable"
 
 endpoints:
+  - name: Wireguard Tunnel
+    group: media
+    url: "icmp://192.168.145.2"
+    interval: 1m
+    conditions:
+      - "[CONNECTED] == true"
+    alerts:
+      - type: email
+        #enabled: false
+        description: "healthcheck failed"
+        send-on-resolved: true
+
   - name: Traefik
-    group: vps
+    group: web
     url: "https://traefik.${PUBLIC_DOMAIN}/"
     interval: 5m
     conditions:
-      - "[STATUS] == 401"  # BasicAuth returns 401, which means Traefik is up
+      # BasicAuth returns 401, which means Traefik is up
+      # FIXME: Change to 200 when OIDC is set up
+      - "[STATUS] == 401"
 
   - name: Pocket ID
-    group: vps
+    group: web
     url: "https://auth.${PUBLIC_DOMAIN}/"
     interval: 5m
     conditions:
       - "[STATUS] == 200"
 
-  - name: Plex
-    group: homelab
-    url: "https://10.1.20.25:32400/web"
-    interval: 1m
+  - name: Plex (Internal)
+    group: media
+    url: "https://10.1.20.25:32400/web/index.html"
+    interval: 2m
     conditions:
       - "[STATUS] == 200"
-
+      - "[RESPONSE_TIME] < 1000"
+    alerts:
+      - type: email
+        #enabled: false
+        description: "Plex down"
+        send-on-resolved: true
   # - name: monitoring
   #   group: internal
   #   url: "https://example.org/"
@@ -48,8 +67,13 @@ endpoints:
   #     - "[BODY] == 93.184.215.14"
   #     - "[DNS_RCODE] == NOERROR"
 
-  # - name: icmp-ping
-  #   url: "icmp://example.org"
-  #   interval: 1m
-  #   conditions:
-  #     - "[CONNECTED] == true"
+
+
+alerting:
+  email:
+    from: "${SMTP_FROM}"
+    username: "${SMTP_USER}"
+    password: "${SMTP_PASSWORD}"
+    host: "${SMTP_HOST}"
+    port: 587
+    to: "${SMTP_TO}"
