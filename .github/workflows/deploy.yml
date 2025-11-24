@@ -71,6 +71,7 @@ jobs:
       ANSIBLE_VERSION: ${{ github.event.inputs.version || '12.1.0' }}
       ANSIBLE_HOST_KEY_CHECKING: False
       ANSIBLE_FORCE_COLOR: 1
+      github_ref_name: ${{ github.head_ref || github.ref_name }}
 
     steps:
       # ---------- Checkout code ----------
@@ -155,8 +156,6 @@ jobs:
       - name: Run ansible playbook
         # Only run if every previous step succeeded
         if: ${{ success() }}
-        env:
-          github_ref_name: ${{ env.github_ref_name }}
         run: |
           ansible-playbook \
             -i inventory \
