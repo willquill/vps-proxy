@@ -7,6 +7,29 @@
     group: "{{ user_name }}"
     mode: "0755"
 
+- name: Create traefik backups directory
+  ansible.builtin.file:
+    path: "{{ repo_dest }}/backups"
+    state: directory
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0755"
+
+- name: Backup current Traefik configuration files
+  ansible.builtin.copy:
+    src: "{{ repo_dest }}/{{ item.src }}"
+    dest: "{{ repo_dest }}/backups/{{ item.dest }}-{{ ansible_date_time.iso8601_basic_short }}-{{ github_ref_name }}.yml"
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0644"
+    remote_src: true
+  with_items:
+    - { src: "config/traefik/traefik.yml", dest: "traefik" }
+    - { src: "config/traefik/config/middlewares.yml", dest: "middlewares" }
+    - { src: "config/traefik/config/services.yml", dest: "services" }
+  register: traefik_backup_result
+  failed_when: false
+
 - name: Copy Traefik main configuration
   ansible.builtin.copy:
     src: traefik.yml
