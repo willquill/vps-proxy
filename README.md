@@ -231,6 +231,24 @@ It's a little funky because you pass in the `TRAEFIK_OIDC_CLIENT_ID` GitHub secr
 
 Then you use that in a new OIDC client configured in the Pocket ID, and when you click Save, it generates a secret for you. Copy and paste that into a new GitHub secret named `TRAEFIK_OIDC_CLIENT_SECRET` and pass that into the Traefik container (doesn't need to be passed into the Pocket ID container.) This means **running another GitHub workflow** to execute the Ansible playbook to populate the values in `.env` - or just manually populate the `.env` in the VPS and recreate the Traefik container.
 
+#### Protecting the Traefik Dashboard with OIDC
+
+To protect the Traefik dashboard with Pocket ID authentication, you need to understand Traefik's internal services:
+
+- **`api@internal`** - Provides both the dashboard UI (`/dashboard/`) AND API endpoints (`/api/*`)
+- **`dashboard@internal`** - Provides ONLY the dashboard UI (`/dashboard/`)
+
+**Why guides sometimes separate them:**
+
+Some guides create two separate routers because the OIDC callback endpoint (`/oidc/callback`) must be routed to a service for the plugin to work. They split it like:
+
+1. `dashboard` router → `dashboard@internal` - handles the UI
+2. `dashboard-api` router → `api@internal` - handles `/api` paths and `/oidc/callback`
+
+**For this project's setup:**
+
+Since we use `api@internal` (which includes everything), we only need ONE router. The single router at `traefik.${PUBLIC_DOMAIN}` matches ALL paths including `/oidc/callback`, so the OIDC flow works correctly. The `public-pocket@file` middleware chain in the docker-compose labels applies the OIDC authentication.
+
 ## Development
 
 Use [nektos/act](https://github.com/nektos/act) to test GitHub Actions locally - big time saver!

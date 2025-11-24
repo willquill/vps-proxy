@@ -26,14 +26,18 @@ endpoints:
 
   - name: Pocket ID
     group: web
-    url: "https://auth.${PUBLIC_DOMAIN}/"
+    url: "https://id.${PUBLIC_DOMAIN}/"
     interval: 5m
     conditions:
       - "[STATUS] == 200"
+    alerts:
+      - type: email
+        description: "Pocket ID is DOWN"
+        send-on-resolved: true
 
-  - name: Plex (Internal)
+  - name: Plex
     group: media
-    url: "https://10.1.20.25:32400/web/index.html"
+    url: "http://10.1.20.25:32400/identity"
     interval: 2m
     conditions:
       - "[STATUS] == 200"
@@ -41,7 +45,7 @@ endpoints:
     alerts:
       - type: email
         #enabled: false
-        description: "Plex down"
+        description: "Plex is DOWN"
         send-on-resolved: true
   # - name: monitoring
   #   group: internal
