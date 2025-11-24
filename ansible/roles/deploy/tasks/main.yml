@@ -56,7 +56,6 @@
     group: "{{ user_name }}"
     mode: "0600"
   no_log: true
-  when: not (vps_proxy_restored | default(false))
 
 - name: Create application configuration directories
   ansible.builtin.file:
