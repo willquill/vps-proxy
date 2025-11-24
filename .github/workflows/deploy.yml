@@ -155,6 +155,8 @@ jobs:
       - name: Run ansible playbook
         # Only run if every previous step succeeded
         if: ${{ success() }}
+        env:
+          github_ref_name: ${{ env.github_ref_name }}
         run: |
           ansible-playbook \
             -i inventory \
