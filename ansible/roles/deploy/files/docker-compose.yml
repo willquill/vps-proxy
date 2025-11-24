@@ -90,7 +90,7 @@ services:
       # HTTP entrypoint
       traefik.http.routers.traefik.entrypoints: "http"
       traefik.http.routers.traefik.rule: "Host(`traefik.${PUBLIC_DOMAIN}`)"
-      traefik.http.routers.traefik.middlewares: "traefik-https-redirect,public@file"
+      traefik.http.routers.traefik.middlewares: "traefik-https-redirect,public-pocket@file"
       # HTTPS entrypoint
       traefik.http.routers.traefik-secure.entrypoints: "https"
       traefik.http.routers.traefik-secure.rule: "Host(`traefik.${PUBLIC_DOMAIN}`)"

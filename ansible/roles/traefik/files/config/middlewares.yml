@@ -59,13 +59,12 @@ http:
         - default-headers
         - rate-limit-moderate
 
-    # Uncomment when ready to use OIDC
-    # public-oidc-auth:
-    #   chain:
-    #     middlewares:
-    #     - default-headers
-    #     - rate-limit-moderate
-    #     - oidc-auth
+    public-pocket:
+      chain:
+        middlewares:
+        - default-headers
+        - rate-limit-moderate
+        - oidc-auth
 
     http-RFC1918-only:
       ipAllowList:
