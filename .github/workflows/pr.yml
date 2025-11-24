@@ -17,8 +17,24 @@ env:
   HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
 
 jobs:
+  check-tofu-changes:
+    name: Check OpenTofu Changes
+    runs-on: ubuntu-latest
+    outputs:
+      tofu_changed: ${{ steps.filter.outputs.tofu }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            tofu:
+              - 'opentofu/**'
+
   tofu-lint:
     name: Tofu Lint
+    needs: check-tofu-changes
+    if: ${{ github.event_name == 'workflow_dispatch' || needs.check-tofu-changes.outputs.tofu_changed == 'true' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -73,7 +89,9 @@ jobs:
   tofu-plan:
     name: Tofu Plan
     needs:
+      - check-tofu-changes
       - tofu-lint
+    if: ${{ !cancelled() && (needs.tofu-lint.result == 'success' || needs.tofu-lint.result == 'skipped') && (github.event_name == 'workflow_dispatch' || needs.check-tofu-changes.outputs.tofu_changed == 'true') }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
