@@ -223,6 +223,14 @@ To test if the WireGuard tunnel is working:
 
 You can also check the connection status in OPNsense under **VPN > WireGuard > Status**
 
+### Pocket ID
+
+To integrate the `traefik-oidc-auth` plugin with a Pocket ID OIDC client, see the plugin [documentation here](https://traefik-oidc-auth.sevensolutions.cc/docs/identity-providers/pocket-id).
+
+It's a little funky because you pass in the `TRAEFIK_OIDC_CLIENT_ID` GitHub secret to the Traefik docker service to be used within the middleware configuration.
+
+Then you use that in a new OIDC client configured in the Pocket ID, and when you click Save, it generates a secret for you. Copy and paste that into a new GitHub secret named `TRAEFIK_OIDC_CLIENT_SECRET` and pass that into the Traefik container (doesn't need to be passed into the Pocket ID container.) This means **running another GitHub workflow** to execute the Ansible playbook to populate the values in `.env` - or just manually populate the `.env` in the VPS and recreate the Traefik container.
+
 ## Development
 
 Use [nektos/act](https://github.com/nektos/act) to test GitHub Actions locally - big time saver!

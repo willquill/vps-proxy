@@ -41,16 +41,17 @@ http:
           X-Forwarded-Proto: https
 
     # Configure OIDC settings in .env file
-    # oidc-auth:
-    #   plugin:
-    #     traefik-oidc-auth:
-    #       Secret: your-secret-here
-    #       Provider:
-    #         Url: "https://auth.yourdomain.com/"
-    #         ClientId: your-client-id
-    #         ClientSecret: your-client-secret
-    #         UsePkce: true
-    #       Scopes: ["openid", "profile", "email"]
+    oidc-auth:
+      plugin:
+        traefik-oidc-auth:
+          Secret: "${TRAEFIK_OIDC_AUTH_SECRET}"
+          Provider:
+            Url: "${TRAEFIK_OIDC_PROVIDER_URL}"
+            ClientId: "${TRAEFIK_OIDC_CLIENT_ID}"
+            ClientSecret: "${TRAEFIK_OIDC_CLIENT_SECRET}"
+            CallbackUri: "${TRAEFIK_OIDC_PROVIDER_CALLBACK_URI}"
+            UsePkce: true
+          Scopes: ["openid", "profile", "email"]
 
     public:
       chain:
@@ -58,13 +59,12 @@ http:
         - default-headers
         - rate-limit-moderate
 
-    # Uncomment when ready to use OIDC
-    # public-oidc-auth:
-    #   chain:
-    #     middlewares:
-    #     - default-headers
-    #     - rate-limit-moderate
-    #     - oidc-auth
+    public-pocket:
+      chain:
+        middlewares:
+        - default-headers
+        - rate-limit-moderate
+        - oidc-auth
 
     http-RFC1918-only:
       ipAllowList:
