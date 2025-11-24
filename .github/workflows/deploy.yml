@@ -15,11 +15,27 @@ on:
       - completed
 
 jobs:
+  check-tofu-changes:
+    name: Check OpenTofu Changes
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main') }}
+    outputs:
+      tofu_changed: ${{ steps.filter.outputs.tofu }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            tofu:
+              - 'opentofu/**'
+
   tofu-apply:
     name: Tofu Apply
+    needs: check-tofu-changes
     runs-on: ubuntu-latest
-    # Run if: workflow_dispatch (no conditions) OR workflow_run with success conditions
-    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main') }}
+    # Run if: workflow_dispatch (no conditions) OR (workflow_run with success conditions AND tofu files changed)
+    if: ${{ github.event_name == 'workflow_dispatch' || needs.check-tofu-changes.outputs.tofu_changed == 'true' }}
     strategy:
       fail-fast: false
       matrix:
@@ -60,10 +76,10 @@ jobs:
   ansible-deploy:
     name: Ansible Playbook Run
     needs:
+      - check-tofu-changes
       - tofu-apply
+    if: ${{ !cancelled() && (needs.tofu-apply.result == 'success' || needs.tofu-apply.result == 'skipped') }}
     runs-on: ubuntu-latest
-    # Run if: workflow_dispatch (no conditions) OR workflow_run with success conditions
-    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main') }}
     environment: hetzner-cloud
     # Note: We do not need to set each env because instead of envvars,
     #       we set -e options where necessary

@@ -18,7 +18,7 @@
 - name: Backup current Traefik configuration files
   ansible.builtin.copy:
     src: "{{ repo_dest }}/{{ item.src }}"
-    dest: "{{ repo_dest }}/backups/{{ item.dest }}-{{ ansible_date_time.iso8601_basic_short }}-{{ github_ref_name }}.yml"
+    dest: "{{ repo_dest }}/backups/{{ item.dest }}-{{ ansible_date_time.iso8601_basic_short }}-{{ github_ref_name | default('unknown') }}.yml"
     owner: "{{ user_name }}"
     group: "{{ user_name }}"
     mode: "0644"
