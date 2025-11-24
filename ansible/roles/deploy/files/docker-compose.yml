@@ -178,7 +178,7 @@ services:
       - "./config/pocketid:/app/data"
     environment:
       - APP_NAME="${PUBLIC_DOMAIN} access portal"
-      - APP_URL=https://auth.${PUBLIC_DOMAIN}
+      - APP_URL=https://id.${PUBLIC_DOMAIN}
       - TRUST_PROXY=true
       - MAXMIND_LICENSE_KEY
       - DB_PROVIDER=postgres
@@ -204,11 +204,11 @@ services:
     labels:
       <<: *proxy-labels
       traefik.http.routers.pocket-id.entrypoints: "http"
-      traefik.http.routers.pocket-id.rule: "Host(`auth.${PUBLIC_DOMAIN}`)"
+      traefik.http.routers.pocket-id.rule: "Host(`id.${PUBLIC_DOMAIN}`)"
       traefik.http.middlewares.pocket-id-https-redirect.redirectscheme.scheme: "https"
       traefik.http.routers.pocket-id.middlewares: "pocket-id-https-redirect"
       traefik.http.routers.pocket-id-secure.entrypoints: "https"
-      traefik.http.routers.pocket-id-secure.rule: "Host(`auth.${PUBLIC_DOMAIN}`)"
+      traefik.http.routers.pocket-id-secure.rule: "Host(`id.${PUBLIC_DOMAIN}`)"
       traefik.http.routers.pocket-id-secure.tls: "true"
       traefik.http.routers.pocket-id-secure.service: "pocket-id"
       traefik.http.services.pocket-id.loadbalancer.server.port: "1411"
