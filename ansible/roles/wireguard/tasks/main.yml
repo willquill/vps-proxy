@@ -140,14 +140,19 @@
   ansible.builtin.file:
     path: "{{ repo_dest }}/wireguard-client-configs"
     state: directory
-    mode: "0700"
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0755"
 
 - name: Copy client configuration to user directory
   ansible.builtin.copy:
     src: /etc/wireguard/client.conf
     dest: "{{ repo_dest }}/wireguard-client-configs/client.conf"
     remote_src: true
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
     mode: "0644"
+    force: false
 
 - name: Generate QR code for client configuration
   ansible.builtin.shell: qrencode -t ansiutf8 < /etc/wireguard/client.conf
@@ -158,7 +163,10 @@
   ansible.builtin.copy:
     content: "{{ wireguard_qr_code_output.stdout }}"
     dest: "{{ repo_dest }}/wireguard-client-configs/client-qr.txt"
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
     mode: "0644"
+    force: false
 
 - name: Create installation summary
   ansible.builtin.copy:
@@ -184,16 +192,10 @@
       To view the QR code for mobile clients:
       cat {{ repo_dest }}/wireguard-client-configs/client-qr.txt
     dest: "{{ repo_dest }}/wireguard-client-configs/installation-summary.txt"
-    mode: "0644"
-
-- name: Change ownership of WireGuard client configs
-  ansible.builtin.file:
-    path: "{{ repo_dest }}/wireguard-client-configs"
-    state: directory
     owner: "{{ user_name }}"
     group: "{{ user_name }}"
-    mode: "0755"
-    recurse: yes
+    mode: "0644"
+    force: false
 
 - name: Verify WireGuard is running
   ansible.builtin.command: wg show

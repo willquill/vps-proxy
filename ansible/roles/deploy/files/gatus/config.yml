@@ -67,8 +67,6 @@ endpoints:
   #     - "[BODY] == 93.184.215.14"
   #     - "[DNS_RCODE] == NOERROR"
 
-
-
 alerting:
   email:
     from: "${SMTP_FROM}"
