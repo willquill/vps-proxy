@@ -37,9 +37,6 @@
   with_items:
     - { src: "docker-compose.yml", dest: "docker-compose" }
     - { src: "config/gatus/config.yml", dest: "gatus" }
-    - { src: "config/traefik/traefik.yml", dest: "traefik" }
-    - { src: "config/traefik/config/middlewares.yml", dest: "middlewares" }
-    - { src: "config/traefik/config/services.yml", dest: "services" }
   register: deploy_backup_result
   failed_when: false
 
