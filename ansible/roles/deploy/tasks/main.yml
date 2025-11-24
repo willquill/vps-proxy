@@ -16,6 +16,33 @@
     group: "{{ user_name }}"
     mode: "0755"
 
+# On each run of this task, create a timestamped backup
+# of the files about to be overwritten.
+- name: Create backups directory
+  ansible.builtin.file:
+    path: "{{ repo_dest }}/backups"
+    state: directory
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0755"
+
+- name: Backup current docker-compose.yml
+  ansible.builtin.copy:
+    src: "{{ repo_dest }}/{{ item.src }}"
+    dest: "{{ repo_dest }}/backups/{{ item.dest }}-{{ ansible_date_time.iso8601_basic_short }}-{{ github_ref_name }}.yml"
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0644"
+    remote_src: true
+  with_items:
+    - { src: "docker-compose.yml", dest: "docker-compose" }
+    - { src: "config/gatus/config.yml", dest: "gatus" }
+    - { src: "config/traefik/traefik.yml", dest: "traefik" }
+    - { src: "config/traefik/config/middlewares.yml", dest: "middlewares" }
+    - { src: "config/traefik/config/services.yml", dest: "services" }
+  register: deploy_backup_result
+  failed_when: false
+
 - name: Copy docker-compose.yml to VPS
   ansible.builtin.copy:
     src: docker-compose.yml

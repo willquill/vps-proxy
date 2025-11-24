@@ -162,6 +162,7 @@ jobs:
             -e "repo_dest=/home/${{ github.repository_owner }}/vps-proxy" \
             -e "vps_host=${{ env.SERVER_IPV4 }}" \
             -e "user_name=${{ github.repository_owner }}" \
+            -e "github_ref_name=${{ env.github_ref_name }}" \
             -e "wireguard_port=51820" \
             -e "wireguard_tunnel_subnet=192.168.145.0/24" \
             -e "wireguard_address=192.168.145.1/24" \
