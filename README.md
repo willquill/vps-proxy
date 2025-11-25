@@ -231,6 +231,8 @@ It's a little funky because you pass in the `TRAEFIK_OIDC_CLIENT_ID` GitHub secr
 
 Then you use that in a new OIDC client configured in the Pocket ID, and when you click Save, it generates a secret for you. Copy and paste that into a new GitHub secret named `TRAEFIK_OIDC_CLIENT_SECRET` and pass that into the Traefik container (doesn't need to be passed into the Pocket ID container.) This means **running another GitHub workflow** to execute the Ansible playbook to populate the values in `.env` - or just manually populate the `.env` in the VPS and recreate the Traefik container.
 
+Any service that you want to protect with Pocket ID that doesn't natively support OIDC can be used with this plugin, and you will need **one callback URL per service** in the OIDC client information for this plugin within Pocket.
+
 #### Protecting the Traefik Dashboard with OIDC
 
 To protect the Traefik dashboard with Pocket ID authentication, you need to understand Traefik's internal services:
