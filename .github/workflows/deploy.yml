@@ -190,4 +190,4 @@ jobs:
             -e "timezone=${{ secrets.TZ }}" \
             -e "nfs_mounts=${{ secrets.NFS_MOUNTS }}" \
             -e "restore_databases=${{ secrets.RESTORE_DATABASES }}" \
-            ansible/main.yml --tags update,ufw,wireguard,docker,mounts,restore,deploy
+            ansible/main.yml --tags update,ufw,wireguard,docker,mounts,traefik,restore,deploy
