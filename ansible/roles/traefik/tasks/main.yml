@@ -40,7 +40,7 @@
 
 - name: Copy Traefik middlewares configuration
   ansible.builtin.copy:
-    src: config/middlewares.yml
+    src: middlewares.yml
     dest: "{{ repo_dest }}/config/traefik/config/middlewares.yml"
     owner: "{{ user_name }}"
     group: "{{ user_name }}"
@@ -48,7 +48,7 @@
 
 - name: Copy Traefik services configuration
   ansible.builtin.copy:
-    src: config/services.yml
+    src: services.yml
     dest: "{{ repo_dest }}/config/traefik/config/services.yml"
     owner: "{{ user_name }}"
     group: "{{ user_name }}"
