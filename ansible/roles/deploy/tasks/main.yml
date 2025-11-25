@@ -82,7 +82,7 @@
 - name: Check if Gatus backup exists
   ansible.builtin.stat:
     path: /mnt/backup/gatus_postgres
-  register: gatus_backup_stat
+  register: deploy_gatus_backup_stat
   when:
     - nfs_server is defined
     - restore_databases | default(false) | bool
@@ -91,7 +91,7 @@
 - name: Check if Pocket ID backup exists
   ansible.builtin.stat:
     path: /mnt/backup/pocketid_postgres
-  register: pocketid_backup_stat
+  register: deploy_pocketid_backup_stat
   when:
     - nfs_server is defined
     - restore_databases | default(false) | bool
@@ -109,8 +109,8 @@
     - nfs_server is defined
     - restore_databases | default(false) | bool
     - not (vps_proxy_restored | default(false))
-    - gatus_backup_stat.stat.exists | default(false)
-  register: gatus_restore
+    - deploy_gatus_backup_stat.stat.exists | default(false)
+  register: deploy_gatus_restore
   failed_when: false
 
 - name: Restore Pocket ID database from backup
@@ -125,8 +125,8 @@
     - nfs_server is defined
     - restore_databases | default(false) | bool
     - not (vps_proxy_restored | default(false))
-    - pocketid_backup_stat.stat.exists | default(false)
-  register: pocketid_restore
+    - deploy_pocketid_backup_stat.stat.exists | default(false)
+  register: deploy_pocketid_restore
   failed_when: false
 
 - name: Check if update.sh script exists

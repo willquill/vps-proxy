@@ -15,40 +15,10 @@ on:
       - completed
 
 jobs:
-  check-tofu-changes:
-    name: Check OpenTofu Changes
-    runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main') }}
-    outputs:
-      tofu_changed: ${{ steps.changed.outputs.tofu_changed }}
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-      - name: Get changed files
-        id: changed
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "tofu_changed=true" >> $GITHUB_OUTPUT
-          else
-            # Get the commit SHA from the workflow_run event
-            COMMIT_SHA="${{ github.event.workflow_run.head_sha }}"
-            # Check if any files in opentofu/ changed in this commit
-            if git diff --name-only $COMMIT_SHA^..$COMMIT_SHA | grep -q '^opentofu/'; then
-              echo "tofu_changed=true" >> $GITHUB_OUTPUT
-              echo "OpenTofu files changed"
-            else
-              echo "tofu_changed=false" >> $GITHUB_OUTPUT
-              echo "No OpenTofu files changed"
-            fi
-          fi
-
   tofu-apply:
     name: Tofu Apply
-    needs: check-tofu-changes
     runs-on: ubuntu-latest
-    # Run if: workflow_dispatch (no conditions) OR (workflow_run with success conditions AND tofu files changed)
-    if: ${{ needs.check-tofu-changes.outputs.tofu_changed == 'true' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main') }}
     strategy:
       fail-fast: false
       matrix:
@@ -88,10 +58,8 @@ jobs:
 
   ansible-deploy:
     name: Ansible Playbook Run
-    needs:
-      - check-tofu-changes
-      - tofu-apply
-    if: ${{ !cancelled() && (needs.tofu-apply.result == 'success' || needs.tofu-apply.result == 'skipped') }}
+    needs: tofu-apply
+    if: ${{ !cancelled() && needs.tofu-apply.result == 'success' }}
     runs-on: ubuntu-latest
     environment: hetzner-cloud
     # Note: We do not need to set each env because instead of envvars,
