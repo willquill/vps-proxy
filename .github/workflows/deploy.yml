@@ -20,24 +20,35 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main') }}
     outputs:
-      tofu_changed: ${{ steps.filter.outputs.tofu }}
+      tofu_changed: ${{ steps.changed.outputs.tofu_changed }}
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
-      - uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            tofu:
-              - 'opentofu/**'
+          fetch-depth: 0
+      - name: Get changed files
+        id: changed
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tofu_changed=true" >> $GITHUB_OUTPUT
+          else
+            # Get the commit SHA from the workflow_run event
+            COMMIT_SHA="${{ github.event.workflow_run.head_sha }}"
+            # Check if any files in opentofu/ changed in this commit
+            if git diff --name-only $COMMIT_SHA^..$COMMIT_SHA | grep -q '^opentofu/'; then
+              echo "tofu_changed=true" >> $GITHUB_OUTPUT
+              echo "OpenTofu files changed"
+            else
+              echo "tofu_changed=false" >> $GITHUB_OUTPUT
+              echo "No OpenTofu files changed"
+            fi
+          fi
 
   tofu-apply:
     name: Tofu Apply
     needs: check-tofu-changes
     runs-on: ubuntu-latest
     # Run if: workflow_dispatch (no conditions) OR (workflow_run with success conditions AND tofu files changed)
-    if: ${{ github.event_name == 'workflow_dispatch' || needs.check-tofu-changes.outputs.tofu_changed == 'true' }}
+    if: ${{ needs.check-tofu-changes.outputs.tofu_changed == 'true' }}
     strategy:
       fail-fast: false
       matrix:

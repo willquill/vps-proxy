@@ -74,6 +74,7 @@ services:
       - TRAEFIK_OIDC_AUTH_SECRET
       - TRAEFIK_OIDC_CLIENT_ID
       - TRAEFIK_OIDC_CLIENT_SECRET
+      # These two are not GitHub Secrets
       - TRAEFIK_OIDC_PROVIDER_URL
       - TRAEFIK_OIDC_PROVIDER_CALLBACK_URI
     volumes:

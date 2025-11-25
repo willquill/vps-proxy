@@ -1,6 +1,6 @@
 ---
 # Runs even in check mode
-- name: \#\#\#\#\#\# BEGIN PLAY \#\#\#\#\#\# Updates and package installation
+- name: ━━━━━━ BEGIN PLAY ━━━━━━ Updates and package installation
   hosts: all
   tags: update
   become: true
@@ -9,7 +9,7 @@
       ansible.builtin.include_role:
         name: update
 
-- name: \#\#\#\#\#\# BEGIN PLAY \#\#\#\#\#\# Configure firewall
+- name: ━━━━━━ BEGIN PLAY ━━━━━━ Configure firewall
   hosts: all
   tags: ufw
   become: true
@@ -18,7 +18,7 @@
       ansible.builtin.include_role:
         name: ufw
 
-- name: \#\#\#\#\#\# BEGIN PLAY \#\#\#\#\#\# Install and configure Wireguard
+- name: ━━━━━━ BEGIN PLAY ━━━━━━ Install and configure Wireguard
   hosts: all
   tags: wireguard
   become: true
@@ -27,7 +27,7 @@
       ansible.builtin.include_role:
         name: wireguard
 
-- name: \#\#\#\#\#\# BEGIN PLAY \#\#\#\#\#\# Initialize docker and app directory
+- name: ━━━━━━ BEGIN PLAY ━━━━━━ Initialize docker and app directory
   hosts: all
   tags: docker
   become: true
@@ -36,7 +36,7 @@
       ansible.builtin.include_role:
         name: docker
 
-- name: \#\#\#\#\#\# BEGIN PLAY \#\#\#\#\#\# Configure Traefik
+- name: ━━━━━━ BEGIN PLAY ━━━━━━ Configure Traefik
   hosts: all
   tags: traefik
   become: true
@@ -45,7 +45,7 @@
       ansible.builtin.include_role:
         name: traefik
 
-- name: \#\#\#\#\#\# BEGIN PLAY \#\#\#\#\#\# Mount NFS shares
+- name: ━━━━━━ BEGIN PLAY ━━━━━━ Mount NFS shares
   hosts: all
   tags: mounts
   become: true
@@ -54,7 +54,7 @@
       ansible.builtin.include_role:
         name: mounts
 
-- name: \#\#\#\#\#\# BEGIN PLAY \#\#\#\#\#\# Restore from backup if available
+- name: ━━━━━━ BEGIN PLAY ━━━━━━ Restore from backup if available
   hosts: all
   tags: restore
   become: true
@@ -63,7 +63,7 @@
       ansible.builtin.include_role:
         name: restore
 
-- name: \#\#\#\#\#\# BEGIN PLAY \#\#\#\#\#\# Initialize dependency files and deploy docker compose file
+- name: ━━━━━━ BEGIN PLAY ━━━━━━ Initialize dependency files and deploy docker compose file
   hosts: all
   tags: deploy
   gather_facts: true
