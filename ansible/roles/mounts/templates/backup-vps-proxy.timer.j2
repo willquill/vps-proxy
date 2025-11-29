@@ -3,9 +3,7 @@ Description=Run vps-proxy backup nightly
 Requires=backup-vps-proxy.service
 
 [Timer]
-OnCalendar=daily
 OnCalendar=*-*-* 02:00:00
-Persistent=true
 RandomizedDelaySec=300
 
 [Install]

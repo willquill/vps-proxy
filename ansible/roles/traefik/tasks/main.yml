@@ -32,6 +32,7 @@
 
 - name: Clean up old backups (keep latest 5 for each file)
   ansible.builtin.shell: |
+    set -o pipefail
     for prefix in traefik middlewares services; do
       ls -t {{ repo_dest }}/backups/${prefix}-*.yml 2>/dev/null | tail -n +6 | xargs -r rm -f
     done

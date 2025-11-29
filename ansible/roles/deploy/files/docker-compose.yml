@@ -38,7 +38,6 @@ services:
     # Drop all Linux capabilities (optional but recommended)
     environment:
       - CLOUDFLARE_API_TOKEN=$CF_DNS_API_TOKEN
-        # Your Cloudflare API token
       - DOMAINS=ddns.${PUBLIC_DOMAIN}
       # Tell Cloudflare to cache webpages and hide your IP (optional)
       - PROXIED=false
