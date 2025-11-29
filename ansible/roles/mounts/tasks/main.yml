@@ -65,7 +65,7 @@
 
 - name: Set fact for backup mount availability
   ansible.builtin.set_fact:
-    backup_mount_available: "{{ mounts_nfs_mount_result.results | selectattr('item.item.path', 'equalto', '/mnt/backup') | selectattr('failed', 'equalto', false) | list | length > 0 }}"
+    backup_mount_available: "{{ mounts_nfs_mount_result.results | selectattr('item.item.path', 'equalto', '/mnt/backups') | selectattr('failed', 'equalto', false) | list | length > 0 }}"
   when:
     - mounts_nfs_mount_result is defined
     - mounts_nfs_mount_result.results is defined
