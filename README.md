@@ -77,10 +77,23 @@ See `ansible/roles/deploy/templates/env.j2` for all variables. **_Note: Some of 
 
 ### NFS Mounts
 
-This secret should be a list of k/v pairs as seen below.
+On the server itself, I did this:
 
 ```sh
-[{"src":"server.example.com:/path/to/share","path":"/mnt/backup"}]
+mkdir /nvr/backups/vps_proxy
+```
+
+```sh
+echo "/nvr/backups/vps_proxy 192.168.145.1/32(rw,no_root_squash,no_subtree_check,sync)" >> \
+  /etc/exports && sudo systemctl restart nfs-kernel-server
+```
+
+On your firewall, make sure the VPS can access 2049/TCP on your NFS server.
+
+The GitHub environment secret `NFS_MOUNTS` should be a list of k/v pairs as seen below.
+
+```sh
+[{"src":"10.1.20.20:/nvr/backups/vps_proxy","path":"/mnt/backups"}]
 ```
 
 ## Details

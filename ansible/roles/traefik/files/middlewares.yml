@@ -58,7 +58,7 @@ http:
         - default-headers
         - rate-limit-moderate
 
-    public-pocket:
+    public-oidc-auth:
       chain:
         middlewares:
         - default-headers
