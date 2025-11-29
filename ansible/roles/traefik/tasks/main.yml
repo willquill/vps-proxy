@@ -30,6 +30,16 @@
   register: traefik_backup_result
   failed_when: false
 
+- name: Clean up old backups (keep latest 5 for each file)
+  ansible.builtin.shell: |
+    for prefix in traefik middlewares services; do
+      ls -t {{ repo_dest }}/backups/${prefix}-*.yml 2>/dev/null | tail -n +6 | xargs -r rm -f
+    done
+  args:
+    executable: /bin/bash
+  changed_when: false
+  failed_when: false
+
 - name: Copy Traefik main configuration
   ansible.builtin.copy:
     src: traefik.yml

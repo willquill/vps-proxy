@@ -69,3 +69,65 @@
   when:
     - mounts_nfs_mount_result is defined
     - mounts_nfs_mount_result.results is defined
+
+- name: Install backup script
+  ansible.builtin.template:
+    src: backup-vps-proxy.sh.j2
+    dest: /usr/local/bin/backup-vps-proxy.sh
+    owner: root
+    group: root
+    mode: "0755"
+  when:
+    - backup_mount_available | default(false)
+
+- name: Install systemd email notification script
+  ansible.builtin.template:
+    src: systemd-email.sh.j2
+    dest: /usr/local/bin/systemd-email.sh
+    owner: root
+    group: root
+    mode: "0755"
+  when:
+    - backup_mount_available | default(false)
+  no_log: true
+
+- name: Install systemd email notification service
+  ansible.builtin.template:
+    src: status-email@.service.j2
+    dest: /etc/systemd/system/status-email@.service
+    owner: root
+    group: root
+    mode: "0644"
+  when:
+    - backup_mount_available | default(false)
+
+- name: Install backup systemd service
+  ansible.builtin.template:
+    src: backup-vps-proxy.service.j2
+    dest: /etc/systemd/system/backup-vps-proxy.service
+    owner: root
+    group: root
+    mode: "0644"
+  when:
+    - backup_mount_available | default(false)
+  notify: Reload systemd
+
+- name: Install backup systemd timer
+  ansible.builtin.template:
+    src: backup-vps-proxy.timer.j2
+    dest: /etc/systemd/system/backup-vps-proxy.timer
+    owner: root
+    group: root
+    mode: "0644"
+  when:
+    - backup_mount_available | default(false)
+  notify: Reload systemd
+
+- name: Enable and start backup timer
+  ansible.builtin.systemd:
+    name: backup-vps-proxy.timer
+    enabled: true
+    state: started
+    daemon_reload: true
+  when:
+    - backup_mount_available | default(false)

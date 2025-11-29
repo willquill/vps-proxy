@@ -1,0 +1,45 @@
+#!/bin/bash
+# Send email notification for systemd service failures
+# Usage: systemd-email.sh <service-name>
+
+SERVICE="$1"
+
+# Get service status
+STATUS=$(systemctl status "$SERVICE" 2>&1)
+JOURNAL=$(journalctl -u "$SERVICE" -n 50 --no-pager)
+
+# Email details
+SMTP_HOST="{{ smtp_host }}"
+SMTP_PORT="{{ smtp_port | default('587') }}"
+SMTP_USER="{{ smtp_user }}"
+SMTP_PASSWORD="{{ smtp_password }}"
+FROM="{{ smtp_user }}"
+TO="{{ smtp_to }}"
+SUBJECT="[VPS Alert] Service Failed: $SERVICE on {{ public_hostname }}"
+
+# Create email body
+read -r -d '' BODY << EOF
+Service $SERVICE has failed on {{ public_hostname }}.
+
+=== Service Status ===
+$STATUS
+
+=== Recent Journal Logs ===
+$JOURNAL
+
+This is an automated message from systemd on {{ public_hostname }}.
+EOF
+
+# Send email using curl
+curl --url "smtp://${SMTP_HOST}:${SMTP_PORT}" \
+  --ssl-reqd \
+  --mail-from "$FROM" \
+  --mail-rcpt "$TO" \
+  --user "${SMTP_USER}:${SMTP_PASSWORD}" \
+  --upload-file - << EOF
+From: $FROM
+To: $TO
+Subject: $SUBJECT
+
+$BODY
+EOF
