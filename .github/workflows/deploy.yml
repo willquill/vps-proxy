@@ -188,6 +188,6 @@ jobs:
             -e "cf_dns_api_token=${{ secrets.CF_DNS_API_TOKEN }}" \
             -e "cf_zone_api_token=${{ secrets.CF_ZONE_API_TOKEN }}" \
             -e "timezone=${{ secrets.TZ }}" \
-            -e "nfs_mounts=${{ secrets.NFS_MOUNTS }}" \
+            -e 'nfs_mounts=${{ secrets.NFS_MOUNTS }}' `# Single quotes required for JSON` \
             -e "restore_databases=${{ secrets.RESTORE_DATABASES }}" \
             ansible/main.yml --tags update,ufw,wireguard,docker,mounts,traefik,restore,deploy

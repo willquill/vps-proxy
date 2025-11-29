@@ -8,7 +8,7 @@
 
 - name: Parse NFS mounts JSON
   ansible.builtin.set_fact:
-    mounts_parsed: "{{ nfs_mounts | from_json if nfs_mounts | default('') != '' else [] }}"
+    mounts_parsed: "{{ (nfs_mounts | string | from_json) if (nfs_mounts | default('') | string != '') else [] }}"
   when: nfs_mounts is defined
 
 - name: Check NFS server accessibility
