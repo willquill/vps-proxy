@@ -1,0 +1,22 @@
+[Unit]
+Description=Backup vps-proxy directory to NFS
+After=mnt-backups.mount network-online.target
+Requires=mnt-backups.mount
+BindsTo=mnt-backups.mount
+OnFailure=status-email@%n.service
+
+[Service]
+Type=oneshot
+User={{ user_name }}
+Group={{ user_name }}
+ExecStart=/usr/local/bin/backup-vps-proxy.sh
+
+# Security hardening
+PrivateTmp=yes
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/mnt/backups
+
+[Install]
+WantedBy=multi-user.target
