@@ -58,6 +58,7 @@ http:
         - default-headers
         - rate-limit-moderate
 
+    # Only for apps that don't have native OIDC support
     public-oidc-auth:
       chain:
         middlewares:

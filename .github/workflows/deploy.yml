@@ -8,6 +8,11 @@ on:
         required: false
         default: "12.1.0"
         type: string
+      tofu_apply:
+        description: "Run OpenTofu apply"
+        required: false
+        default: false
+        type: boolean
   workflow_run:
     workflows: ["Security"]
     branches: [main]
@@ -18,7 +23,8 @@ jobs:
   tofu-apply:
     name: Tofu Apply
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main') }}
+    # Only run on dispatch and when tofu_apply is true
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tofu_apply == 'true' }}
     strategy:
       fail-fast: false
       matrix:
@@ -179,6 +185,8 @@ jobs:
             -e "pocketid_postgres_password=${{ secrets.POCKETID_POSTGRES_PASSWORD }}" \
             -e "pocketid_postgres_db=${{ secrets.POCKETID_POSTGRES_DB }}" \
             -e "pocketid_encryption_key=${{ secrets.POCKETID_ENCRYPTION_KEY }}" \
+            -e "oidc_rp_client_id=${{ secrets.OIDC_RP_CLIENT_ID }}" \ `# linkding`
+            -e "oidc_rp_client_secret=${{ secrets.OIDC_RP_CLIENT_SECRET }}" \ `# linkding`
             -e "smtp_host=${{ secrets.SMTP_HOST }}" \
             -e "smtp_user=${{ secrets.SMTP_USER }}" \
             -e "smtp_password=${{ secrets.SMTP_PASSWORD }}" \

@@ -1,6 +1,12 @@
 name: PR
 on:
   workflow_dispatch:
+    inputs:
+      run_tofu_jobs:
+        description: "Run OpenTofu Lint and Plan"
+        required: false
+        default: false
+        type: boolean
   pull_request:
     branches: [main]
 
@@ -19,7 +25,7 @@ env:
 jobs:
   tofu-lint:
     name: Tofu Lint
-    if: ${{ github.event_name == 'workflow_dispatch' }}
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.run_tofu_jobs == 'true' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
