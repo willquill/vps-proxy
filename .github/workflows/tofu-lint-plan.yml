@@ -1,4 +1,4 @@
-name: PR
+name: Tofu Lint & Plan
 on:
   workflow_dispatch:
     inputs:
@@ -9,6 +9,11 @@ on:
         type: boolean
   pull_request:
     branches: [main]
+  workflow_run:
+    workflows: ["Security"]
+    branches: [main]
+    types:
+      - completed
 
 env:
   TZ: ${{ secrets.TZ }}
@@ -23,17 +28,35 @@ env:
   HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
 
 jobs:
+  check-tofu-changes:
+    name: Check for OpenTofu Changes
+    runs-on: ubuntu-latest
+    outputs:
+      tofu_changed: ${{ steps.filter.outputs.tofu }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            tofu:
+              - 'opentofu/**'
+
   tofu-lint:
     name: Tofu Lint
-    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.run_tofu_jobs == 'true' }}
+    needs: check-tofu-changes
+    if: ${{ needs.check-tofu-changes.outputs.tofu_changed == 'true' || (github.event_name == 'workflow_dispatch' && github.event.inputs.run_tofu_jobs == 'true') }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         include:
-          - tofu_version: "~>1.10.6"
+          - tofu_version: "~>1.10.7"
             working_dir: opentofu
-          - tofu_version: "~>1.10.6"
+          - tofu_version: "~>1.10.7"
             working_dir: tfstate
     environment: hetzner-cloud
     env:
@@ -80,14 +103,15 @@ jobs:
   tofu-plan:
     name: Tofu Plan
     needs:
+      - check-tofu-changes
       - tofu-lint
-    if: ${{ !cancelled() && (needs.tofu-lint.result == 'success' || needs.tofu-lint.result == 'skipped') && github.event_name == 'workflow_dispatch' }}
+    if: ${{ !cancelled() && needs.check-tofu-changes.outputs.tofu_changed == 'true' && (needs.tofu-lint.result == 'success' || needs.tofu-lint.result == 'skipped') }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         include:
-          - tofu_version: "~>1.10.6"
+          - tofu_version: "~>1.10.7"
             working_dir: opentofu
 
     environment: hetzner-cloud
