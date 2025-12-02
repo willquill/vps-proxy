@@ -1,4 +1,4 @@
-name: Tofu Lint and Plan
+name: Tofu Lint & Plan
 on:
   workflow_dispatch:
     inputs:
