@@ -126,8 +126,9 @@ jobs:
             -e "pocketid_postgres_password=${{ secrets.POCKETID_POSTGRES_PASSWORD }}" \
             -e "pocketid_postgres_db=${{ secrets.POCKETID_POSTGRES_DB }}" \
             -e "pocketid_encryption_key=${{ secrets.POCKETID_ENCRYPTION_KEY }}" \
-            -e "oidc_rp_client_id=${{ secrets.OIDC_RP_CLIENT_ID }}" \ `# linkding`
-            -e "oidc_rp_client_secret=${{ secrets.OIDC_RP_CLIENT_SECRET }}" \ `# linkding`
+            # For OIDC setup for Linkding and PocketID
+            -e "oidc_rp_client_id=${{ secrets.OIDC_RP_CLIENT_ID }}" \
+            -e "oidc_rp_client_secret=${{ secrets.OIDC_RP_CLIENT_SECRET }}" \
             -e "smtp_host=${{ secrets.SMTP_HOST }}" \
             -e "smtp_user=${{ secrets.SMTP_USER }}" \
             -e "smtp_password=${{ secrets.SMTP_PASSWORD }}" \
@@ -137,6 +138,7 @@ jobs:
             -e "cf_dns_api_token=${{ secrets.CF_DNS_API_TOKEN }}" \
             -e "cf_zone_api_token=${{ secrets.CF_ZONE_API_TOKEN }}" \
             -e "timezone=${{ secrets.TZ }}" \
-            -e 'nfs_mounts=${{ secrets.NFS_MOUNTS }}' `# Single quotes required for JSON` \
+            # Single quotes required for JSON value within secret
+            -e 'nfs_mounts=${{ secrets.NFS_MOUNTS }}' \
             -e "restore_databases=${{ secrets.RESTORE_DATABASES }}" \
             ansible/main.yml --tags update,ufw,wireguard,docker,mounts,traefik,restore,deploy
