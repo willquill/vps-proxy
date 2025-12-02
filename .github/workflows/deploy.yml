@@ -8,11 +8,6 @@ on:
         required: false
         default: "12.1.0"
         type: string
-      tofu_apply:
-        description: "Run OpenTofu apply"
-        required: false
-        default: false
-        type: boolean
   workflow_run:
     workflows: ["Security"]
     branches: [main]
@@ -20,61 +15,10 @@ on:
       - completed
 
 jobs:
-  tofu-apply:
-    name: Tofu Apply
-    runs-on: ubuntu-latest
-    # Only run on dispatch and when tofu_apply is true
-    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tofu_apply == 'true' }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - tofu_version: "~>1.10.6"
-            working_dir: opentofu
-    environment: hetzner-cloud
-    env:
-      TZ: ${{ secrets.TZ }}
-      # AWS keys for S3 state backend
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      # To populate Terraform variables
-      TF_VAR_repo_owner: ${{ github.repository_owner }}
-      TF_VAR_workflow_actor: ${{ github.actor }}
-      TF_VAR_ssh_authorized_key: ${{ secrets.VPS_PROXY_KEY_PUBLIC }}
-      # Hetzner Cloud token required to create resources
-      HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
-      tf_actions_working_dir: ${{ matrix.working_dir }}
-      tofu_version: ${{ matrix.tofu_version }}
-      github_ref_name: ${{ github.head_ref || github.ref_name }}
-
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.tofu_version }}-${{ matrix.working_dir }}
-      cancel-in-progress: true
-
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Apply
-        id: apply
-        uses: ./.github/actions/opentofu
-        with:
-          github_ref_name: ${{ env.github_ref_name }}
-          tofu_version: ${{ matrix.tofu_version }}
-          apply: "true"
-
-      - name: Save SERVER_IPV4 to GitHub environment variable
-        run: |
-          SERVER_IPV4=$(jq -r '.server_ipv4.value' ${{ env.tf_actions_working_dir }}/tf_output.json)
-          echo "SERVER_IPV4=$SERVER_IPV4" >> $GITHUB_ENV
-          gh variable set SERVER_IPV4 --body "$SERVER_IPV4" --env hetzner-cloud
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   ansible-deploy:
     name: Ansible Playbook Run
-    needs: tofu-apply
-    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main') }}
     environment: hetzner-cloud
     # Note: We do not need to set each env because instead of envvars,
     #       we set -e options where necessary
@@ -113,24 +57,11 @@ jobs:
         run: |
           ansible-galaxy collection install -r ansible/galaxy-requirements.yml
 
-      - name: Download Terraform output
-        if: ${{ needs.tofu-apply.result == 'success' }}
-        uses: actions/download-artifact@v5
-        with:
-          name: tf-output
-
-      - name: Parse SERVER_IPV4 from output or environment
-        id: parse_output
+      - name: Get SERVER_IPV4 from environment
+        id: get_ip
         run: |
-          if [ -f tf_output.json ]; then
-            # Get from tofu output if available
-            SERVER_IPV4=$(jq -r '.server_ipv4.value' tf_output.json)
-            echo "Using SERVER_IPV4 from tofu output: $SERVER_IPV4"
-          else
-            # Get from GitHub environment variable
-            SERVER_IPV4=$(gh variable get SERVER_IPV4 --env hetzner-cloud)
-            echo "Using SERVER_IPV4 from environment variable: $SERVER_IPV4"
-          fi
+          SERVER_IPV4=$(gh variable get SERVER_IPV4 --env hetzner-cloud)
+          echo "Using SERVER_IPV4: $SERVER_IPV4"
           echo "SERVER_IPV4=$SERVER_IPV4" >> $GITHUB_ENV
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
