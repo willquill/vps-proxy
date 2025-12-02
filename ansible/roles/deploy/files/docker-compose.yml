@@ -38,7 +38,7 @@ services:
     # Drop all Linux capabilities (optional but recommended)
     environment:
       - CLOUDFLARE_API_TOKEN=$CF_DNS_API_TOKEN
-      - DOMAINS=ddns.${PUBLIC_DOMAIN}
+      - DOMAINS=ddns2.${PUBLIC_DOMAIN}
       # Tell Cloudflare to cache webpages and hide your IP (optional)
       - PROXIED=false
       - IP6_PROVIDER=none
@@ -68,7 +68,6 @@ services:
       # Zone / DNS / Edit on the specific zone for which I use Traefik
       - CF_DNS_API_TOKEN
       - ACME_EMAIL
-      - PUBLIC_DOMAIN
       # Used by traefik-oidc-auth middleware
       - TRAEFIK_OIDC_AUTH_SECRET
       - TRAEFIK_OIDC_CLIENT_ID
