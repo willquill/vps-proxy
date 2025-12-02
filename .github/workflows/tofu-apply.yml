@@ -54,7 +54,7 @@ jobs:
         run: |
           SERVER_IPV4=$(jq -r '.server_ipv4.value' ${{ env.tf_actions_working_dir }}/tf_output.json)
           echo "Saving SERVER_IPV4: $SERVER_IPV4"
-          echo "$SERVER_IPV4" | gh secret set SERVER_IPV4 --env hetzner-cloud
-          echo "✓ SERVER_IPV4 saved to hetzner-cloud environment"
+          echo "$SERVER_IPV4" | gh secret set SERVER_IPV4
+          echo "✓ SERVER_IPV4 saved as repository secret"
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_PAT_SECRETS_WRITE }}

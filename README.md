@@ -78,6 +78,26 @@ GitHub Actions needs several environment secrets for CI/CD. Some need to be encr
 | `TZ`                          | Timezone for containers              | IANA timezone (e.g., America/New_York)                                                             |
 | `NFS_MOUNTS`                  | NFS shares to mount (JSON array)     | `[{"src":"server.example.com:/path/to/share","path":"/mnt/backup"}]`                               |
 | `RESTORE_DATABASES`           | Whether to restore from backup       | `true` or `false`                                                                                  |
+| `GH_PAT_SECRETS_WRITE`        | GitHub PAT for workflow automation   | Fine-grained token with Secrets:Read+Write permission (see below)                                  |
+| `SERVER_IPV4`                 | VPS IPv4 address                     | Auto-populated by tofu-apply workflow, do not create manually                                      |
+
+### GitHub Personal Access Token (PAT)
+
+The `GH_PAT_SECRETS_WRITE` secret is used by the `tofu-apply` workflow to automatically save the VPS IP address as the `SERVER_IPV4` secret for use by the `deploy` workflow.
+
+**To create a fine-grained PAT:**
+
+1. Go to GitHub Settings → Developer settings → Personal access tokens → **Fine-grained tokens**
+2. Click "Generate new token"
+3. **Token name**: `VPS-Proxy Workflow - Set Secrets`
+4. **Expiration**: No expiration (recommended for infrastructure automation)
+5. **Repository access**: Only select repositories → Choose `willquill/vps-proxy`
+6. **Repository permissions**:
+   - **Secrets**: ✅ Read and write
+7. Click "Generate token" and copy it
+8. Add it as a repository secret named `GH_PAT_SECRETS_WRITE`
+
+This allows the infrastructure provisioning workflow to persist the VPS IP address indefinitely without artifact retention limits.
 
 ### Ansible Secrets
 
