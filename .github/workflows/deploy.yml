@@ -57,22 +57,17 @@ jobs:
         run: |
           ansible-galaxy collection install -r ansible/galaxy-requirements.yml
 
-      - name: Set SERVER_IPV4 from secret
-        run: |
-          echo "SERVER_IPV4=${{ secrets.SERVER_IPV4 }}" >> $GITHUB_ENV
-          echo "Using SERVER_IPV4: ${{ secrets.SERVER_IPV4 }}"
-
       # ---------- Wait for cloud-init ----------
       - name: Wait for cloud-init to complete
         run: |
-          echo "Waiting for cloud-init to complete on ${{ env.SERVER_IPV4 }}..."
+          echo "Waiting for cloud-init to complete on ${{ secrets.SERVER_IPV4 }}..."
           mkdir -p ~/.ssh
           echo "${{ secrets.VPS_PROXY_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
 
           for i in {1..30}; do
             echo "Attempt $i/30: Checking if SSH is available and cloud-init is done..."
-            if ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 -p 2222 -i ~/.ssh/id_ed25519 ${{ github.repository_owner }}@${{ env.SERVER_IPV4 }} "cloud-init status --wait" 2>/dev/null; then
+            if ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 -p 2222 -i ~/.ssh/id_ed25519 ${{ github.repository_owner }}@${{ secrets.SERVER_IPV4 }} "cloud-init status --wait" 2>/dev/null; then
               echo "Cloud-init completed successfully!"
               break
             fi
@@ -91,14 +86,14 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.VPS_PROXY_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -p 2222 -H ${{ env.SERVER_IPV4 }} >> ~/.ssh/known_hosts
+          ssh-keyscan -p 2222 -H ${{ secrets.SERVER_IPV4 }} >> ~/.ssh/known_hosts
 
       # ---------- Create inventory file ----------
       - name: Create inventory file
         run: |
           cat <<EOF > inventory
           [vps]
-            ${{ env.SERVER_IPV4 }} ansible_user=${{ github.repository_owner }} ansible_port=2222
+            ${{ secrets.SERVER_IPV4 }} ansible_user=${{ github.repository_owner }} ansible_port=2222
           EOF
 
       # ---------- Run Ansible ----------
@@ -110,7 +105,7 @@ jobs:
             -i inventory \
             -e "ansible_ssh_private_key_file=~/.ssh/id_ed25519" \
             -e "repo_dest=/home/${{ github.repository_owner }}/vps-proxy" \
-            -e "vps_host=${{ env.SERVER_IPV4 }}" \
+            -e "vps_host=${{ secrets.SERVER_IPV4 }}" \
             -e "user_name=${{ github.repository_owner }}" \
             -e "github_ref_name=${{ env.github_ref_name }}" \
             -e "wireguard_port=51820" \
