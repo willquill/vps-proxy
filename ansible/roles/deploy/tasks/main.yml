@@ -78,6 +78,7 @@
   with_items:
     - "gatus"
     - "gatus_postgres"
+    - "linkding"
     - "pocketid_postgres"
     - "pocketid"
   when: not (vps_proxy_restored | default(false))
