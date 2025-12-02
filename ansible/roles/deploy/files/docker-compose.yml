@@ -236,7 +236,6 @@ services:
       - OIDC_OP_TOKEN_ENDPOINT=https://id.${PUBLIC_DOMAIN}/api/oidc/token
       - OIDC_OP_USER_ENDPOINT=https://id.${PUBLIC_DOMAIN}/api/oidc/userinfo
       - OIDC_OP_JWKS_ENDPOINT=https://id.${PUBLIC_DOMAIN}/.well-known/jwks.json
-      - OIDC_VERIFY_SSL=True
     labels:
       <<: *proxy-labels
       traefik.http.routers.linkding.entrypoints: "http"

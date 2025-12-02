@@ -62,10 +62,18 @@ jobs:
           tofu_version: ${{ matrix.tofu_version }}
           apply: "true"
 
+      - name: Save SERVER_IPV4 to GitHub environment variable
+        run: |
+          SERVER_IPV4=$(jq -r '.server_ipv4.value' ${{ env.tf_actions_working_dir }}/tf_output.json)
+          echo "SERVER_IPV4=$SERVER_IPV4" >> $GITHUB_ENV
+          gh variable set SERVER_IPV4 --body "$SERVER_IPV4" --env hetzner-cloud
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   ansible-deploy:
     name: Ansible Playbook Run
     needs: tofu-apply
-    if: ${{ !cancelled() && needs.tofu-apply.result == 'success' }}
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     environment: hetzner-cloud
     # Note: We do not need to set each env because instead of envvars,
@@ -106,15 +114,26 @@ jobs:
           ansible-galaxy collection install -r ansible/galaxy-requirements.yml
 
       - name: Download Terraform output
+        if: ${{ needs.tofu-apply.result == 'success' }}
         uses: actions/download-artifact@v5
         with:
           name: tf-output
 
-      - name: Parse SERVER_IPV4 from output
+      - name: Parse SERVER_IPV4 from output or environment
         id: parse_output
         run: |
-          SERVER_IPV4=$(jq -r '.server_ipv4.value' tf_output.json)
+          if [ -f tf_output.json ]; then
+            # Get from tofu output if available
+            SERVER_IPV4=$(jq -r '.server_ipv4.value' tf_output.json)
+            echo "Using SERVER_IPV4 from tofu output: $SERVER_IPV4"
+          else
+            # Get from GitHub environment variable
+            SERVER_IPV4=$(gh variable get SERVER_IPV4 --env hetzner-cloud)
+            echo "Using SERVER_IPV4 from environment variable: $SERVER_IPV4"
+          fi
           echo "SERVER_IPV4=$SERVER_IPV4" >> $GITHUB_ENV
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # ---------- Wait for cloud-init ----------
       - name: Wait for cloud-init to complete
