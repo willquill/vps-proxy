@@ -57,14 +57,10 @@ jobs:
         run: |
           ansible-galaxy collection install -r ansible/galaxy-requirements.yml
 
-      - name: Get SERVER_IPV4 from environment
-        id: get_ip
+      - name: Set SERVER_IPV4 from secret
         run: |
-          SERVER_IPV4=$(gh variable get SERVER_IPV4 --env hetzner-cloud)
-          echo "Using SERVER_IPV4: $SERVER_IPV4"
-          echo "SERVER_IPV4=$SERVER_IPV4" >> $GITHUB_ENV
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          echo "SERVER_IPV4=${{ secrets.SERVER_IPV4 }}" >> $GITHUB_ENV
+          echo "Using SERVER_IPV4: ${{ secrets.SERVER_IPV4 }}"
 
       # ---------- Wait for cloud-init ----------
       - name: Wait for cloud-init to complete

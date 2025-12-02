@@ -50,12 +50,11 @@ jobs:
           tofu_version: ${{ matrix.tofu_version }}
           apply: "true"
 
-      - name: Save SERVER_IPV4 to GitHub environment variable
+      - name: Save SERVER_IPV4 to GitHub secret
         run: |
           SERVER_IPV4=$(jq -r '.server_ipv4.value' ${{ env.tf_actions_working_dir }}/tf_output.json)
-          echo "SERVER_IPV4=$SERVER_IPV4" >> $GITHUB_ENV
-          echo "Saved SERVER_IPV4: $SERVER_IPV4"
-          gh variable set SERVER_IPV4 --body "$SERVER_IPV4" --env hetzner-cloud
+          echo "Saving SERVER_IPV4: $SERVER_IPV4"
+          echo "$SERVER_IPV4" | gh secret set SERVER_IPV4 --env hetzner-cloud
           echo "✓ SERVER_IPV4 saved to hetzner-cloud environment"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
