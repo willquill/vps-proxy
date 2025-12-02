@@ -49,16 +49,28 @@ GitHub Actions needs several environment secrets for CI/CD. Some need to be encr
 
 | Secret Name                   | Purpose                              | How to Generate                                                                                    |
 | ----------------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------- |
-| `VPS_HOST`                    | VPS hostname or IP                   | Provided by Hetzner Cloud after VPS creation                                                       |
 | `VPS_PROXY_KEY`               | SSH private key for VPS access       | `ssh-keygen -t ed25519`                                                                            |
-| `VPS_USER`                    | SSH username for VPS                 | Your chosen username (e.g., GitHub username)                                                       |
+| `VPS_PROXY_KEY_PUBLIC`        | SSH public key for VPS access        | Generated alongside private key                                                                    |
+| `AWS_ACCESS_KEY_ID`           | AWS access key for S3 state backend  | Created in AWS IAM                                                                                 |
+| `AWS_SECRET_ACCESS_KEY`       | AWS secret key for S3 state backend  | Created in AWS IAM                                                                                 |
 | `HCLOUD_TOKEN`                | Hetzner Cloud API token              | Generated in Hetzner Cloud Console → Security → API Tokens                                         |
 | `TRAEFIK_BASIC_AUTH_USERNAME` | Traefik dashboard username           | Your chosen username                                                                               |
 | `TRAEFIK_BASIC_AUTH_PASSWORD` | Traefik dashboard password (hashed)  | `echo $(htpasswd -nb user password) \| sed -e s/\\$/\\$\\$/g`                                      |
 | `TRAEFIK_OIDC_AUTH_SECRET`    | OIDC authentication secret           | `openssl rand -base64 36`                                                                          |
-| `TRAEFIK_OIDC_CLIENT_ID`      | OIDC client identifier               | Provided by your identity provider                                                                 |
-| `TRAEFIK_OIDC_CLIENT_SECRET`  | OIDC client secret                   | Provided by your identity provider                                                                 |
+| `TRAEFIK_OIDC_CLIENT_ID`      | OIDC client identifier for Traefik   | Provided by Pocket ID                                                                              |
+| `TRAEFIK_OIDC_CLIENT_SECRET`  | OIDC client secret for Traefik       | Provided by Pocket ID                                                                              |
+| `OIDC_RP_CLIENT_ID`           | OIDC client identifier for Linkding  | Provided by Pocket ID                                                                              |
+| `OIDC_RP_CLIENT_SECRET`       | OIDC client secret for Linkding      | Provided by Pocket ID                                                                              |
 | `MAXMIND_LICENSE_KEY`         | MaxMind GeoIP license key            | [MaxMind signup](https://www.maxmind.com/en/geolite2/signup)                                       |
+| `POCKETID_POSTGRES_USER`      | Pocket ID database username          | Your chosen username                                                                               |
+| `POCKETID_POSTGRES_PASSWORD`  | Pocket ID database password          | `openssl rand -base64 32`                                                                          |
+| `POCKETID_POSTGRES_DB`        | Pocket ID database name              | Your chosen database name (e.g., pocketid)                                                         |
+| `POCKETID_ENCRYPTION_KEY`     | Pocket ID encryption key             | `openssl rand -base64 32`                                                                          |
+| `SMTP_HOST`                   | SMTP server hostname                 | Your SMTP provider's server (e.g., smtp.gmail.com)                                                 |
+| `SMTP_USER`                   | SMTP username                        | Your email address                                                                                 |
+| `SMTP_PASSWORD`               | SMTP password                        | Your email password or app-specific password                                                       |
+| `SMTP_TO`                     | Email address for alerts             | Email address to receive notifications                                                             |
+| `WIREGUARD_PEER_ENDPOINT`     | WireGuard peer endpoint              | Your home network's public IP or DDNS hostname                                                     |
 | `ACME_EMAIL`                  | Email for Let's Encrypt certificates | Your email address                                                                                 |
 | `PUBLIC_DOMAIN`               | Your public domain name              | Your registered domain (e.g., example.com)                                                         |
 | `CF_DNS_API_TOKEN`            | Cloudflare DNS API token             | [Cloudflare API tokens](https://dash.cloudflare.com/profile/api-tokens) with DNS:Edit permissions  |
