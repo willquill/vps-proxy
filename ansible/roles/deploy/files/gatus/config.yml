@@ -16,16 +16,16 @@ endpoints:
         send-on-resolved: true
 
   - name: Traefik
-    group: web
+    group: core
     url: "https://traefik.${PUBLIC_DOMAIN}/"
     interval: 5m
     conditions:
       # BasicAuth returns 401, which means Traefik is up
       # FIXME: Change to 200 when OIDC is set up
-      - "[STATUS] == 401"
+      - "[STATUS] == 200"
 
   - name: Pocket ID
-    group: web
+    group: core
     url: "https://id.${PUBLIC_DOMAIN}/"
     interval: 5m
     conditions:
@@ -33,6 +33,28 @@ endpoints:
     alerts:
       - type: email
         description: "Pocket ID is DOWN"
+        send-on-resolved: true
+
+  - name: IDM Public Access
+    group: media
+    url: "https://idm.${IDM_DOMAIN}/"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: email
+        description: "IDM Public Access is DOWN"
+        send-on-resolved: true
+
+  - name: Service1 Public Access
+    group: media
+    url: "https://${LAN_SERVICE1}.${PUBLIC_DOMAIN}/"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: email
+        description: "Service1 Public Access is DOWN"
         send-on-resolved: true
 
   - name: Plex

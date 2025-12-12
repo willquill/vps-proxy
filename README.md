@@ -59,8 +59,8 @@ GitHub Actions needs several environment secrets for CI/CD. Some need to be encr
 | `TRAEFIK_OIDC_AUTH_SECRET`    | OIDC authentication secret           | `openssl rand -base64 36`                                                                          |
 | `TRAEFIK_OIDC_CLIENT_ID`      | OIDC client identifier for Traefik   | Provided by Pocket ID                                                                              |
 | `TRAEFIK_OIDC_CLIENT_SECRET`  | OIDC client secret for Traefik       | Provided by Pocket ID                                                                              |
-| `OIDC_RP_CLIENT_ID`           | OIDC client identifier for Linkding  | Provided by Pocket ID                                                                              |
-| `OIDC_RP_CLIENT_SECRET`       | OIDC client secret for Linkding      | Provided by Pocket ID                                                                              |
+| `IDM_DOMAIN`                  | FQDN of homelab identity manager     | Your homelab IdM domain (e.g., lan.example.com)                                                    |
+| `LAN_SERVICE1`                | FQDN of homelab service              | Your homelab service1 subdomain (e.g., service1)                                                   |
 | `MAXMIND_LICENSE_KEY`         | MaxMind GeoIP license key            | [MaxMind signup](https://www.maxmind.com/en/geolite2/signup)                                       |
 | `POCKETID_POSTGRES_USER`      | Pocket ID database username          | Your chosen username                                                                               |
 | `POCKETID_POSTGRES_PASSWORD`  | Pocket ID database password          | `openssl rand -base64 32`                                                                          |
