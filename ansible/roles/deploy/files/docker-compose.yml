@@ -74,6 +74,10 @@ services:
       - TRAEFIK_OIDC_CLIENT_SECRET
       # Not GitHub Secret
       - TRAEFIK_OIDC_PROVIDER_URL
+      # To forward requests to LAN
+      - PUBLIC_DOMAIN
+      - IDM_FQDN
+      - LAN_SERVICE1
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -217,37 +221,6 @@ services:
       traefik.http.routers.pocket-id-secure.service: "pocket-id"
       traefik.http.services.pocket-id.loadbalancer.server.port: "1411"
       traefik.http.routers.pocket-id-secure.middlewares: "public@file"
-  linkding:
-    image: sissbruecker/linkding:latest
-    container_name: linkding
-    restart: unless-stopped
-    <<: [*common]
-    networks:
-      proxy: {}
-    volumes:
-      - "./config/linkding:/app/data"
-    environment:
-      # OIDC: https://pocket-id.org/docs/client-examples/linkding
-      - LD_ENABLE_OIDC=True
-      - LD_ENABLE_AUTH_PROXY=True
-      - OIDC_RP_CLIENT_ID
-      - OIDC_RP_CLIENT_SECRET
-      - OIDC_OP_AUTHORIZATION_ENDPOINT=https://id.${PUBLIC_DOMAIN}/authorize
-      - OIDC_OP_TOKEN_ENDPOINT=https://id.${PUBLIC_DOMAIN}/api/oidc/token
-      - OIDC_OP_USER_ENDPOINT=https://id.${PUBLIC_DOMAIN}/api/oidc/userinfo
-      - OIDC_OP_JWKS_ENDPOINT=https://id.${PUBLIC_DOMAIN}/.well-known/jwks.json
-    labels:
-      <<: *proxy-labels
-      traefik.http.routers.linkding.entrypoints: "http"
-      traefik.http.routers.linkding.rule: "Host(`links.${PUBLIC_DOMAIN}`)"
-      traefik.http.middlewares.linkding-https-redirect.redirectscheme.scheme: "https"
-      traefik.http.routers.linkding.middlewares: "linkding-https-redirect"
-      traefik.http.routers.linkding-secure.entrypoints: "https"
-      traefik.http.routers.linkding-secure.rule: "Host(`links.${PUBLIC_DOMAIN}`)"
-      traefik.http.routers.linkding-secure.tls: "true"
-      traefik.http.routers.linkding-secure.service: "linkding"
-      traefik.http.services.linkding.loadbalancer.server.port: "9090"
-      traefik.http.routers.linkding-secure.middlewares: "public@file"
   # watchtower manages auto updates. this is optional.
   watchtower:
     image: nickfedor/watchtower

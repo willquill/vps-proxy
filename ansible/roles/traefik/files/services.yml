@@ -1,20 +1,28 @@
 # Example services configuration
 # Uncomment and modify as needed
 
-# http:
-#   routers: 
-#     example:
-#       entryPoints:
-#         - "https"
-#       rule: "Host(`example.yourdomain.com`)"
-#       middlewares:
-#         - public
-#       tls: {}
-#       service: example
-# 
-#   services:
-#     example:
-#       loadBalancer:
-#         servers:
-#           - url: "http://10.1.0.100:8080"
-#         passHostHeader: true
+http:
+  routers: 
+    idm:
+      entryPoints:
+        - "https"
+      rule: "Host(`{{env "IDM_FQDN"}}`)"
+      middlewares:
+        - public
+      tls: {}
+      service: lan_traefik
+    service1:
+      entryPoints:
+        - "https"
+      rule: "Host(`{{env "LAN_SERVICE1"}}`.{{env "PUBLIC_DOMAIN"}}`)"
+      middlewares:
+        - public
+      tls: {}
+      service: lan_traefik
+
+  services:
+    lan_traefik:
+      loadBalancer:
+        servers:
+          - url: "https://192.168.145.2:443"
+        passHostHeader: true

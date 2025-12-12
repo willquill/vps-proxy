@@ -22,7 +22,7 @@ endpoints:
     conditions:
       # BasicAuth returns 401, which means Traefik is up
       # FIXME: Change to 200 when OIDC is set up
-      - "[STATUS] == 401"
+      - "[STATUS] == 200"
 
   - name: Pocket ID
     group: web
@@ -33,6 +33,17 @@ endpoints:
     alerts:
       - type: email
         description: "Pocket ID is DOWN"
+        send-on-resolved: true
+
+  - name: Linkding
+    group: web
+    url: "https://links.${PUBLIC_DOMAIN}/"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: email
+        description: "Linkding is DOWN"
         send-on-resolved: true
 
   - name: Plex
