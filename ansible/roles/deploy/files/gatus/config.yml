@@ -35,15 +35,26 @@ endpoints:
         description: "Pocket ID is DOWN"
         send-on-resolved: true
 
-  - name: Linkding
+  - name: IDM Public Access
     group: web
-    url: "https://links.${PUBLIC_DOMAIN}/"
+    url: "https://idm.${IDM_DOMAIN}/"
     interval: 5m
     conditions:
       - "[STATUS] == 200"
     alerts:
       - type: email
-        description: "Linkding is DOWN"
+        description: "IDM Public Access is DOWN"
+        send-on-resolved: true
+
+  - name: Service1 Public Access
+    group: web
+    url: "https://${LAN_SERVICE1}.${PUBLIC_DOMAIN}/"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: email
+        description: "Service1 Public Access is DOWN"
         send-on-resolved: true
 
   - name: Plex

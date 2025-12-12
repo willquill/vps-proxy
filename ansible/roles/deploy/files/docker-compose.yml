@@ -109,6 +109,8 @@ services:
       traefik.http.routers.traefik-api.tls.certresolver: "cloudflare"
       traefik.http.routers.traefik-api.tls.domains[0].main: "${PUBLIC_DOMAIN}"
       traefik.http.routers.traefik-api.tls.domains[0].sans: "*.${PUBLIC_DOMAIN}"
+      traefik.http.routers.traefik-api.tls.domains[0].main: "${IDM_DOMAIN}"
+      traefik.http.routers.traefik-api.tls.domains[0].sans: "idm.${IDM_DOMAIN}"
       traefik.http.routers.traefik-api.service: "api@internal"
   # Storage backend for gatus
   gatus_postgres:

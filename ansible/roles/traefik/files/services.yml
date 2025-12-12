@@ -6,7 +6,7 @@ http:
     idm:
       entryPoints:
         - "https"
-      rule: "Host(`{{env "IDM_FQDN"}}`)"
+      rule: "Host(`idm.{{env "IDM_DOMAIN"}}`)"
       middlewares:
         - public
       tls: {}

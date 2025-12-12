@@ -121,7 +121,7 @@ jobs:
             -e "traefik_oidc_auth_secret=${{ secrets.TRAEFIK_OIDC_AUTH_SECRET }}" \
             -e "traefik_oidc_client_id=${{ secrets.TRAEFIK_OIDC_CLIENT_ID }}" \
             -e "traefik_oidc_client_secret=${{ secrets.TRAEFIK_OIDC_CLIENT_SECRET }}" \
-            -e "idm_fqdn=${{ secrets.IDM_FQDN }}" \
+            -e "idm_domain=${{ secrets.IDM_DOMAIN }}" \
             -e "lan_service1=${{ secrets.LAN_SERVICE1 }}" \
             -e "maxmind_license_key=${{ secrets.MAXMIND_LICENSE_KEY }}" \
             -e "pocketid_postgres_user=${{ secrets.POCKETID_POSTGRES_USER }}" \
