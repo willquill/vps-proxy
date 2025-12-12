@@ -76,8 +76,9 @@ services:
       - TRAEFIK_OIDC_PROVIDER_URL
       # To forward requests to LAN
       - PUBLIC_DOMAIN
-      - IDM_FQDN
+      - IDM_DOMAIN
       - LAN_SERVICE1
+      - LAN_SERVICE2
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -109,8 +110,8 @@ services:
       traefik.http.routers.traefik-api.tls.certresolver: "cloudflare"
       traefik.http.routers.traefik-api.tls.domains[0].main: "${PUBLIC_DOMAIN}"
       traefik.http.routers.traefik-api.tls.domains[0].sans: "*.${PUBLIC_DOMAIN}"
-      traefik.http.routers.traefik-api.tls.domains[0].main: "${IDM_DOMAIN}"
-      traefik.http.routers.traefik-api.tls.domains[0].sans: "idm.${IDM_DOMAIN}"
+      traefik.http.routers.traefik-api.tls.domains[1].main: "${IDM_DOMAIN}"
+      traefik.http.routers.traefik-api.tls.domains[1].sans: "idm.${IDM_DOMAIN}"
       traefik.http.routers.traefik-api.service: "api@internal"
   # Storage backend for gatus
   gatus_postgres:
@@ -146,6 +147,10 @@ services:
       - SMTP_TO
       - SMTP_USER
       - SMTP_PASSWORD
+      # Monitor LAN
+      - IDM_DOMAIN
+      - LAN_SERVICE1
+      - LAN_SERVICE2
     volumes:
       - ./config/gatus:/config
     labels:

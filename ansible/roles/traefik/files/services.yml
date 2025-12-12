@@ -1,7 +1,8 @@
-# Example services configuration
-# Uncomment and modify as needed
-
 http:
+  # serversTransports:
+  #   insecureTransport:
+  #     insecureSkipVerify: true
+
   routers: 
     idm:
       entryPoints:
@@ -14,15 +15,25 @@ http:
     service1:
       entryPoints:
         - "https"
-      rule: "Host(`{{env "LAN_SERVICE1"}}`.{{env "PUBLIC_DOMAIN"}}`)"
+      rule: "Host(`{{env "LAN_SERVICE1"}}.{{env "PUBLIC_DOMAIN"}}`)"
       middlewares:
         - public
       tls: {}
       service: lan_traefik
+    # service2:
+    #   entryPoints:
+    #     - "https"
+    #   rule: "Host(`{{env "LAN_SERVICE2"}}.{{env "PUBLIC_DOMAIN"}}`)"
+    #   middlewares:
+    #     - public
+    #   tls: {}
+    #   service: lan_traefik
+    
 
   services:
     lan_traefik:
       loadBalancer:
         servers:
-          - url: "https://192.168.145.2:443"
+          - url: "https://10.1.15.10:443"
         passHostHeader: true
+        #serversTransport: insecureTransport

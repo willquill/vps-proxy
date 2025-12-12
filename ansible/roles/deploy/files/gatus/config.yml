@@ -20,9 +20,8 @@ endpoints:
     url: "https://traefik.${PUBLIC_DOMAIN}/"
     interval: 5m
     conditions:
-      # BasicAuth returns 401, which means Traefik is up
-      # FIXME: Change to 200 when OIDC is set up
-      - "[STATUS] == 200"
+      # Because it's behind authentication
+      - "[STATUS] == 401"
 
   - name: Pocket ID
     group: core
@@ -51,10 +50,23 @@ endpoints:
     url: "https://${LAN_SERVICE1}.${PUBLIC_DOMAIN}/"
     interval: 5m
     conditions:
-      - "[STATUS] == 200"
+      # Because it's behind authentication
+      - "[STATUS] == 401"
     alerts:
       - type: email
         description: "Service1 Public Access is DOWN"
+        send-on-resolved: true
+
+  - name: Service2 Public Access
+    group: media
+    url: "https://${LAN_SERVICE2}.${PUBLIC_DOMAIN}/"
+    interval: 5m
+    conditions:
+      # Because it's behind authentication
+      - "[STATUS] == 401"
+    alerts:
+      - type: email
+        description: "Service2 Public Access is DOWN"
         send-on-resolved: true
 
   - name: Plex
