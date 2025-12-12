@@ -16,7 +16,7 @@ endpoints:
         send-on-resolved: true
 
   - name: Traefik
-    group: web
+    group: core
     url: "https://traefik.${PUBLIC_DOMAIN}/"
     interval: 5m
     conditions:
@@ -25,7 +25,7 @@ endpoints:
       - "[STATUS] == 200"
 
   - name: Pocket ID
-    group: web
+    group: core
     url: "https://id.${PUBLIC_DOMAIN}/"
     interval: 5m
     conditions:
@@ -36,7 +36,7 @@ endpoints:
         send-on-resolved: true
 
   - name: IDM Public Access
-    group: web
+    group: media
     url: "https://idm.${IDM_DOMAIN}/"
     interval: 5m
     conditions:
@@ -47,7 +47,7 @@ endpoints:
         send-on-resolved: true
 
   - name: Service1 Public Access
-    group: web
+    group: media
     url: "https://${LAN_SERVICE1}.${PUBLIC_DOMAIN}/"
     interval: 5m
     conditions:
