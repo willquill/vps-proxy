@@ -123,6 +123,7 @@ jobs:
             -e "traefik_oidc_client_secret=${{ secrets.TRAEFIK_OIDC_CLIENT_SECRET }}" \
             -e "idm_domain=${{ secrets.IDM_DOMAIN }}" \
             -e "lan_service1=${{ secrets.LAN_SERVICE1 }}" \
+            -e "lan_service2=${{ secrets.LAN_SERVICE2 }}" \
             -e "maxmind_license_key=${{ secrets.MAXMIND_LICENSE_KEY }}" \
             -e "pocketid_postgres_user=${{ secrets.POCKETID_POSTGRES_USER }}" \
             -e "pocketid_postgres_password=${{ secrets.POCKETID_POSTGRES_PASSWORD }}" \
