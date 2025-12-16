@@ -1,32 +1,52 @@
-storage:
-  type: postgres
-  path: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@gatus_postgres:5432/${POSTGRES_DB}?sslmode=disable"
+alerting:
+  email:
+    from: "${SMTP_FROM}"
+    username: "${SMTP_USER}"
+    password: "${SMTP_PASSWORD}"
+    host: "${SMTP_HOST}"
+    port: 587
+    to: "${SMTP_TO}"
+
+announcements:
+#   - timestamp: 2025-11-07T14:00:00Z
+#     type: outage
+#     message: "Scheduled maintenance on database servers from 14:00 to 16:00 UTC"
+#   - timestamp: 2025-11-07T16:15:00Z
+#     type: operational
+#     message: "Database maintenance completed successfully. All systems operational."
+#   - timestamp: 2025-11-07T12:00:00Z
+#     type: information
+#     message: "New monitoring dashboard features will be deployed next week"
+  - timestamp: 2025-12-16T16:16:36.000-06:00
+    type: warning
+    message: "Some content is being removed and re-added as part of maintenance."
+    #archived: true
 
 endpoints:
   - name: Wireguard Tunnel
-    group: media
+    group: Backend
     url: "icmp://192.168.145.2"
-    interval: 1m
+    interval: 35s
     conditions:
       - "[CONNECTED] == true"
     alerts:
       - type: email
         #enabled: false
-        description: "healthcheck failed"
+        description: "Wireguard tunnel is DOWN"
         send-on-resolved: true
 
   - name: Traefik
-    group: core
+    group: Backend
     url: "https://traefik.${PUBLIC_DOMAIN}/"
-    interval: 5m
+    interval: 30s
     conditions:
       # Because it's behind authentication
       - "[STATUS] == 401"
 
   - name: Pocket ID
-    group: core
+    group: Backend
     url: "https://id.${PUBLIC_DOMAIN}/"
-    interval: 5m
+    interval: 30s
     conditions:
       - "[STATUS] == 200"
     alerts:
@@ -34,45 +54,45 @@ endpoints:
         description: "Pocket ID is DOWN"
         send-on-resolved: true
 
-  - name: IDM Public Access
-    group: media
+  - name: Arcana Media Console
+    group: Arcana Media
     url: "https://idm.${IDM_DOMAIN}/"
-    interval: 5m
+    interval: 30s
     conditions:
       - "[STATUS] == 200"
     alerts:
       - type: email
-        description: "IDM Public Access is DOWN"
+        description: "Arcana Media Console is DOWN"
         send-on-resolved: true
 
-  - name: Service1 Public Access
-    group: media
+  - name: ${LAN_SERVICE1}
+    group: Arcana Media
     url: "https://${LAN_SERVICE1}.${PUBLIC_DOMAIN}/"
-    interval: 5m
+    interval: 30s
     conditions:
       # Because it's behind authentication
       - "[STATUS] == 401"
     alerts:
       - type: email
-        description: "Service1 Public Access is DOWN"
+        description: "${LAN_SERVICE1} is DOWN"
         send-on-resolved: true
 
-  - name: Service2 Public Access
-    group: media
+  - name: ${LAN_SERVICE2}
+    group: Arcana Media
     url: "https://${LAN_SERVICE2}.${PUBLIC_DOMAIN}/"
-    interval: 5m
+    interval: 30s
     conditions:
       # Because it's behind authentication
       - "[STATUS] == 401"
     alerts:
       - type: email
-        description: "Service2 Public Access is DOWN"
+        description: "${LAN_SERVICE2} is DOWN"
         send-on-resolved: true
 
   - name: Plex
-    group: media
+    group: Arcana Media
     url: "http://10.1.20.25:32400/identity"
-    interval: 2m
+    interval: 30s
     conditions:
       - "[STATUS] == 200"
       - "[RESPONSE_TIME] < 1000"
@@ -105,11 +125,16 @@ endpoints:
   #     - "[BODY] == 93.184.215.14"
   #     - "[DNS_RCODE] == NOERROR"
 
-alerting:
-  email:
-    from: "${SMTP_FROM}"
-    username: "${SMTP_USER}"
-    password: "${SMTP_PASSWORD}"
-    host: "${SMTP_HOST}"
-    port: 587
-    to: "${SMTP_TO}"
+storage:
+  type: postgres
+  path: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@gatus_postgres:5432/${POSTGRES_DB}?sslmode=disable"
+
+ui:
+  header: "Arcana Media Status"
+  title: "Arcana Media Status"
+  logo: "https://res.cloudinary.com/loresec/image/upload/c_thumb,w_200,g_face/v1765898985/vps-proxy/arcanawizardhead.webp"
+  dashboard-heading: " "
+  dashboard-subheading: " "
+  default-sort-by: "group"
+  favicon: "https://res.cloudinary.com/loresec/image/upload/c_scale,w_32/v1765898985/vps-proxy/arcanawizardhead.ico"
+  dark-mode: true
