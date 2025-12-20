@@ -7,7 +7,7 @@ http:
     crowdsec-bouncer:
       plugin:
         crowdsec-bouncer-traefik-plugin:
-          CrowdsecLapiKey: "${CROWDSEC_TRAEFIK_BOUNCER_API_KEY}"
+          CrowdsecLapiKeyFile: "/crowdsec-api-key.txt"
           Enabled: true
 
     rate-limit-strict:
