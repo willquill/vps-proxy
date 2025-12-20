@@ -78,11 +78,25 @@
   with_items:
     - "crowdsec/data"
     - "crowdsec/etc"
+    - "crowdsec/etc/notifications"
     - "gatus"
     - "gatus_postgres"
     - "pocketid_postgres"
     - "pocketid"
   when: not (vps_proxy_restored | default(false))
+
+- name: Copy Crowdsec configuration files
+  ansible.builtin.copy:
+    src: "crowdsec/{{ item.src }}"
+    dest: "{{ repo_dest }}/config/crowdsec/etc/{{ item.dest }}"
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0644"
+  with_items:
+    - { src: "acquis.yml", dest: "acquis.yml" }
+    - { src: "profiles.yml", dest: "profiles.yml" }
+    - { src: "http.yml", dest: "notifications/http.yml" }
+    - { src: "email.yml", dest: "notifications/email.yml" }
 
 - name: Copy Gatus configuration
   ansible.builtin.copy:

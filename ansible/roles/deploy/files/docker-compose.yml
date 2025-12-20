@@ -45,7 +45,6 @@ services:
   crowdsec:
     image: crowdsecurity/crowdsec:v1.7.4
     container_name: crowdsec
-    user: ${PUID:-1000}:${PGID:-1000}
     restart: unless-stopped
     depends_on:
       - traefik
@@ -89,17 +88,8 @@ services:
     container_name: traefik
     restart: unless-stopped
     pull_policy: always
-    # So the logs are owned by the user and not root
-    # This way, crowdsec, running as user 1000, can read the logs
-    user: ${PUID:-1000}:${PGID:-1000}
     security_opt:
       - no-new-privileges:true
-    # Allow binding to ports 80/443 as non-root
-    cap_add:
-      - CAP_NET_BIND_SERVICE
-    # Needed by any container that accesses docker.sock
-    group_add:
-      - ${PGID:-1000}
     networks:
       proxy: {}
         # # Required for Authentik
@@ -127,6 +117,8 @@ services:
       - IDM_DOMAIN
       - LAN_SERVICE1
       - LAN_SERVICE2
+      # For Crowdsec Traefik bouncer
+      - CROWDSEC_TRAEFIK_BOUNCER_API_KEY
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro

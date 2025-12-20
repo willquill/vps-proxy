@@ -4,6 +4,12 @@
 http:
   middlewares:
 
+    crowdsec-bouncer:
+      plugin:
+        crowdsec-bouncer-traefik-plugin:
+          CrowdsecLapiKey: "${CROWDSEC_TRAEFIK_BOUNCER_API_KEY}"
+          Enabled: true
+
     rate-limit-strict:
       rateLimit:
         average: 10      # 10 requests
@@ -57,6 +63,7 @@ http:
         middlewares:
         - default-headers
         - rate-limit-moderate
+        - crowdsec-bouncer
 
     # Only for apps that don't have native OIDC support
     public-oidc-auth:
@@ -65,6 +72,7 @@ http:
         - default-headers
         - rate-limit-moderate
         - oidc-auth
+        - crowdsec-bouncer
 
     http-RFC1918-only:
       ipAllowList:
@@ -78,3 +86,4 @@ http:
         middlewares:
         - http-RFC1918-only
         - default-headers
+        - crowdsec-bouncer
