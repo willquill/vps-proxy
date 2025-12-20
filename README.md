@@ -47,39 +47,40 @@ Clone or fork this repo and then do the following:
 
 GitHub Actions needs several environment secrets for CI/CD. Some need to be encrypted - others not really, but I'm encrypted them all anyway.
 
-| Secret Name                   | Purpose                              | How to Generate                                                                                    |
-| ----------------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------- |
-| `VPS_PROXY_KEY`               | SSH private key for VPS access       | `ssh-keygen -t ed25519`                                                                            |
-| `VPS_PROXY_KEY_PUBLIC`        | SSH public key for VPS access        | Generated alongside private key                                                                    |
-| `AWS_ACCESS_KEY_ID`           | AWS access key for S3 state backend  | Created in AWS IAM                                                                                 |
-| `AWS_SECRET_ACCESS_KEY`       | AWS secret key for S3 state backend  | Created in AWS IAM                                                                                 |
-| `HCLOUD_TOKEN`                | Hetzner Cloud API token              | Generated in Hetzner Cloud Console → Security → API Tokens                                         |
-| `TRAEFIK_BASIC_AUTH_USERNAME` | Traefik dashboard username           | Your chosen username                                                                               |
-| `TRAEFIK_BASIC_AUTH_PASSWORD` | Traefik dashboard password (hashed)  | `echo $(htpasswd -nb user password) \| sed -e s/\\$/\\$\\$/g`                                      |
-| `TRAEFIK_OIDC_AUTH_SECRET`    | OIDC authentication secret           | `openssl rand -base64 36`                                                                          |
-| `TRAEFIK_OIDC_CLIENT_ID`      | OIDC client identifier for Traefik   | Provided by Pocket ID                                                                              |
-| `TRAEFIK_OIDC_CLIENT_SECRET`  | OIDC client secret for Traefik       | Provided by Pocket ID                                                                              |
-| `IDM_DOMAIN`                  | FQDN of homelab identity manager     | Your homelab IdM domain (e.g., lan.example.com)                                                    |
-| `LAN_SERVICE1`                | FQDN of homelab service              | Your homelab service1 subdomain (e.g., service1)                                                   |
-| `MAXMIND_LICENSE_KEY`         | MaxMind GeoIP license key            | [MaxMind signup](https://www.maxmind.com/en/geolite2/signup)                                       |
-| `POCKETID_POSTGRES_USER`      | Pocket ID database username          | Your chosen username                                                                               |
-| `POCKETID_POSTGRES_PASSWORD`  | Pocket ID database password          | `openssl rand -base64 32`                                                                          |
-| `POCKETID_POSTGRES_DB`        | Pocket ID database name              | Your chosen database name (e.g., pocketid)                                                         |
-| `POCKETID_ENCRYPTION_KEY`     | Pocket ID encryption key             | `openssl rand -base64 32`                                                                          |
-| `SMTP_HOST`                   | SMTP server hostname                 | Your SMTP provider's server (e.g., smtp.gmail.com)                                                 |
-| `SMTP_USER`                   | SMTP username                        | Your email address                                                                                 |
-| `SMTP_PASSWORD`               | SMTP password                        | Your email password or app-specific password                                                       |
-| `SMTP_TO`                     | Email address for alerts             | Email address to receive notifications                                                             |
-| `WIREGUARD_PEER_ENDPOINT`     | WireGuard peer endpoint              | Your home network's public IP or DDNS hostname                                                     |
-| `ACME_EMAIL`                  | Email for Let's Encrypt certificates | Your email address                                                                                 |
-| `PUBLIC_DOMAIN`               | Your public domain name              | Your registered domain (e.g., example.com)                                                         |
-| `CF_DNS_API_TOKEN`            | Cloudflare DNS API token             | [Cloudflare API tokens](https://dash.cloudflare.com/profile/api-tokens) with DNS:Edit permissions  |
-| `CF_ZONE_API_TOKEN`           | Cloudflare Zone API token            | [Cloudflare API tokens](https://dash.cloudflare.com/profile/api-tokens) with Zone:Read permissions |
-| `TZ`                          | Timezone for containers              | IANA timezone (e.g., America/New_York)                                                             |
-| `NFS_MOUNTS`                  | NFS shares to mount (JSON array)     | `[{"src":"server.example.com:/path/to/share","path":"/mnt/backup"}]`                               |
-| `RESTORE_DATABASES`           | Whether to restore from backup       | `true` or `false`                                                                                  |
-| `GH_PAT_SECRETS_WRITE`        | GitHub PAT for workflow automation   | Fine-grained token with Secrets:Read+Write permission (see below)                                  |
-| `SERVER_IPV4`                 | VPS IPv4 address                     | Auto-populated by tofu-apply workflow, do not create manually                                      |
+| Secret Name                        | Purpose                              | How to Generate                                                                                    |
+| ---------------------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| `VPS_PROXY_KEY`                    | SSH private key for VPS access       | `ssh-keygen -t ed25519`                                                                            |
+| `VPS_PROXY_KEY_PUBLIC`             | SSH public key for VPS access        | Generated alongside private key                                                                    |
+| `AWS_ACCESS_KEY_ID`                | AWS access key for S3 state backend  | Created in AWS IAM                                                                                 |
+| `AWS_SECRET_ACCESS_KEY`            | AWS secret key for S3 state backend  | Created in AWS IAM                                                                                 |
+| `HCLOUD_TOKEN`                     | Hetzner Cloud API token              | Generated in Hetzner Cloud Console → Security → API Tokens                                         |
+| `TRAEFIK_BASIC_AUTH_USERNAME`      | Traefik dashboard username           | Your chosen username                                                                               |
+| `TRAEFIK_BASIC_AUTH_PASSWORD`      | Traefik dashboard password (hashed)  | `echo $(htpasswd -nb user password) \| sed -e s/\\$/\\$\\$/g`                                      |
+| `TRAEFIK_OIDC_AUTH_SECRET`         | OIDC authentication secret           | `openssl rand -base64 36`                                                                          |
+| `TRAEFIK_OIDC_CLIENT_ID`           | OIDC client identifier for Traefik   | Provided by Pocket ID                                                                              |
+| `TRAEFIK_OIDC_CLIENT_SECRET`       | OIDC client secret for Traefik       | Provided by Pocket ID                                                                              |
+| `CROWDSEC_TRAEFIK_BOUNCER_API_KEY` | CrowdSec bouncer API key             | `docker exec crowdsec cscli bouncers add traefik-bouncer`                                          |
+| `IDM_DOMAIN`                       | FQDN of homelab identity manager     | Your homelab IdM domain (e.g., lan.example.com)                                                    |
+| `LAN_SERVICE1`                     | FQDN of homelab service              | Your homelab service1 subdomain (e.g., service1)                                                   |
+| `MAXMIND_LICENSE_KEY`              | MaxMind GeoIP license key            | [MaxMind signup](https://www.maxmind.com/en/geolite2/signup)                                       |
+| `POCKETID_POSTGRES_USER`           | Pocket ID database username          | Your chosen username                                                                               |
+| `POCKETID_POSTGRES_PASSWORD`       | Pocket ID database password          | `openssl rand -base64 32`                                                                          |
+| `POCKETID_POSTGRES_DB`             | Pocket ID database name              | Your chosen database name (e.g., pocketid)                                                         |
+| `POCKETID_ENCRYPTION_KEY`          | Pocket ID encryption key             | `openssl rand -base64 32`                                                                          |
+| `SMTP_HOST`                        | SMTP server hostname                 | Your SMTP provider's server (e.g., smtp.gmail.com)                                                 |
+| `SMTP_USER`                        | SMTP username                        | Your email address                                                                                 |
+| `SMTP_PASSWORD`                    | SMTP password                        | Your email password or app-specific password                                                       |
+| `SMTP_TO`                          | Email address for alerts             | Email address to receive notifications                                                             |
+| `WIREGUARD_PEER_ENDPOINT`          | WireGuard peer endpoint              | Your home network's public IP or DDNS hostname                                                     |
+| `ACME_EMAIL`                       | Email for Let's Encrypt certificates | Your email address                                                                                 |
+| `PUBLIC_DOMAIN`                    | Your public domain name              | Your registered domain (e.g., example.com)                                                         |
+| `CF_DNS_API_TOKEN`                 | Cloudflare DNS API token             | [Cloudflare API tokens](https://dash.cloudflare.com/profile/api-tokens) with DNS:Edit permissions  |
+| `CF_ZONE_API_TOKEN`                | Cloudflare Zone API token            | [Cloudflare API tokens](https://dash.cloudflare.com/profile/api-tokens) with Zone:Read permissions |
+| `TZ`                               | Timezone for containers              | IANA timezone (e.g., America/New_York)                                                             |
+| `NFS_MOUNTS`                       | NFS shares to mount (JSON array)     | `[{"src":"server.example.com:/path/to/share","path":"/mnt/backup"}]`                               |
+| `RESTORE_DATABASES`                | Whether to restore from backup       | `true` or `false`                                                                                  |
+| `GH_PAT_SECRETS_WRITE`             | GitHub PAT for workflow automation   | Fine-grained token with Secrets:Read+Write permission (see below)                                  |
+| `SERVER_IPV4`                      | VPS IPv4 address                     | Auto-populated by tofu-apply workflow, do not create manually                                      |
 
 ### GitHub Personal Access Token (PAT)
 
@@ -267,6 +268,27 @@ To test if the WireGuard tunnel is working:
 2. From OPNsense or any host on home network: `ping 192.168.145.1`
 
 You can also check the connection status in OPNsense under **VPN > WireGuard > Status**
+
+### Crowdsec
+
+I followed [this guide](https://blog.lrvt.de/configuring-crowdsec-with-traefik/).
+
+After spinning it up, register an account to get your code and then execute this:
+
+```sh
+# enroll security engine by execing into the crowdsec container
+docker exec crowdsec cscli console enroll -e context <account-code>
+```
+
+The guide then says to create a bouncer token with `docker exec crowdsec cscli bouncers add traefik-bouncer` but wait a sec. A better approach is to use the [Crowdsec Bouncer Traefik plugin](https://plugins.traefik.io/plugins/6335346ca4caa9ddeffda116/crowdsec-bouncer-traefik-plugin).
+
+We do still need the token though, so go ahead and create it:
+
+```sh
+docker exec crowdsec cscli bouncers add traefik-bouncer
+```
+
+Use the code given in the crowdsec-bouncer middleware after adding the plugin to traefik.yaml.
 
 ### Pocket ID
 
