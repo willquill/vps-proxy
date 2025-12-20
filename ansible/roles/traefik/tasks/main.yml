@@ -94,6 +94,15 @@
     mode: "0600"
   no_log: true
 
+- name: Write CrowdSec API key file
+  ansible.builtin.copy:
+    content: "{{ crowdsec_traefik_bouncer_api_key }}"
+    dest: "{{ repo_dest }}/config/traefik/crowdsec-api-key.txt"
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0600"
+  no_log: true
+
 - name: Create empty acme.json file if it doesn't exist
   ansible.builtin.file:
     path: "{{ repo_dest }}/config/traefik/acme.json"
