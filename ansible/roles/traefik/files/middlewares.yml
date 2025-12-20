@@ -7,8 +7,34 @@ http:
     crowdsec-bouncer:
       plugin:
         crowdsec-bouncer-traefik-plugin:
-          CrowdsecLapiKeyFile: "/crowdsec-api-key.txt"
-          Enabled: true
+          enabled: true
+          defaultDecisionSeconds: 60
+          crowdsecMode: live # stream is more performant but live gives real-time decisions
+          crowdsecAppsecEnabled: true # <--- here you can enable appsec waf
+          crowdsecAppsecHost: crowdsec:7422
+          crowdsecAppsecFailureBlock: true
+          crowdsecAppsecUnreachableBlock: true
+          crowdsecLapiKeyFile: "/crowdsec-api-key.txt"
+          crowdsecLapiHost: crowdsec:8080
+          crowdsecLapiScheme: http
+          crowdsecLapiTLSInsecureVerify: false
+          # We are actively defining all private class IPv4 subnets as trusted IPs. 
+          # This is necessary, as we want to trust our Traefik reverse proxy's HTTP headers like X-Forwarded-For and X-Real-IP
+          # Those headers typically define the real IP address of our website visitors and threat actors,
+          # used by CrowdSec for decision making and banning.
+          forwardedHeadersTrustedIPs:
+            # private class ranges
+            - 10.0.0.0/8
+            - 172.16.0.0/12
+            - 192.168.0.0/16
+          # These define trusted IPs or IP ranges we consider trustworthy.
+          # Those IP addresses or network ranges will not be blocked or banned by CrowdSec.
+          # Basically a whitelisting approach.
+          clientTrustedIPs:
+            # private class ranges
+            - 10.0.0.0/8
+            - 172.16.0.0/12
+            - 192.168.0.0/16
 
     rate-limit-strict:
       rateLimit:
@@ -86,4 +112,4 @@ http:
         middlewares:
         - http-RFC1918-only
         - default-headers
-        - crowdsec-bouncer
+
