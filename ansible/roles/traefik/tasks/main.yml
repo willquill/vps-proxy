@@ -1,4 +1,12 @@
 ---
+- name: Ensure logs directory exists
+  ansible.builtin.file:
+    path: "{{ repo_dest }}/logs"
+    state: directory
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0755"
+
 - name: Ensure Traefik config directory exists
   ansible.builtin.file:
     path: "{{ repo_dest }}/config/traefik/config"

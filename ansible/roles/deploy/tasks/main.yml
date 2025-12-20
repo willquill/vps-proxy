@@ -76,6 +76,8 @@
     group: "{{ user_name }}"
     mode: "0755"
   with_items:
+    - "crowdsec/data"
+    - "crowdsec/etc"
     - "gatus"
     - "gatus_postgres"
     - "pocketid_postgres"

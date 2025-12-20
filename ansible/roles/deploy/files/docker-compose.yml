@@ -42,6 +42,48 @@ services:
       # Tell Cloudflare to cache webpages and hide your IP (optional)
       - PROXIED=false
       - IP6_PROVIDER=none
+  crowdsec:
+    image: crowdsecurity/crowdsec:v1.7.4
+    container_name: crowdsec
+    user: ${PUID:-1000}:${PGID:-1000}
+    restart: unless-stopped
+    depends_on:
+      - traefik
+    networks:
+      proxy: {}
+    # Since Traefik and Crowdsec apps run on the same network
+    # they can communicate directly and we don't need to expose any ports
+    # ports:
+    #   - 127.0.0.1:9876:8080 # port mapping for local firewall bouncers
+    # expose:
+    #   - 8080 # http api for bouncers
+    #   - 6060 # metrics endpoint for prometheus
+    #   - 7422 # appsec waf endpoint
+    volumes:
+      # crowdsec container data
+      - ./crowdsec/data:/var/lib/crowdsec/data
+      - ./crowdsec/etc:/etc/crowdsec
+      # log bind mounts into crowdsec
+      - /var/log/auth.log:/var/log/auth.log:ro
+      - /var/log/syslog:/var/log/syslog:ro
+      # Traefik logs
+      - ./logs:/logs
+    environment:
+      - GID=1000
+      - COLLECTIONS=crowdsecurity/traefik crowdsecurity/http-cve crowdsecurity/base-http-scenarios crowdsecurity/sshd crowdsecurity/linux crowdsecurity/appsec-generic-rules crowdsecurity/appsec-virtual-patching crowdsecurity/appsec-crs
+      #- CUSTOM_HOSTNAME=my-crowdsec-host123
+  # This service rotates the Traefik logs
+  logrotate:
+    image: samuelrunggaldier/logrotate:latest
+    volumes:
+      - ./logs:/logs
+    environment:
+      - $TZ
+      - LOGS_PATH=/logs/*.log
+      - TRIGGER_INTERVAL=daily
+      - MAX_SIZE=100M
+      - MAX_BACKUPS=30
+      - DELAYCOMPRESS=true
   traefik:
     image: traefik:v3.6.1
     container_name: traefik
@@ -82,6 +124,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./logs:/logs
       - ./config/traefik/config:/etc/traefik/config:ro
       - ./config/traefik/traefik.yml:/traefik.yml:ro
       - ./config/traefik/acme.json:/acme.json:rw
