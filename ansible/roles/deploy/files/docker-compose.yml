@@ -117,8 +117,6 @@ services:
       - IDM_DOMAIN
       - LAN_SERVICE1
       - LAN_SERVICE2
-      # For Crowdsec Traefik bouncer
-      - CROWDSEC_TRAEFIK_BOUNCER_API_KEY
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -126,7 +124,8 @@ services:
       - ./config/traefik/config:/etc/traefik/config:ro
       - ./config/traefik/traefik.yml:/traefik.yml:ro
       - ./config/traefik/acme.json:/acme.json:rw
-      - ./config/traefik/usersfile.txt:/usersfile.txt
+      - ./config/traefik/usersfile.txt:/usersfile.txt:ro
+      - ./config/traefik/crowdsec-api-key.txt:/crowdsec-api-key.txt:ro
     labels:
       traefik.enable: true
       # Middlewares

@@ -282,13 +282,13 @@ docker exec crowdsec cscli console enroll -e context <account-code>
 
 The guide then says to create a bouncer token with `docker exec crowdsec cscli bouncers add traefik-bouncer` but wait a sec. A better approach is to use the [Crowdsec Bouncer Traefik plugin](https://plugins.traefik.io/plugins/6335346ca4caa9ddeffda116/crowdsec-bouncer-traefik-plugin).
 
-We do still need the token though, so go ahead and create it:
+You'll need to generate a bouncer API key and add it as the `CROWDSEC_TRAEFIK_BOUNCER_API_KEY` GitHub secret:
 
 ```sh
 docker exec crowdsec cscli bouncers add traefik-bouncer
 ```
 
-Use the code given in the crowdsec-bouncer middleware after adding the plugin to traefik.yaml.
+The Ansible playbook automatically writes this key to a file that Traefik's CrowdSec middleware reads via `CrowdsecLapiKeyFile: "/crowdsec-api-key.txt"` in middlewares.yml.
 
 ### Pocket ID
 
