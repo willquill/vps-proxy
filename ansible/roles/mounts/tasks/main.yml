@@ -77,6 +77,10 @@
     owner: root
     group: root
     mode: "0755"
+  vars:
+    backup_exclude_paths:
+      - 'logs/'
+      - 'config/crowdsec/'
   when:
     - mounts_backup_mount_available | default(false)
 
