@@ -60,8 +60,8 @@ services:
     #   - 7422 # appsec waf endpoint
     volumes:
       # crowdsec container data
-      - ./crowdsec/data:/var/lib/crowdsec/data
-      - ./crowdsec/etc:/etc/crowdsec
+      - ./config/crowdsec/data:/var/lib/crowdsec/data
+      - ./config/crowdsec/etc:/etc/crowdsec
       # log bind mounts into crowdsec
       - /var/log/auth.log:/var/log/auth.log:ro
       - /var/log/syslog:/var/log/syslog:ro
