@@ -1,6 +1,6 @@
 filenames:
  - /var/log/auth.log
- - /var/log/syslog
+ - /var/log/syslog # FIXME: Is directory in Debian 13
 labels:
   type: syslog
 ---
