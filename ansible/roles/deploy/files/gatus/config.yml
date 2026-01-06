@@ -43,51 +43,51 @@ endpoints:
       # Because it's behind authentication
       - "[STATUS] == 401"
 
-  - name: Pocket ID
-    group: Backend
-    url: "https://id.${PUBLIC_DOMAIN}/"
-    interval: 30s
-    conditions:
-      - "[STATUS] == 200"
-    alerts:
-      - type: email
-        description: "Pocket ID is DOWN"
-        send-on-resolved: true
+  # - name: Pocket ID
+  #   group: Backend
+  #   url: "https://id.${PUBLIC_DOMAIN}/"
+  #   interval: 30s
+  #   conditions:
+  #     - "[STATUS] == 200"
+  #   alerts:
+  #     - type: email
+  #       description: "Pocket ID is DOWN"
+  #       send-on-resolved: true
 
-  - name: Arcana Media Console
-    group: Arcana Media
-    url: "https://idm.${IDM_DOMAIN}/"
-    interval: 30s
-    conditions:
-      - "[STATUS] == 200"
-    alerts:
-      - type: email
-        description: "Arcana Media Console is DOWN"
-        send-on-resolved: true
+  # - name: Arcana Media Console
+  #   group: Arcana Media
+  #   url: "https://idm.${IDM_DOMAIN}/"
+  #   interval: 30s
+  #   conditions:
+  #     - "[STATUS] == 200"
+  #   alerts:
+  #     - type: email
+  #       description: "Arcana Media Console is DOWN"
+  #       send-on-resolved: true
 
-  - name: ${LAN_SERVICE1}
-    group: Arcana Media
-    url: "https://${LAN_SERVICE1}.${PUBLIC_DOMAIN}/"
-    interval: 30s
-    conditions:
-      # Because it's behind authentication
-      - "[STATUS] == 401"
-    alerts:
-      - type: email
-        description: "${LAN_SERVICE1} is DOWN"
-        send-on-resolved: true
+  # - name: ${LAN_SERVICE1}
+  #   group: Arcana Media
+  #   url: "https://${LAN_SERVICE1}.${PUBLIC_DOMAIN}/"
+  #   interval: 30s
+  #   conditions:
+  #     # Because it's behind authentication
+  #     - "[STATUS] == 401"
+  #   alerts:
+  #     - type: email
+  #       description: "${LAN_SERVICE1} is DOWN"
+  #       send-on-resolved: true
 
-  - name: ${LAN_SERVICE2}
-    group: Arcana Media
-    url: "https://${LAN_SERVICE2}.${PUBLIC_DOMAIN}/"
-    interval: 30s
-    conditions:
-      # Because it's behind authentication
-      - "[STATUS] == 401"
-    alerts:
-      - type: email
-        description: "${LAN_SERVICE2} is DOWN"
-        send-on-resolved: true
+  # - name: ${LAN_SERVICE2}
+  #   group: Arcana Media
+  #   url: "https://${LAN_SERVICE2}.${PUBLIC_DOMAIN}/"
+  #   interval: 30s
+  #   conditions:
+  #     # Because it's behind authentication
+  #     - "[STATUS] == 401"
+  #   alerts:
+  #     - type: email
+  #       description: "${LAN_SERVICE2} is DOWN"
+  #       send-on-resolved: true
 
   - name: Plex
     group: Arcana Media
