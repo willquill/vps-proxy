@@ -10,10 +10,10 @@ http:
           enabled: true
           defaultDecisionSeconds: 60
           crowdsecMode: live # stream is more performant but live gives real-time decisions
-          crowdsecAppsecEnabled: true # <--- here you can enable appsec waf
+          crowdsecAppsecEnabled: false # <--- here you can enable appsec waf
           crowdsecAppsecHost: crowdsec:7422
-          crowdsecAppsecFailureBlock: true
-          crowdsecAppsecUnreachableBlock: true
+          crowdsecAppsecFailureBlock: false
+          crowdsecAppsecUnreachableBlock: false
           crowdsecLapiKeyFile: "/crowdsec-api-key.txt"
           crowdsecLapiHost: crowdsec:8080
           crowdsecLapiScheme: http
