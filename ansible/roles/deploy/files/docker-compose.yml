@@ -69,7 +69,6 @@ services:
       - ./logs:/logs
     environment:
       - GID=1000
-      - APPSEC_ENABLED=true # for the middleware that has appsec enabled
       - COLLECTIONS=crowdsecurity/traefik crowdsecurity/http-cve crowdsecurity/base-http-scenarios crowdsecurity/sshd crowdsecurity/linux crowdsecurity/appsec-generic-rules crowdsecurity/appsec-virtual-patching crowdsecurity/appsec-crs
       #- CUSTOM_HOSTNAME=my-crowdsec-host123
   # This service rotates the Traefik logs
