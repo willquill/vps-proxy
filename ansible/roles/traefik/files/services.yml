@@ -9,7 +9,7 @@ http:
         - "https"
       rule: "Host(`idm.{{env "IDM_DOMAIN"}}`)"
       middlewares:
-        - public-with-appsec
+        - public
       tls: {}
       service: lan_traefik
     service1:
@@ -17,7 +17,7 @@ http:
         - "https"
       rule: "Host(`{{env "LAN_SERVICE1"}}.{{env "PUBLIC_DOMAIN"}}`)"
       middlewares:
-        - public-with-appsec
+        - public
       tls: {}
       service: lan_traefik
     service2:
@@ -25,7 +25,7 @@ http:
         - "https"
       rule: "Host(`{{env "LAN_SERVICE2"}}.{{env "PUBLIC_DOMAIN"}}`)"
       middlewares:
-        - public-with-appsec
+        - public
       tls: {}
       service: lan_traefik
     
