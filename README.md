@@ -316,7 +316,7 @@ Some guides create two separate routers because the OIDC callback endpoint (`/oi
 
 **For this project's setup:**
 
-Since we use `api@internal` (which includes everything), we only need ONE router. The single router at `traefik.${PUBLIC_DOMAIN}` matches ALL paths including `/oidc/callback`, so the OIDC flow works correctly. The `public-pocket@file` middleware chain in the docker-compose labels applies the OIDC authentication.
+Since we use `api@internal` (which includes everything), we only need ONE router. The single router at `tvps.${PUBLIC_DOMAIN}` matches ALL paths including `/oidc/callback`, so the OIDC flow works correctly. The `public-pocket@file` middleware chain in the docker-compose labels applies the OIDC authentication.
 
 ## Development
 

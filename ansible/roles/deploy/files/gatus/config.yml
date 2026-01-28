@@ -37,7 +37,7 @@ endpoints:
 
   - name: Traefik
     group: Backend
-    url: "https://traefik.${PUBLIC_DOMAIN}/"
+    url: "https://tvps.${PUBLIC_DOMAIN}/"
     interval: 30s
     conditions:
       # Because it's behind authentication
