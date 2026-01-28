@@ -134,17 +134,17 @@ services:
       traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto: "https"
       # HTTP entrypoint
       traefik.http.routers.traefik.entrypoints: "http"
-      traefik.http.routers.traefik.rule: "Host(`traefik.${PUBLIC_DOMAIN}`)"
+      traefik.http.routers.traefik.rule: "Host(`tvps.${PUBLIC_DOMAIN}`)"
       traefik.http.routers.traefik.middlewares: "traefik-https-redirect,public@file"
       # HTTPS dashboard
       traefik.http.routers.traefik-dashboard.entrypoints: "https"
-      traefik.http.routers.traefik-dashboard.rule: "Host(`traefik.${PUBLIC_DOMAIN}`)"
+      traefik.http.routers.traefik-dashboard.rule: "Host(`tvps.${PUBLIC_DOMAIN}`)"
       traefik.http.routers.traefik-dashboard.middlewares: "public-oidc-auth@file"
       traefik.http.routers.traefik-dashboard.tls: "true"
       traefik.http.routers.traefik-dashboard.service: "dashboard@internal"
       # HTTPS API
       traefik.http.routers.traefik-api.entrypoints: "https"
-      traefik.http.routers.traefik-api.rule: "Host(`traefik.${PUBLIC_DOMAIN}`) && (PathPrefix(`/api`) || PathPrefix(`/oidc/callback`))"
+      traefik.http.routers.traefik-api.rule: "Host(`tvps.${PUBLIC_DOMAIN}`) && (PathPrefix(`/api`) || PathPrefix(`/oidc/callback`))"
       traefik.http.routers.traefik-api.middlewares: "public-oidc-auth@file"
       traefik.http.routers.traefik-api.tls: "true"
       traefik.http.routers.traefik-api.tls.certresolver: "cloudflare"
