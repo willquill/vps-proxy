@@ -2,14 +2,15 @@ api:
   dashboard: true
   debug: true
 entryPoints:
-  http:
+  web:
     address: ":80"
     http:
       redirections:
         entryPoint:
-          to: https
+          to: websecure
           scheme: https
-  https:
+          permanent: true
+  websecure:
     address: ":443"
 
 serversTransport:

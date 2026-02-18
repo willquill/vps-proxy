@@ -128,22 +128,14 @@ services:
       - ./config/traefik/crowdsec-api-key.txt:/crowdsec-api-key.txt:ro
     labels:
       traefik.enable: true
-      # Middlewares
-      # traefik.http.middlewares.traefik-auth.basicauth.usersfile: "/usersfile.txt"
-      traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme: "https"
-      traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto: "https"
-      # HTTP entrypoint
-      traefik.http.routers.traefik.entrypoints: "http"
-      traefik.http.routers.traefik.rule: "Host(`tvps.${PUBLIC_DOMAIN}`)"
-      traefik.http.routers.traefik.middlewares: "traefik-https-redirect,public@file"
       # HTTPS dashboard
-      traefik.http.routers.traefik-dashboard.entrypoints: "https"
+      traefik.http.routers.traefik-dashboard.entrypoints: "websecure"
       traefik.http.routers.traefik-dashboard.rule: "Host(`tvps.${PUBLIC_DOMAIN}`)"
       traefik.http.routers.traefik-dashboard.middlewares: "public-oidc-auth@file"
       traefik.http.routers.traefik-dashboard.tls: "true"
       traefik.http.routers.traefik-dashboard.service: "dashboard@internal"
       # HTTPS API
-      traefik.http.routers.traefik-api.entrypoints: "https"
+      traefik.http.routers.traefik-api.entrypoints: "websecure"
       traefik.http.routers.traefik-api.rule: "Host(`tvps.${PUBLIC_DOMAIN}`) && (PathPrefix(`/api`) || PathPrefix(`/oidc/callback`))"
       traefik.http.routers.traefik-api.middlewares: "public-oidc-auth@file"
       traefik.http.routers.traefik-api.tls: "true"
@@ -195,16 +187,12 @@ services:
       - ./config/gatus:/config
     labels:
       <<: *proxy-labels
-      traefik.http.routers.status.entrypoints: "http"
+      traefik.http.routers.status.entrypoints: "websecure"
       traefik.http.routers.status.rule: "Host(`status.${PUBLIC_DOMAIN}`)"
-      traefik.http.middlewares.status-https-redirect.redirectscheme.scheme: "https"
-      traefik.http.routers.status.middlewares: "status-https-redirect"
-      traefik.http.routers.status-secure.entrypoints: "https"
-      traefik.http.routers.status-secure.rule: "Host(`status.${PUBLIC_DOMAIN}`)"
-      traefik.http.routers.status-secure.tls: "true"
-      traefik.http.routers.status-secure.service: "status"
+      traefik.http.routers.status.tls: "true"
+      traefik.http.routers.status.service: "status"
       traefik.http.services.status.loadbalancer.server.port: "8080"
-      traefik.http.routers.status-secure.middlewares: "public@file"
+      traefik.http.routers.status.middlewares: "public@file"
     pull_policy: always
   # Storage backend for gatus
   pocketid_postgres:
@@ -258,16 +246,49 @@ services:
       start_period: 10s
     labels:
       <<: *proxy-labels
-      traefik.http.routers.pocket-id.entrypoints: "http"
+      traefik.http.routers.pocket-id.entrypoints: "websecure"
       traefik.http.routers.pocket-id.rule: "Host(`id.${PUBLIC_DOMAIN}`)"
-      traefik.http.middlewares.pocket-id-https-redirect.redirectscheme.scheme: "https"
-      traefik.http.routers.pocket-id.middlewares: "pocket-id-https-redirect"
-      traefik.http.routers.pocket-id-secure.entrypoints: "https"
-      traefik.http.routers.pocket-id-secure.rule: "Host(`id.${PUBLIC_DOMAIN}`)"
-      traefik.http.routers.pocket-id-secure.tls: "true"
-      traefik.http.routers.pocket-id-secure.service: "pocket-id"
+      traefik.http.routers.pocket-id.tls: "true"
+      traefik.http.routers.pocket-id.service: "pocket-id"
       traefik.http.services.pocket-id.loadbalancer.server.port: "1411"
-      traefik.http.routers.pocket-id-secure.middlewares: "public@file"
+      traefik.http.routers.pocket-id.middlewares: "public@file"
+  tuwunel:
+    image: ghcr.io/matrix-construct/tuwunel:latest
+    container_name: tuwunel
+    restart: unless-stopped
+    pull_policy: always
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      proxy: {}
+    volumes:
+      - ./config/tuwunel/data:/var/lib/tuwunel
+      - ./config/tuwunel/tuwunel.toml:/etc/tuwunel.toml:ro
+    environment:
+      - TUWUNEL_SERVER_NAME=matrix.${PUBLIC_DOMAIN}
+      - TUWUNEL_DATABASE_PATH=/var/lib/tuwunel
+      - TUWUNEL_PORT=6167
+      - TUWUNEL_ADDRESS=0.0.0.0
+      - TUWUNEL_MAX_REQUEST_SIZE=20000000
+      - TUWUNEL_ALLOW_REGISTRATION=${TUWUNEL_ALLOW_REGISTRATION:-false}
+      - TUWUNEL_REGISTRATION_TOKEN=${TUWUNEL_REGISTRATION_TOKEN:-}
+      - TUWUNEL_ALLOW_FEDERATION=true
+      - TUWUNEL_TRUSTED_SERVERS=["matrix.org"]
+      - TUWUNEL_CONFIG=/etc/tuwunel.toml
+      - TUWUNEL_LOG=info
+      - TUWUNEL_WELL_KNOWN={client=https://matrix.${PUBLIC_DOMAIN},server=matrix.${PUBLIC_DOMAIN}:443}
+    ulimits:
+      nofile:
+        soft: 1048567
+        hard: 1048567
+    labels:
+      <<: *proxy-labels
+      traefik.http.routers.tuwunel.entrypoints: "websecure"
+      traefik.http.routers.tuwunel.rule: "Host(`matrix.${PUBLIC_DOMAIN}`)"
+      traefik.http.routers.tuwunel.tls: "true"
+      traefik.http.routers.tuwunel.service: "tuwunel"
+      traefik.http.services.tuwunel.loadbalancer.server.port: "6167"
+      traefik.http.routers.tuwunel.middlewares: "public@file"
   # watchtower manages auto updates. this is optional.
   watchtower:
     image: nickfedor/watchtower

@@ -83,6 +83,8 @@
     - "gatus_postgres"
     - "pocketid_postgres"
     - "pocketid"
+    - "tuwunel"
+    - "tuwunel/data"
   when: not (vps_proxy_restored | default(false))
 
 - name: Copy Crowdsec configuration files
@@ -97,6 +99,15 @@
     - { src: "profiles.yml", dest: "profiles.yml" }
     - { src: "http.yml", dest: "notifications/http.yml" }
     - { src: "email.yml", dest: "notifications/email.yml" }
+
+- name: Create tuwunel configuration from template
+  ansible.builtin.template:
+    src: tuwunel.toml.j2
+    dest: "{{ repo_dest }}/config/tuwunel/tuwunel.toml"
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    mode: "0600"
+  no_log: true
 
 - name: Copy Gatus configuration
   ansible.builtin.copy:

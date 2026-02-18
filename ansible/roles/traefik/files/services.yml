@@ -6,7 +6,7 @@ http:
   routers: 
     idm:
       entryPoints:
-        - "https"
+        - "websecure"
       rule: "Host(`idm.{{env "IDM_DOMAIN"}}`)"
       middlewares:
         - public
@@ -14,7 +14,7 @@ http:
       service: lan_traefik
     service1:
       entryPoints:
-        - "https"
+        - "websecure"
       rule: "Host(`{{env "LAN_SERVICE1"}}.{{env "PUBLIC_DOMAIN"}}`)"
       middlewares:
         - public
@@ -22,7 +22,7 @@ http:
       service: lan_traefik
     service2:
       entryPoints:
-        - "https"
+        - "websecure"
       rule: "Host(`{{env "LAN_SERVICE2"}}.{{env "PUBLIC_DOMAIN"}}`)"
       middlewares:
         - public

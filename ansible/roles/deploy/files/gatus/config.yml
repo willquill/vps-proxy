@@ -54,6 +54,13 @@ endpoints:
         description: "Pocket ID is DOWN"
         send-on-resolved: true
 
+  - name: Tuwunel Chat
+    group: Backend
+    url: "https://matrix.${PUBLIC_DOMAIN}/"
+    interval: 30s
+    conditions:
+      - "[STATUS] == 200"
+
   - name: Arcana Media Console
     group: Arcana Media
     url: "https://idm.${IDM_DOMAIN}/"
