@@ -5,6 +5,7 @@ Create a VPS that runs
 - [Traefik](https://traefik.io/traefik) (reverse proxy) w/ [oidc-auth](https://github.com/sevensolutions/traefik-oidc-auth) plugin
 - [Pocket ID](https://github.com/pocket-id/pocket-id) (OIDC identity provider)
 - [Gatus](https://gatus.io/) (uptime monitoring and alerting)
+- [Tuwunel](https://github.com/matrix-construct/tuwunel) (Matrix homeserver)
 - Wireguard tunnel to another network
 
 Automation tasks:
@@ -67,6 +68,10 @@ GitHub Actions needs several environment secrets for CI/CD. Some need to be encr
 | `POCKETID_POSTGRES_PASSWORD`       | Pocket ID database password          | `openssl rand -base64 32`                                                                          |
 | `POCKETID_POSTGRES_DB`             | Pocket ID database name              | Your chosen database name (e.g., pocketid)                                                         |
 | `POCKETID_ENCRYPTION_KEY`          | Pocket ID encryption key             | `openssl rand -base64 32`                                                                          |
+| `TUWUNEL_ALLOW_REGISTRATION`       | Allow new Matrix user registration   | `true` or `false` (set `true` initially to create first user, then `false`)                        |
+| `TUWUNEL_REGISTRATION_TOKEN`       | Token required during registration   | `openssl rand -base64 32` (required when registration is enabled)                                  |
+| `TUWUNEL_OIDC_CLIENT_ID`           | OIDC client ID for Matrix SSO        | Provided by Pocket ID (leave empty to disable SSO)                                                 |
+| `TUWUNEL_OIDC_CLIENT_SECRET`       | OIDC client secret for Matrix SSO    | Provided by Pocket ID (leave empty to disable SSO)                                                 |
 | `SMTP_HOST`                        | SMTP server hostname                 | Your SMTP provider's server (e.g., smtp.gmail.com)                                                 |
 | `SMTP_USER`                        | SMTP username                        | Your email address                                                                                 |
 | `SMTP_PASSWORD`                    | SMTP password                        | Your email password or app-specific password                                                       |
@@ -317,6 +322,104 @@ Some guides create two separate routers because the OIDC callback endpoint (`/oi
 **For this project's setup:**
 
 Since we use `api@internal` (which includes everything), we only need ONE router. The single router at `tvps.${PUBLIC_DOMAIN}` matches ALL paths including `/oidc/callback`, so the OIDC flow works correctly. The `public-pocket@file` middleware chain in the docker-compose labels applies the OIDC authentication.
+
+### Tuwunel (Matrix Homeserver)
+
+[Tuwunel](https://github.com/matrix-construct/tuwunel) is a lightweight, actively maintained Matrix homeserver written in Rust. It is the successor to [conduwuit](https://github.com/girlbossceo/conduwuit) (itself a fork of [Conduit](https://conduit.rs/)), with native SSO/OIDC support, built-in sliding sync, and an embedded RocksDB database (no external database required).
+
+#### DNS Records
+
+Create the following DNS record pointing to your VPS:
+
+| Type | Name | Value |
+|------|------|-------|
+| A or CNAME | `matrix` | Your VPS IP or DDNS hostname |
+
+Your Matrix server will be accessible at `matrix.<your-domain>`, and Matrix user IDs will be `@user:matrix.<your-domain>`.
+
+#### GitHub Secrets
+
+| Secret | Purpose | Value |
+|--------|---------|-------|
+| `TUWUNEL_ALLOW_REGISTRATION` | Controls open registration | `true` or `false` |
+| `TUWUNEL_REGISTRATION_TOKEN` | Token required during registration | `openssl rand -base64 32` |
+| `TUWUNEL_OIDC_CLIENT_ID` | OIDC client ID for Matrix SSO | Provided by Pocket ID (leave empty to disable SSO) |
+| `TUWUNEL_OIDC_CLIENT_SECRET` | OIDC client secret for Matrix SSO | Provided by Pocket ID (leave empty to disable SSO) |
+
+#### Post-Deployment Setup
+
+Choose one of the two authentication paths below, then follow the common steps.
+
+##### Option A: With Pocket ID (OIDC/SSO)
+
+Tuwunel has native SSO/OIDC support. When configured with Pocket ID, users log in via your Pocket ID instance instead of Matrix passwords. The first user to register through SSO is automatically granted server admin privileges.
+
+1. **Create a new OIDC client in Pocket ID:**
+   - Navigate to your Pocket ID admin panel at `https://id.<your-domain>`
+   - Create a new OIDC client
+   - **Name**: Tuwunel Matrix (or your preference)
+   - **Callback URLs**: `https://matrix.<your-domain>/_matrix/client/unstable/login/sso/callback/<your-client-id>` (replace `<your-client-id>` with the Client ID shown in Pocket ID)
+   - **Logout Callback URLs**: `https://matrix.<your-domain>`
+   - **Public Client**: Unchecked
+   - **PKCE**: Unchecked
+   - Save and copy the generated **Client ID** and **Client Secret**
+
+2. **Create the GitHub secrets:**
+   - `TUWUNEL_OIDC_CLIENT_ID`: The client ID you chose above
+   - `TUWUNEL_OIDC_CLIENT_SECRET`: The secret generated by Pocket ID
+   - `TUWUNEL_ALLOW_REGISTRATION`: `true` (SSO users are auto-registered on first login)
+   - `TUWUNEL_REGISTRATION_TOKEN`: Generate with `openssl rand -base64 32`
+
+3. **Deploy the stack** via GitHub Actions or manually.
+
+4. **Log in with a Matrix client** (see [Recommended Clients](#recommended-matrix-clients)). Set the homeserver to `https://matrix.<your-domain>`. The client will show an SSO login button that redirects to Pocket ID. The first user to log in becomes the server admin.
+
+5. **Optionally disable direct registration** by setting `TUWUNEL_ALLOW_REGISTRATION` to `false` and redeploying. SSO-based registration will still work — this only affects username/password registration.
+
+##### Option B: Without OIDC (Password Only)
+
+If you prefer not to use SSO, leave `TUWUNEL_OIDC_CLIENT_ID` and `TUWUNEL_OIDC_CLIENT_SECRET` empty. Users will authenticate with Matrix username/password directly against the homeserver.
+
+1. **Create the GitHub secrets:**
+   - `TUWUNEL_ALLOW_REGISTRATION`: `true`
+   - `TUWUNEL_REGISTRATION_TOKEN`: Generate with `openssl rand -base64 32`
+   - `TUWUNEL_OIDC_CLIENT_ID`: Leave empty
+   - `TUWUNEL_OIDC_CLIENT_SECRET`: Leave empty
+
+2. **Deploy the stack** via GitHub Actions or manually.
+
+3. **Create your admin account** using a Matrix client (see [Recommended Clients](#recommended-matrix-clients)). Connect to `https://matrix.<your-domain>` and register a new account. You will need the registration token you created above. The first user registered is automatically granted admin privileges.
+
+4. **Disable open registration** by setting `TUWUNEL_ALLOW_REGISTRATION` to `false` and redeploying.
+
+5. **Create additional users** (after disabling registration) via the admin room. Send this message in `#admins:matrix.<your-domain>`:
+
+   ```
+   @tuwunel:matrix.<your-domain> create_user <username> <password>
+   ```
+
+##### Common Post-Setup Steps
+
+6. **Verify federation** (optional) at the [Matrix Federation Tester](https://federationtester.matrix.org/) by entering `matrix.<your-domain>`.
+
+7. **Manage your server** via the admin room `#admins:matrix.<your-domain>`. Send `@tuwunel:matrix.<your-domain> help` to see available commands.
+
+#### Federation
+
+Tuwunel supports federation out of the box. The `TUWUNEL_WELL_KNOWN` environment variable is configured to advertise the server at `matrix.<your-domain>:443`, so other Matrix servers will discover and connect to it automatically.
+
+If you want Matrix user IDs to use your base domain (e.g., `@user:<your-domain>` instead of `@user:matrix.<your-domain>`), you need to serve `.well-known/matrix/server` and `.well-known/matrix/client` files on your base domain. This requires additional configuration (e.g., an nginx container or Cloudflare Workers) that is beyond the scope of this default setup.
+
+#### Recommended Matrix Clients
+
+| Client | Platform | Notes |
+|--------|----------|-------|
+| [Element](https://element.io/) | Android, iOS, Web, Desktop | Most mature and feature-complete. Recommended for most users. Supports SSO login. |
+| [Element X](https://element.io/labs/element-x) | Android, iOS | Next-gen Element client with improved performance and sliding sync. Supports SSO login. |
+| [FluffyChat](https://fluffychat.im/) | Android, iOS, Web, Desktop | Simple, intuitive, and beginner-friendly. Supports SSO login. |
+| [SchildiChat](https://schildi.chat/) | Android, Desktop, Web | Element fork with a more traditional IM experience. Supports SSO login. |
+
+When configuring a client, set the homeserver URL to `https://matrix.<your-domain>`. If SSO is configured, the client will display an SSO login button alongside the password option.
 
 ## Development
 

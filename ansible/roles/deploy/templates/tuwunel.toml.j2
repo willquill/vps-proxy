@@ -1,0 +1,16 @@
+[global]
+# SSO/OIDC Identity Provider configuration
+# To disable OIDC, leave tuwunel_oidc_client_id empty in GitHub Secrets
+
+{% if tuwunel_oidc_client_id | default('') | length > 0 %}
+[[global.identity_provider]]
+name = "PocketID"
+brand = "custom"
+client_id = "{{ tuwunel_oidc_client_id }}"
+client_secret = "{{ tuwunel_oidc_client_secret }}"
+issuer_url = "https://id.{{ public_hostname }}/"
+callback_url = "https://matrix.{{ public_hostname }}/_matrix/client/unstable/login/sso/callback/{{ tuwunel_oidc_client_id }}"
+default = true
+discovery = true
+scope = ["openid", "profile", "email"]
+{% endif %}
