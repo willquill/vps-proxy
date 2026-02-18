@@ -59,7 +59,7 @@ endpoints:
     url: "https://matrix.${PUBLIC_DOMAIN}/"
     interval: 30s
     conditions:
-      - "[STATUS] == 401"
+      - "[STATUS] == 200"
 
   - name: Arcana Media Console
     group: Arcana Media
