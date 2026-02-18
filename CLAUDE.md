@@ -68,7 +68,7 @@ VARIABLE_NAME={{ ansible_variable_name }}
 Add `-e` flags to the `ansible-playbook` command for each new Ansible variable:
 
 ```yaml
--e "ansible_variable_name=${{ secrets.SECRET_NAME }}"
+-e "ansible_variable_name=${{ secrets.SECRET_NAME }}" \
 ```
 
 ### 4. Config Directories (`ansible/roles/deploy/tasks/main.yml`)
@@ -86,24 +86,24 @@ Add a new endpoint entry to the `endpoints` list. Do not configure alerts for ne
 If the service is **not** behind OIDC authentication:
 
 ```yaml
-  - name: <Service Name>
-    group: Backend
-    url: "https://<subdomain>.${PUBLIC_DOMAIN}/"
-    interval: 30s
-    conditions:
-      - "[STATUS] == 200"
+- name: <Service Name>
+  group: Backend
+  url: "https://<subdomain>.${PUBLIC_DOMAIN}/"
+  interval: 30s
+  conditions:
+    - "[STATUS] == 200"
 ```
 
 If the service **is** behind OIDC authentication (Traefik OIDC middleware or native OIDC):
 
 ```yaml
-  - name: <Service Name>
-    group: Backend
-    url: "https://<subdomain>.${PUBLIC_DOMAIN}/"
-    interval: 30s
-    conditions:
-      # Because it's behind authentication
-      - "[STATUS] == 401"
+- name: <Service Name>
+  group: Backend
+  url: "https://<subdomain>.${PUBLIC_DOMAIN}/"
+  interval: 30s
+  conditions:
+    # Because it's behind authentication
+    - "[STATUS] == 401"
 ```
 
 ### 6. README (`README.md`)
