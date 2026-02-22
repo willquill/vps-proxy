@@ -61,7 +61,7 @@ GitHub Actions needs several environment secrets for CI/CD. Some need to be encr
 | `TRAEFIK_OIDC_CLIENT_ID`           | OIDC client identifier for Traefik   | Provided by Pocket ID                                                                              |
 | `TRAEFIK_OIDC_CLIENT_SECRET`       | OIDC client secret for Traefik       | Provided by Pocket ID                                                                              |
 | `CROWDSEC_TRAEFIK_BOUNCER_API_KEY` | CrowdSec bouncer API key             | `docker exec crowdsec cscli bouncers add traefik-bouncer`                                          |
-| `IDM_DOMAIN`                       | FQDN of homelab identity manager     | Your homelab IdM domain (e.g., lan.example.com)                                                    |
+| `IDM_DOMAIN`                       | FQDN of homelab identity manager     | Your homelab IdM domain (e.g., idm.example.com)                                                    |
 | `LAN_SERVICE1`                     | FQDN of homelab service              | Your homelab service1 subdomain (e.g., service1)                                                   |
 | `MAXMIND_LICENSE_KEY`              | MaxMind GeoIP license key            | [MaxMind signup](https://www.maxmind.com/en/geolite2/signup)                                       |
 | `POCKETID_POSTGRES_USER`           | Pocket ID database username          | Your chosen username                                                                               |
@@ -331,20 +331,20 @@ Since we use `api@internal` (which includes everything), we only need ONE router
 
 Create the following DNS record pointing to your VPS:
 
-| Type | Name | Value |
-|------|------|-------|
+| Type       | Name     | Value                        |
+| ---------- | -------- | ---------------------------- |
 | A or CNAME | `matrix` | Your VPS IP or DDNS hostname |
 
 Your Matrix server will be accessible at `matrix.<your-domain>`, and Matrix user IDs will be `@user:matrix.<your-domain>`.
 
 #### GitHub Secrets
 
-| Secret | Purpose | Value |
-|--------|---------|-------|
-| `TUWUNEL_ALLOW_REGISTRATION` | Controls open registration | `true` or `false` |
-| `TUWUNEL_REGISTRATION_TOKEN` | Token required during registration | `openssl rand -base64 32` |
-| `TUWUNEL_OIDC_CLIENT_ID` | OIDC client ID for Matrix SSO | Provided by Pocket ID (leave empty to disable SSO) |
-| `TUWUNEL_OIDC_CLIENT_SECRET` | OIDC client secret for Matrix SSO | Provided by Pocket ID (leave empty to disable SSO) |
+| Secret                       | Purpose                            | Value                                              |
+| ---------------------------- | ---------------------------------- | -------------------------------------------------- |
+| `TUWUNEL_ALLOW_REGISTRATION` | Controls open registration         | `true` or `false`                                  |
+| `TUWUNEL_REGISTRATION_TOKEN` | Token required during registration | `openssl rand -base64 32`                          |
+| `TUWUNEL_OIDC_CLIENT_ID`     | OIDC client ID for Matrix SSO      | Provided by Pocket ID (leave empty to disable SSO) |
+| `TUWUNEL_OIDC_CLIENT_SECRET` | OIDC client secret for Matrix SSO  | Provided by Pocket ID (leave empty to disable SSO) |
 
 #### Post-Deployment Setup
 
@@ -388,11 +388,21 @@ If you prefer not to use SSO, leave `TUWUNEL_OIDC_CLIENT_ID` and `TUWUNEL_OIDC_C
 
 2. **Deploy the stack** via GitHub Actions or manually.
 
-3. **Create your admin account** using a Matrix client (see [Recommended Clients](#recommended-matrix-clients)). Connect to `https://matrix.<your-domain>` and register a new account. You will need the registration token you created above. The first user registered is automatically granted admin privileges.
+3. **Create your admin account** using a Matrix client (see [Recommended Clients](#recommended-matrix-clients)). Connect to `https://matrix.<your-domain>` and register a new account. You will need the registration token you created above. The first user registered is automatically granted admin privileges and will join the Admin Room. If the first user logs in via PocketID, they won't be in the Admin Room. So I recommend that you first create an account named `admin` using the token registration method.
+
+After that, you can login with PocketID authentication as your preferred user to create the user in your homeserver. Then login to your admin account, go to the Admin Room, and invite your preferred user. You may then deactivate your temporary `admin` user (or just keep it).
+
+Since your PocketID user will not have a password, and since a password is required to federate with any other Matrix homeserver, I recommend entering the following command for each PocketID user so that they may reset their password:
+
+```
+!admin users reset_password @willquill:matrix.rakara.net
+```
+
+This will output a new generated password. That user can then go to "change password", enter the generated password as the current password, and set their own password.
 
 4. **Disable open registration** by setting `TUWUNEL_ALLOW_REGISTRATION` to `false` and redeploying.
 
-5. **Create additional users** (after disabling registration) via the admin room. Send this message in `#admins:matrix.<your-domain>`:
+5. **Create additional users** (after disabling registration) via the admin room. **This is only necessary for users that won't use PocketID.** Send this message in `#admins:matrix.<your-domain>`:
 
    ```
    @tuwunel:matrix.<your-domain> create_user <username> <password>
@@ -412,12 +422,12 @@ If you want Matrix user IDs to use your base domain (e.g., `@user:<your-domain>`
 
 #### Recommended Matrix Clients
 
-| Client | Platform | Notes |
-|--------|----------|-------|
-| [Element](https://element.io/) | Android, iOS, Web, Desktop | Most mature and feature-complete. Recommended for most users. Supports SSO login. |
-| [Element X](https://element.io/labs/element-x) | Android, iOS | Next-gen Element client with improved performance and sliding sync. Supports SSO login. |
-| [FluffyChat](https://fluffychat.im/) | Android, iOS, Web, Desktop | Simple, intuitive, and beginner-friendly. Supports SSO login. |
-| [SchildiChat](https://schildi.chat/) | Android, Desktop, Web | Element fork with a more traditional IM experience. Supports SSO login. |
+| Client                                         | Platform                   | Notes                                                                                   |
+| ---------------------------------------------- | -------------------------- | --------------------------------------------------------------------------------------- |
+| [Element](https://element.io/)                 | Android, iOS, Web, Desktop | Most mature and feature-complete. Recommended for most users. Supports SSO login.       |
+| [Element X](https://element.io/labs/element-x) | Android, iOS               | Next-gen Element client with improved performance and sliding sync. Supports SSO login. |
+| [FluffyChat](https://fluffychat.im/)           | Android, iOS, Web, Desktop | Simple, intuitive, and beginner-friendly. Supports SSO login.                           |
+| [SchildiChat](https://schildi.chat/)           | Android, Desktop, Web      | Element fork with a more traditional IM experience. Supports SSO login.                 |
 
 When configuring a client, set the homeserver URL to `https://matrix.<your-domain>`. If SSO is configured, the client will display an SSO login button alongside the password option.
 

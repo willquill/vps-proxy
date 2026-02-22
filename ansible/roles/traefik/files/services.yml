@@ -7,7 +7,7 @@ http:
     idm:
       entryPoints:
         - "websecure"
-      rule: "Host(`idm.{{env "IDM_DOMAIN"}}`)"
+      rule: "Host(`{{env "IDM_DOMAIN"}}`)"
       middlewares:
         - public
       tls: {}
@@ -34,6 +34,6 @@ http:
     lan_traefik:
       loadBalancer:
         servers:
-          - url: "https://10.1.15.10:443"
+          - url: "https://10.1.20.15:443"
         passHostHeader: true
         #serversTransport: insecureTransport
