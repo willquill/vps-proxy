@@ -3,8 +3,9 @@ on:
   pull_request:
   push:
     branches: [main]
-  schedule:
-    - cron: "0 6 * * *" # 6 AM every day
+  # FIXME: Disabled to pause development of this project
+  # schedule:
+  #   - cron: "0 6 * * *" # 6 AM every day
 
 env:
   TZ: ${{ secrets.TZ }}
